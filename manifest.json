@@ -1,7 +1,7 @@
 {
   "id": "leetcode-chinese",
   "name": "LeetCode Chinese",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minAppVersion": "1.12.7",
   "description": "在 Obsidian 中浏览力扣中国站题目、编写与提交解答，生成中文 AI 复盘和关联笔记.",
   "author": "jie.chen",
