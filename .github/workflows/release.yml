@@ -35,4 +35,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$RELEASE_TAG" --title "LeetCode Chinese $RELEASE_TAG" --notes-file docs/7-发版与回滚/1.0.0-发布说明.md main.js manifest.json styles.css leetcode-chinese.zip
+          gh release create "$RELEASE_TAG" --title "LeetCode Chinese $RELEASE_TAG" --notes-file "docs/7-发版与回滚/$RELEASE_TAG-发布说明.md" main.js manifest.json styles.css leetcode-chinese.zip
