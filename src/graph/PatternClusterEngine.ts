@@ -31,6 +31,7 @@ import type { KgClassification } from './parseKgResponse';
 import { mergeTechniquesSectionAI } from './mergeTechniquesSection';
 import { mergeRelatedVariantsSection } from './mergeRelatedVariantsSection';
 import type { ClusterHubWriter, HubEntry } from './ClusterHubWriter';
+import { resolveProblemNotePath } from '../notes/NoteTemplate';
 import { logger } from '../shared/logger';
 import TurndownService from 'turndown';
 
@@ -52,7 +53,7 @@ export interface PatternClusterEngineSettings {
   getActiveAIProvider(): unknown;
   getFeatureFlags(): { lookAheadEdges: boolean };
   getProblemDetail(slug: string): unknown;
-  getProblemIndex(): { problems: Array<{ slug: string; id: number; title: string }> } | null;
+  getProblemIndex(): { problems: Array<{ slug: string; id: number | string; title: string }> } | null;
   addCostLedger(usd: number): Promise<void>;
   getProblemsFolder(): string;
 }
@@ -132,17 +133,18 @@ export class PatternClusterEngine {
     problemHtml: string,
     code: string,
     language: string,
-  ): Promise<void> {
+    options: { force?: boolean } = {},
+  ): Promise<boolean> {
     // Gate 1: auto AI KG toggle
-    if (!this.settings.getAutoAIKnowledgeGraph()) {
+    if (!options.force && !this.settings.getAutoAIKnowledgeGraph()) {
       logger.debug('PatternClusterEngine.onAccepted: autoAIKG disabled');
-      return;
+      return false;
     }
 
     // Gate 2: active AI provider configured
     if (this.settings.getActiveAIProvider() === null) {
       logger.debug('PatternClusterEngine.onAccepted: no active AI provider');
-      return;
+      return false;
     }
 
     // Persistence check (AIKG-01): if lc-pattern already set, skip classification
@@ -151,7 +153,7 @@ export class PatternClusterEngine {
     const existingPatterns: string[] = Array.isArray(existingRaw)
       ? existingRaw.filter((p): p is string => typeof p === 'string' && p.length > 0)
       : typeof existingRaw === 'string' && existingRaw.length > 0 ? [existingRaw] : [];
-    if (existingPatterns.length > 0) {
+    if (!options.force && existingPatterns.length > 0) {
       logger.debug('PatternClusterEngine.onAccepted: lc-pattern already set, skipping classification', {
         pattern: existingPatterns,
       });
@@ -165,7 +167,7 @@ export class PatternClusterEngine {
       for (const p of existingPatterns) {
         await this.updateHub(file, p);
       }
-      return;
+      return true;
     }
 
     // Convert HTML to markdown
@@ -174,7 +176,7 @@ export class PatternClusterEngine {
       problemMd = this.turndown.turndown(problemHtml);
     } catch (err) {
       logger.debug('PatternClusterEngine.onAccepted: turndown failed', err);
-      return;
+      return false;
     }
 
     // Assemble prompt
@@ -192,7 +194,7 @@ export class PatternClusterEngine {
       logger.debug('PatternClusterEngine.onAccepted: AI response', { responseText });
     } catch (err) {
       logger.debug('PatternClusterEngine.onAccepted: AI invoke failed', err);
-      return;
+      return false;
     }
 
     // Cost accounting
@@ -231,6 +233,7 @@ export class PatternClusterEngine {
       });
     } catch (err) {
       logger.debug('PatternClusterEngine.onAccepted: frontmatter write failed', err);
+      return false;
     }
 
     // Write Techniques section via vault.process (all patterns)
@@ -240,6 +243,7 @@ export class PatternClusterEngine {
       });
     } catch (err) {
       logger.debug('PatternClusterEngine.onAccepted: techniques write failed', err);
+      return false;
     }
 
     logger.debug('PatternClusterEngine.onAccepted: parsed response', {
@@ -271,20 +275,22 @@ export class PatternClusterEngine {
     const enrichedVariants = combinedVariants.map((v) => {
       const entry = indexProblems.find((p) => p.slug === v.slug);
       if (entry) {
-        const linkTarget = `${entry.id}-${v.slug}`;
+        const path = resolveProblemNotePath(this.app, this.settings.getProblemsFolder(), v.slug, entry);
+        const linkTarget = path?.slice(0, -3);
         return { ...v, linkTarget, title: entry.title };
       }
       return v;
     });
 
     // Write Related Variants (only if any exist)
-    if (enrichedVariants.length > 0) {
+    if (enrichedVariants.length > 0 || options.force) {
       try {
         await this.app.vault.process(file, (body: string) => {
           return mergeRelatedVariantsSection(body, enrichedVariants);
         });
       } catch (err) {
         logger.debug('PatternClusterEngine.onAccepted: related variants write failed', err);
+        return false;
       }
     }
 
@@ -292,6 +298,7 @@ export class PatternClusterEngine {
     for (const p of patternNames) {
       await this.updateHub(file, p);
     }
+    return true;
   }
 
   /**

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { SettingsStore } from '../src/settings/SettingsStore';
 
 function makeMockPlugin(initial: unknown = null) {
-  const state: { data: unknown } = { data: initial };
+  const state: { data: unknown } = { data: initial && typeof initial === "object" ? { leetcodeSite: "cn", ...initial } : initial };
   return {
     loadData: vi.fn(async () => state.data),
     saveData: vi.fn(async (d: unknown) => { state.data = d; }),
@@ -14,7 +14,7 @@ describe('SettingsStore (AUTH-03, AUTH-05, D-07, D-10)', () => {
     const plugin = makeMockPlugin(null);
     const s = await SettingsStore.load(plugin as never);
     expect(s.getAuthCookies()).toBeNull();
-    expect(s.getProblemsFolder()).toBe('LeetCode');
+    expect(s.getProblemsFolder()).toBe('leetcode');
     expect(s.getDefaultLanguage()).toBe('python3');
     expect(s.getProblemIndex()).toBeNull();
   });
@@ -87,7 +87,7 @@ describe('SettingsStore.load — untrusted-disk validation (CR-02 / WR-04)', () 
       problemsFolder: '../../.ssh',
     });
     const s = await SettingsStore.load(plugin as never);
-    expect(s.getProblemsFolder()).toBe('LeetCode');
+    expect(s.getProblemsFolder()).toBe('leetcode');
   });
 
   it('rejects absolute problemsFolder path', async () => {
@@ -96,7 +96,7 @@ describe('SettingsStore.load — untrusted-disk validation (CR-02 / WR-04)', () 
       problemsFolder: '/etc/passwd',
     });
     const s = await SettingsStore.load(plugin as never);
-    expect(s.getProblemsFolder()).toBe('LeetCode');
+    expect(s.getProblemsFolder()).toBe('leetcode');
   });
 
   it('strips trailing slash from a valid problemsFolder', async () => {
@@ -147,7 +147,7 @@ describe('SettingsStore.load — untrusted-disk validation (CR-02 / WR-04)', () 
     const plugin = makeMockPlugin('garbage');
     const s = await SettingsStore.load(plugin as never);
     expect(s.getAuthCookies()).toBeNull();
-    expect(s.getProblemsFolder()).toBe('LeetCode');
+    expect(s.getProblemsFolder()).toBe('leetcode');
   });
 });
 
@@ -260,11 +260,11 @@ describe('SettingsStore — Phase 4 backward-compat (GRAPH-05, D-12, D-15, D-21)
     // sanitizeFolder no-trailing-slash invariant (Phase 1 D-10).
     const plugin = makeMockPlugin({ version: 1, problemsFolder: 'LeetCode' });
     const s = await SettingsStore.load(plugin as never);
-    expect(s.getTechniquesFolder()).toBe('LeetCode/Techniques');
+    expect(s.getTechniquesFolder()).toBe('LeetCode/techniques');
 
     const plugin2 = makeMockPlugin({ version: 1, problemsFolder: 'my notes/leetcode' });
     const s2 = await SettingsStore.load(plugin2 as never);
-    expect(s2.getTechniquesFolder()).toBe('my notes/leetcode/Techniques');
+    expect(s2.getTechniquesFolder()).toBe('my notes/leetcode/techniques');
   });
 });
 
@@ -327,14 +327,14 @@ describe('SettingsStore — techniquesFolderOverride round-trip (Phase 5 POLISH-
   });
 
   it('getTechniquesFolder returns derived default when override is empty', async () => {
-    // D-15 — empty override string = use `{problemsFolder}/Techniques`.
+    // D-15 — empty override string = use `{problemsFolder}/techniques`.
     const plugin = makeMockPlugin({
       version: 1,
       problemsFolder: 'LeetCode',
       techniquesFolderOverride: '',
     });
     const s = await SettingsStore.load(plugin as never);
-    expect(s.getTechniquesFolder()).toBe('LeetCode/Techniques');
+    expect(s.getTechniquesFolder()).toBe('LeetCode/techniques');
   });
 
   it('setter accepts raw input without stripping (UI layer owns sanitization)', async () => {

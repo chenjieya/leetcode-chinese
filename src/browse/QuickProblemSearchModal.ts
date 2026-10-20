@@ -40,6 +40,7 @@ export function filterProblems(
       else if (String(p.id).startsWith(q)) prefix.push(p);
       else if (
         p.title.toLowerCase().includes(lowered) ||
+        (p.originalTitle?.toLowerCase().includes(lowered) ?? false) ||
         p.slug.toLowerCase().includes(lowered)
       ) {
         rest.push(p);
@@ -52,6 +53,7 @@ export function filterProblems(
   for (const p of problems) {
     if (
       p.title.toLowerCase().includes(lowered) ||
+        (p.originalTitle?.toLowerCase().includes(lowered) ?? false) ||
       p.slug.toLowerCase().includes(lowered)
     ) {
       out.push(p);
@@ -68,11 +70,11 @@ export class QuickProblemSearchModal extends SuggestModal<IndexedProblem> {
     private readonly onChoose: (p: IndexedProblem) => void,
   ) {
     super(app);
-    this.setPlaceholder('Search by ID, title, or slug…');
+    this.setPlaceholder('按题号、中文/英文标题或标识搜索…');
     this.emptyStateText =
       problems.length === 0
-        ? 'Open the LeetCode problem browser at least once to populate the index.'
-        : 'No matching problems.';
+        ? '请先打开一次 LeetCode 题库，加载题目索引。'
+        : '没有匹配的题目。';
     this.limit = QUICK_SEARCH_LIMIT;
   }
 

@@ -1,3 +1,4 @@
+import { normalizeHeadingLine, persistedHeading } from '../notes/noteHeadings';
 // src/contest/ContestScratchManager.ts
 // Manages ephemeral scratch .md files for contest code editing.
 // Files live in the vault at a hidden path so Obsidian can open them in
@@ -29,13 +30,13 @@ function buildScratchContent(problem: ContestProblemState, contentMd?: string): 
   lines.push(`lc-language: ${problem.language}`);
   lines.push('---');
   lines.push(`# ${problem.title}`);
-  lines.push('## Problem');
+  lines.push(persistedHeading('## Problem'));
   lines.push('');
   if (contentMd) {
     lines.push(contentMd);
   }
   lines.push('');
-  lines.push('## Code');
+  lines.push(persistedHeading('## Code'));
   lines.push('');
   lines.push('```' + fenceTag);
   lines.push(problem.code || '');
@@ -45,7 +46,7 @@ function buildScratchContent(problem: ContestProblemState, contentMd?: string): 
 }
 
 export function extractCodeFromScratch(content: string): string | null {
-  const match = content.match(/^## Code\s*\n+```[^\n]*\n([\s\S]*?)^```/m);
+  const match = content.split('\n').map(line => normalizeHeadingLine(line) === '## Code' ? '## Code' : line).join('\n').match(/^## Code\s*\n+```[^\n]*\n([\s\S]*?)^```/m);
   return match ? match[1]!.trimEnd() : null;
 }
 

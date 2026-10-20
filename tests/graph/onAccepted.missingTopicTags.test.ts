@@ -64,11 +64,11 @@ describe('KnowledgeGraphWriter.onAccepted — missing topicTags cache (Pitfall 1
 
     // Frontmatter wrote.
     const fm = deps.vault.getFrontmatter('LeetCode/1-two-sum.md')!;
-    expect(fm['lc-status']).toBe('accepted');
+    expect(fm['lc-status']).toBe('已完成');
 
     // Body wrote — ## Techniques present despite downstream stub failure.
     const body = deps.vault.getContent('LeetCode/1-two-sum.md') ?? '';
-    expect(body).toContain('## Techniques');
+    expect(body).toContain('## 解题技巧');
     expect(body).toContain('[[Hash Table]]');
   });
 
@@ -107,11 +107,11 @@ describe('KnowledgeGraphWriter.onAccepted — missing topicTags cache (Pitfall 1
 
     // Frontmatter wrote.
     const fm = deps.vault.getFrontmatter('LeetCode/1-two-sum.md')!;
-    expect(fm['lc-status']).toBe('accepted');
+    expect(fm['lc-status']).toBe('已完成');
 
     // ## Techniques body written using derived names.
     const body = deps.vault.getContent('LeetCode/1-two-sum.md') ?? '';
-    expect(body).toContain('## Techniques');
+    expect(body).toContain('## 解题技巧');
     expect(body).toContain('[[Hash Table]]');
     expect(body).toContain('[[Array]]');
 
@@ -120,8 +120,8 @@ describe('KnowledgeGraphWriter.onAccepted — missing topicTags cache (Pitfall 1
     const stubPaths = deps.vault.spies.create.mock.calls.map((c) => c[0]);
     expect(stubPaths).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/Techniques\/Hash Table\.md$/),
-        expect.stringMatching(/Techniques\/Array\.md$/),
+        expect.stringMatching(/techniques\/Hash Table\.md$/),
+        expect.stringMatching(/techniques\/Array\.md$/),
       ]),
     );
   });
@@ -157,10 +157,10 @@ describe('KnowledgeGraphWriter.onAccepted — missing topicTags cache (Pitfall 1
     await writer.onAccepted(ctx as never, acceptedTerminal as never);
 
     const fm = deps.vault.getFrontmatter('LeetCode/1-two-sum.md')!;
-    expect(fm['lc-status']).toBe('accepted');
+    expect(fm['lc-status']).toBe('已完成');
 
     const body = deps.vault.getContent('LeetCode/1-two-sum.md') ?? '';
-    expect(body).not.toContain('## Techniques');
+    expect(body).not.toContain('## 解题技巧');
     expect(deps.vault.spies.create).not.toHaveBeenCalled();
   });
 });

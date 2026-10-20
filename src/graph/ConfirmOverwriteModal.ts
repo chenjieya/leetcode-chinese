@@ -49,18 +49,18 @@ export class ConfirmOverwriteModal extends Modal {
   private render(): void {
     clear(this.contentEl);
     if (this.titleEl) {
-      setText(this.titleEl, 'Overwrite current code?');
+      setText(this.titleEl, '覆盖当前代码？');
     }
     const body = appendEl(this.contentEl, 'div', 'leetcode-submissions-confirm-body');
     const p = appendEl(body, 'p');
     setText(p,
-      'Your current ## Code block will be replaced with this submission. Continue?');
+      '当前代码章节将被这次提交的代码替换，是否继续？');
 
     const footer = appendEl(this.contentEl, 'div',
       'leetcode-submissions-footer leetcode-submissions-action-row');
 
     const cancelBtn = appendEl(footer, 'button');
-    setText(cancelBtn, 'Cancel');
+    setText(cancelBtn, '取消');
     cancelBtn.addEventListener('click', () => {
       this.settle(false);
       this.close();
@@ -74,7 +74,7 @@ export class ConfirmOverwriteModal extends Modal {
     }
 
     const overwriteBtn = appendEl(footer, 'button', 'mod-warning');
-    setText(overwriteBtn, 'Overwrite');
+    setText(overwriteBtn, '覆盖');
     overwriteBtn.addEventListener('click', () => {
       this.settle(true);
       this.close();

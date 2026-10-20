@@ -7,12 +7,12 @@ describe('injectCodeSection — idempotent path (SOLVE-02, D-06/D-07)', () => {
   it('inserts ## Code section between ## Problem and ## Notes when missing', () => {
     const body = '## Problem\nA problem.\n\n## Notes\nMy notes.\n';
     const out = injectCodeSection(body, OPTS);
-    expect(out).toContain('## Code');
+    expect(out).toContain('## 代码');
     // Phase 22 v1.3: codeBlockFor emits the ```leetcode-solve opener regardless of langSlug.
     expect(out).toContain('```leetcode-solve');
     expect(out).toContain('def solve():');
     const problemIdx = out.indexOf('## Problem');
-    const codeIdx = out.indexOf('## Code');
+    const codeIdx = out.indexOf('## 代码');
     const notesIdx = out.indexOf('## Notes');
     expect(codeIdx).toBeGreaterThan(problemIdx);
     expect(notesIdx).toBeGreaterThan(codeIdx);
@@ -64,7 +64,7 @@ describe('injectCodeSection — idempotent path (SOLVE-02, D-06/D-07)', () => {
   it('inserts at EOF when neither ## Problem nor ## Notes exist', () => {
     const body = 'Just a free-form note.\n';
     const out = injectCodeSection(body, OPTS);
-    expect(out).toContain('## Code');
+    expect(out).toContain('## 代码');
     // Phase 22 v1.3: codeBlockFor emits ```leetcode-solve regardless of langSlug.
     expect(out).toContain('```leetcode-solve');
   });
@@ -79,7 +79,7 @@ describe('injectCodeSection — idempotent path (SOLVE-02, D-06/D-07)', () => {
   it('handles ## Problem only (no ## Notes) — inserts after ## Problem body', () => {
     const body = '## Problem\nA problem.\n';
     const out = injectCodeSection(body, OPTS);
-    expect(out).toContain('## Code');
+    expect(out).toContain('## 代码');
     // Phase 22 v1.3: codeBlockFor emits ```leetcode-solve regardless of langSlug.
     expect(out).toContain('```leetcode-solve');
   });
@@ -135,7 +135,7 @@ describe('injectCodeSection — fenceKind dispatch (Plan 21-03 v13-emit, D-emit-
       langSlug: 'python3',
       fenceKind: 'leetcode-solve',
     });
-    expect(out).toContain('## Code');
+    expect(out).toContain('## 代码');
     // Phase 22 v1.3: codeBlockFor emits ```leetcode-solve regardless of langSlug.
     expect(out).toContain('```leetcode-solve');
   });
@@ -304,7 +304,7 @@ describe('injectCodeSection — WR-07-fix ## Code-scoped fence index (Plan 21-07
     // The stray ```leetcode-solve in ## Notes is preserved.
     expect(out).toContain('```leetcode-solve\nfencey\n```');
     // The legacy path creates a ## Code section.
-    expect(out).toContain('## Code');
+    expect(out).toContain('## 代码');
     // Phase 22 v1.3: codeBlockFor emits ```leetcode-solve regardless of langSlug.
     expect(out).toContain('```leetcode-solve');
     expect(out).toContain('NEW');

@@ -225,6 +225,6 @@ describe('SubmissionHistoryStore', () => {
     expect(fetchHistory).toHaveBeenCalledWith('two-sum');
     const contentEl = (modal as unknown as { contentEl: { textContent: string } }).contentEl;
     // Row rendered — verdict chip displays "Accepted".
-    expect(contentEl.textContent).toContain('Accepted');
+    expect(contentEl.textContent).toContain('通过');
   });
 });

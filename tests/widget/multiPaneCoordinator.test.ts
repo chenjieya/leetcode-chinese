@@ -254,8 +254,8 @@ describe('Phase 20 Plan 20-04 — registerMultiPaneCoordinator (multi-pane affor
     expect(overlay).not.toBeNull();
     const cta = overlay!.querySelector('.lc-takeover-cta') as HTMLButtonElement;
     expect(cta).not.toBeNull();
-    expect(cta.textContent).toBe('Click to take over');
-    expect(cta.getAttribute('title')).toContain('take over');
+    expect(cta.textContent).toBe('点击接管编辑');
+    expect(cta.getAttribute('title')).toContain('接管');
     expect(a.container.getAttribute('data-pane-state')).toBe('peer');
 
     real('active');

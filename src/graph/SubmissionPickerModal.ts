@@ -106,7 +106,7 @@ export class SubmissionPickerModal extends Modal {
     addClass(this.contentEl, 'leetcode-submissions');
     addClass(this.contentEl, 'leetcode-submissions-picker');
     if (this.titleEl) {
-      setText(this.titleEl, `Past submissions — ${this.deps.title}`);
+      setText(this.titleEl, `历史提交 — ${this.deps.title}`);
     }
     void this.loadAndRender();
   }
@@ -171,7 +171,7 @@ export class SubmissionPickerModal extends Modal {
     const body = appendEl(this.contentEl, 'div', 'leetcode-submissions-body');
     body.setAttribute('aria-live', 'polite');
     const p = appendEl(body, 'p', 'leetcode-submissions-loading');
-    setText(p, 'Loading submissions…');
+    setText(p, '正在加载提交记录…');
   }
 
   private renderEmpty(): void {
@@ -180,7 +180,7 @@ export class SubmissionPickerModal extends Modal {
     body.setAttribute('aria-live', 'polite');
     const p = appendEl(body, 'p', 'leetcode-submissions-empty');
     // D-06 locked copy — UI-SPEC §Notice strings.
-    setText(p, 'No submissions yet.');
+    setText(p, '暂无提交记录。');
   }
 
   private renderError(): void {
@@ -189,7 +189,7 @@ export class SubmissionPickerModal extends Modal {
     body.setAttribute('aria-live', 'polite');
     const p = appendEl(body, 'p', 'leetcode-submissions-error');
     // D-06: inline error, not a Notice. Copy locked by UI-SPEC.
-    setText(p, "Couldn't load submissions. Check your connection.");
+    setText(p, "无法加载提交记录，请检查网络连接。");
   }
 
   private renderRows(rows: SubmissionRow[]): void {
@@ -377,10 +377,10 @@ function fireSessionExpiredNotice(login: () => void | Promise<void> = () => unde
       // Obsidian's Node.createSpan/createEl create AND append; call on the
       // fragment so they append to it, not to the Document (Plan 20-10 hotfix).
       const copy = frag.createSpan();
-      copy.textContent = 'LeetCode session expired. Log in again.';
+      copy.textContent = '力扣登录已过期，请重新登录。';
       const btn = frag.createEl('button');
       btn.className = 'leetcode-notice-action mod-cta';
-      btn.textContent = 'Log in';
+      btn.textContent = '登录';
       btn.addEventListener('click', () => { void Promise.resolve(login()).catch(() => undefined); });
       new Ctor(frag, SESSION_EXPIRED_NOTICE_MS);
       return;

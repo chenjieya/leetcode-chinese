@@ -209,7 +209,7 @@ function runCredentialProcess(value: string): { stdout: string; stderr: string }
 
   // Spawn failure (e.g., ENOENT — command not found)
   if (result.error) {
-    throw new Error(`credential_process spawn failed: ${result.error.code || 'unknown error'}`);
+    throw new Error(`credential_process spawn failed: ${result.error.code || '未知错误'}`);
   }
 
   // Non-zero exit

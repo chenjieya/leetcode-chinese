@@ -70,11 +70,11 @@ describe('SubmissionPickerModal (D-03, D-05, D-06)', () => {
     expect(first).toBeDefined();
     const arg = first!.arg;
     const hasLockedCopy =
-      (typeof arg === 'string' && arg.includes('LeetCode session expired. Log in again.')) ||
+      (typeof arg === 'string' && arg.includes('力扣登录已过期，请重新登录。')) ||
       (arg instanceof DocumentFragment && (() => {
         const host = document.createElement('div');
         host.appendChild(arg.cloneNode(true));
-        return host.textContent?.includes('LeetCode session expired. Log in again.') === true;
+        return host.textContent?.includes('力扣登录已过期，请重新登录。') === true;
       })());
     expect(hasLockedCopy).toBe(true);
   });
@@ -93,7 +93,7 @@ describe('SubmissionPickerModal (D-03, D-05, D-06)', () => {
 
     // The picker's empty-state DOM must contain the exact placeholder string.
     const contentEl = (modal as unknown as { contentEl: { textContent: string } }).contentEl;
-    expect(contentEl.textContent).toContain('No submissions yet.');
+    expect(contentEl.textContent).toContain('暂无提交记录。');
   });
 
   it('network error renders inline', async () => {
@@ -112,7 +112,7 @@ describe('SubmissionPickerModal (D-03, D-05, D-06)', () => {
 
     const contentEl = (modal as unknown as { contentEl: { textContent: string } }).contentEl;
     // D-06: inline error, NOT a Notice. UI-SPEC pins the copy.
-    expect(contentEl.textContent).toContain("Couldn't load submissions.");
+    expect(contentEl.textContent).toContain("无法加载提交记录");
   });
 });
 

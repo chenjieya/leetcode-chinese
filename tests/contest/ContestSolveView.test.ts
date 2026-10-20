@@ -215,7 +215,7 @@ describe('ContestSolveView', () => {
       const leaf = makeLeaf();
       const view = new ContestSolveView(leaf as never, plugin as never);
       await view.setState({ problemIdx: 0 }, { history: false });
-      expect(view.getDisplayText()).toBe('Contest: 1. Two Sum');
+      expect(view.getDisplayText()).toBe('竞赛：1. Two Sum');
     });
   });
 

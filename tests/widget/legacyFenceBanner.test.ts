@@ -74,7 +74,7 @@ describe('mountLegacyFenceBanner', () => {
 
     const button = host.querySelector('.leetcode-migration-banner button');
     expect(button).not.toBeNull();
-    expect(button!.textContent).toBe('Migrate now');
+    expect(button!.textContent).toBe('立即迁移');
 
     // Read-only <pre><code> renders the source (byte-exact in Test 4).
     const pre = host.querySelector('pre');
@@ -147,7 +147,7 @@ describe('mountLegacyFenceBanner', () => {
     // Banner copy reflects in-flight state.
     const copy = host.querySelector('.leetcode-migration-banner__copy');
     expect(copy).not.toBeNull();
-    expect(copy!.textContent).toBe('Migrating note to v1.3 format...');
+    expect(copy!.textContent).toBe('正在迁移笔记到新版格式…');
   });
 
   it("Test 5: mode='read-only-legacy' renders <pre><code> only, no banner", () => {
@@ -193,7 +193,7 @@ describe('mountLegacyFenceBanner', () => {
     mountLegacyFenceBanner(host, 'pass', file as never, plugin as never, 'manual-prompt');
     const copy = host.querySelector('.leetcode-migration-banner__copy');
     expect(copy).not.toBeNull();
-    expect(copy!.textContent).toBe('This note uses the v1.2 format.');
+    expect(copy!.textContent).toBe('这篇笔记仍使用旧版格式。');
   });
 
   it("Test 8: defaultLanguage falls back to 'python3' when settings getter is undefined", async () => {

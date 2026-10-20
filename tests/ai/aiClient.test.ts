@@ -220,7 +220,7 @@ describe('Phase 07 AIClient — invoke', () => {
     const settings = makeMockSettings({ overrides: { getActiveAIProvider: () => null } });
     const client = new AIClient(settings as never);
     await expect(client.invoke({ prompt: 'hi' } as never)).rejects.toThrow(
-      /No AI provider configured/,
+      /尚未配置 AI 服务/,
     );
   });
 

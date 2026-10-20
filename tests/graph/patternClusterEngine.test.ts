@@ -48,6 +48,24 @@ function makeMockFile(path = 'LeetCode/two-sum.md', basename = 'Two Sum') {
 // ── PatternClusterEngine Tests ────────────────────────────────────────────────
 
 describe('PatternClusterEngine', () => {
+  it('显式重新生成可更新已有分类的英文变式，普通重复通过仍复用分类', async () => {
+    const path = 'LeetCode/two-sum.md';
+    const m = makeMockVaultApp({ [path]: '## Notes\n个人笔记\n## Related Variants\nold English reason\n' });
+    m.seedFrontmatter(path, { 'lc-pattern': ['Two Pointers'], 'lc-difficulty': 'Easy' });
+    const aiClient = makeAIClient();
+    const engine = new PatternClusterEngine({
+      app: m.app as never, aiClient: aiClient as never,
+      settings: makeSettings() as never, hubWriter: makeHubWriter() as never,
+    });
+    await engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>题面</p>', 'solution', 'python3');
+    expect(aiClient.invoke).not.toHaveBeenCalled();
+    expect(await engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>题面</p>', 'solution', 'python3', { force: true })).toBe(true);
+    expect(aiClient.invoke).toHaveBeenCalledTimes(1);
+    expect(m.getContent(path)).toContain('暂无通过题库校验的关联题目。');
+    expect(m.getContent(path)).toContain('个人笔记');
+    expect(m.getContent(path)).not.toContain('old English reason');
+  });
+
   it('gates on autoAIKnowledgeGraph setting (returns early when disabled)', async () => {
     const m = makeMockVaultApp({});
     const aiClient = makeAIClient();
@@ -156,7 +174,7 @@ describe('PatternClusterEngine', () => {
 
     await engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>desc</p>', 'code', 'python3');
     const body = m.getContent('LeetCode/two-sum.md')!;
-    expect(body).toContain('- [[Two Pointers]]');
+    expect(body).toContain('- [[Two Pointers|双指针]]');
     expect(body).not.toContain('[[Array]]');
     expect(body).not.toContain('[[Hash Table]]');
   });
@@ -181,8 +199,8 @@ describe('PatternClusterEngine', () => {
 
     await engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>desc</p>', 'code', 'python3');
     const body = m.getContent('LeetCode/two-sum.md')!;
-    expect(body).toContain('## Related Variants');
-    expect(body).toContain('[[1-3sum|3sum]]');
+    expect(body).toContain('## 相关变式');
+    expect(body).toContain('[[LeetCode/1. 3sum|3sum]]');
   });
 
   it('drops unknown slugs from variants (validated against getProblemDetail)', async () => {
@@ -209,7 +227,7 @@ describe('PatternClusterEngine', () => {
     await engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>desc</p>', 'code', 'python3');
     const body = m.getContent('LeetCode/two-sum.md')!;
     expect(body).not.toContain('unknown-problem');
-    expect(body).toContain('[[1-3sum|3sum]]');
+    expect(body).toContain('[[LeetCode/1. 3sum|3sum]]');
   });
 
   it('respects featureFlags.lookAheadEdges gate for lookAhead edges', async () => {
@@ -258,7 +276,7 @@ describe('PatternClusterEngine', () => {
 
     await engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>desc</p>', 'code', 'python3');
     const body = m.getContent('LeetCode/two-sum.md')!;
-    expect(body).toContain('[[1-valid-anagram|valid-anagram]]');
+    expect(body).toContain('[[LeetCode/1. valid-anagram|valid-anagram]]');
   });
 
   it('calls addCostLedger after successful invoke', async () => {
@@ -296,7 +314,7 @@ describe('PatternClusterEngine', () => {
     // Should not throw
     await expect(
       engine.onAccepted(makeMockFile() as never, 'two-sum', '<p>desc</p>', 'code', 'python3'),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(false);
   });
 
   it('shows OtherPatternModal when parsed.pattern === OTHER and uses result', async () => {

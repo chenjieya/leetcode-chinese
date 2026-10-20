@@ -3,7 +3,7 @@
 // Phase 11 Plan 02 Task 1 — Hub note CRUD + reconcile for AI Knowledge Graph.
 //
 // Responsibilities:
-//   - Create hub notes at {problemsFolder}/Patterns/{pattern}.md
+//   - Create hub notes at {problemsFolder}/patterns/{pattern}.md
 //   - Append new entries to existing hub notes (idempotent)
 //   - Reconcile: scan all notes with lc-pattern frontmatter and rebuild hubs
 //
@@ -17,7 +17,7 @@
 
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
-import { normalizePatternName } from './patternTaxonomy';
+import { normalizePatternName, patternDisplayName } from './patternTaxonomy';
 import { sanitizeHubFilename } from './hubFilename';
 import { logger } from '../shared/logger';
 
@@ -69,7 +69,7 @@ export interface ClusterHubWriterDeps {
 }
 
 /**
- * Manages pattern hub notes at {problemsFolder}/Patterns/{pattern}.md.
+ * Manages pattern hub notes at {problemsFolder}/patterns/{pattern}.md.
  * Hub notes contain difficulty-grouped tables listing all problems classified
  * into that pattern.
  */
@@ -88,7 +88,7 @@ export class ClusterHubWriter {
    */
   async ensureHub(patternName: string, firstEntry: HubEntry): Promise<void> {
     const normalized = normalizePatternName(patternName);
-    const folderPath = `${this.problemsFolder}/Patterns`;
+    const folderPath = `${this.problemsFolder}/patterns`;
     const filePath = `${folderPath}/${sanitizeHubFilename(normalized)}.md`;
 
     // Check existence
@@ -120,7 +120,7 @@ export class ClusterHubWriter {
    */
   async appendEntry(patternName: string, entry: HubEntry): Promise<void> {
     const normalized = normalizePatternName(patternName);
-    const filePath = `${this.problemsFolder}/Patterns/${sanitizeHubFilename(normalized)}.md`;
+    const filePath = `${this.problemsFolder}/patterns/${sanitizeHubFilename(normalized)}.md`;
     const file = narrowToTFile(this.app.vault.getAbstractFileByPath(filePath));
     if (!file) {
       logger.debug('ClusterHubWriter.appendEntry: hub not found, calling ensureHub', { filePath });
@@ -153,10 +153,19 @@ export class ClusterHubWriter {
       const groups = new Map<string, HubEntry[]>();
       for (const file of prefixedFiles) {
         const cache = this.app.metadataCache.getFileCache(file);
-        const pattern = cache?.frontmatter?.['lc-pattern'] as string | undefined;
-        if (!pattern || pattern.length === 0) continue;
-
-        const normalized = normalizePatternName(pattern);
+        // 重新分类后旧模式可能已无成员，仍需刷新受管索引，避免残留旧题目链接。
+        const hubPattern: unknown = cache?.frontmatter?.['pattern'];
+        if (file.path.startsWith(`${this.problemsFolder}/patterns/`)
+          && cache?.frontmatter?.['lc-pattern-hub'] === true
+          && typeof hubPattern === 'string' && hubPattern.trim()) {
+          const normalized = normalizePatternName(hubPattern);
+          if (!groups.has(normalized)) groups.set(normalized, []);
+          continue;
+        }
+        const raw: unknown = cache?.frontmatter?.['lc-pattern'];
+        const patterns = (Array.isArray(raw) ? raw : [raw])
+          .filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+        if (patterns.length === 0) continue;
         const difficulty = (cache?.frontmatter?.['lc-difficulty'] as string) ?? 'Medium';
         const solvedDate = (cache?.frontmatter?.['lc-solved-date'] as string) ?? '';
 
@@ -169,14 +178,17 @@ export class ClusterHubWriter {
           solvedDate,
         };
 
-        const existing = groups.get(normalized) ?? [];
-        existing.push(entry);
-        groups.set(normalized, existing);
+        // 新版写入数组，旧笔记仍可能是单个字符串；一题可归属多个模式。
+        for (const normalized of new Set(patterns.map(normalizePatternName))) {
+          const existing = groups.get(normalized) ?? [];
+          existing.push(entry);
+          groups.set(normalized, existing);
+        }
       }
 
       // Rebuild each hub
       for (const [patternName, entries] of groups) {
-        const folderPath = `${this.problemsFolder}/Patterns`;
+        const folderPath = `${this.problemsFolder}/patterns`;
         const filePath = `${folderPath}/${sanitizeHubFilename(patternName)}.md`;
         const file = narrowToTFile(this.app.vault.getAbstractFileByPath(filePath));
 
@@ -237,18 +249,23 @@ function buildHubNoteBody(patternName: string, entries: HubEntry[]): string {
     `pattern: "${patternName}"`,
     '---',
     '',
-    `# ${patternName}`,
+    `# ${patternDisplayName(patternName)}`,
     '',
-    '### Easy',
+    '本页是算法模式的题目索引，按难度汇总已分类的题目；不包含自动生成的算法教程。',
     '',
+    '### 简单',
+    '',
+    ...(easy.length === 0 ? ['暂无题目。'] : []),
     ...easy.map((e) => `- [[${e.fileBasename}|${e.title}]]`),
     '',
-    '### Medium',
+    '### 中等',
     '',
+    ...(medium.length === 0 ? ['暂无题目。'] : []),
     ...medium.map((e) => `- [[${e.fileBasename}|${e.title}]]`),
     '',
-    '### Hard',
+    '### 困难',
     '',
+    ...(hard.length === 0 ? ['暂无题目。'] : []),
     ...hard.map((e) => `- [[${e.fileBasename}|${e.title}]]`),
     '',
   ];
@@ -265,15 +282,17 @@ function appendToHub(body: string, entry: HubEntry): string {
   if (body.includes(`[[${entry.fileBasename}|`)) return body;
 
   const lines = body.split('\n');
-  const sectionHeading = `### ${entry.difficulty}`;
+  const labels = { Easy: '简单', Medium: '中等', Hard: '困难' };
   const bullet = `- [[${entry.fileBasename}|${entry.title}]]`;
 
   // Find the difficulty section and append the bullet after existing items
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === sectionHeading) {
+    const label = lines[i]?.replace(/^#{1,6}\s+(?:\d+(?:\.\d+)*\.?\s+)?/, '').trim();
+    if (label === entry.difficulty || label === labels[entry.difficulty]) {
       let insertIdx = i + 1;
       // Skip blank lines after heading
       while (insertIdx < lines.length && lines[insertIdx]! === '') insertIdx++;
+      if (lines[insertIdx] === '暂无题目。') lines.splice(insertIdx, 1);
       // Skip existing bullet items
       while (insertIdx < lines.length && lines[insertIdx]!.startsWith('- [[')) insertIdx++;
       // Insert the new bullet

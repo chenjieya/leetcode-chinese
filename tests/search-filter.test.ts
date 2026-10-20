@@ -23,12 +23,12 @@ describe('ProblemListService search + filter (BROWSE-03, BROWSE-04 difficulty)',
     // "Two Sum" (id=1), "Add Two Numbers" (id=2), and "Median of Two Sorted Arrays" (id=4)
     // all contain the substring "two" — substring match (not word-boundary) is the
     // documented semantics (Plan 05 <behavior>, BROWSE-03 in RESEARCH.md).
-    expect(r.map((p) => p.id).sort((a, b) => a - b)).toEqual([1, 2, 4]);
+    expect(r.map((p) => p.id).sort((a, b) => Number(a) - Number(b))).toEqual([1, 2, 4]);
   });
 
   it('search matches id prefix', () => {
     const r = svc.search(FIXTURE, '1');
-    expect(r.map((p) => p.id).sort((a, b) => a - b)).toEqual([1, 12]);
+    expect(r.map((p) => p.id).sort((a, b) => Number(a) - Number(b))).toEqual([1, 12]);
   });
 
   it('search returns full list when term empty', () => {
@@ -51,7 +51,7 @@ describe('ProblemListService search + filter (BROWSE-03, BROWSE-04 difficulty)',
 
   it('filter by multiple difficulties (Easy + Hard)', () => {
     const r = svc.filter(FIXTURE, { difficulty: ['Easy', 'Hard'] });
-    expect(r.map((p) => p.id).sort((a, b) => a - b)).toEqual([1, 4]);
+    expect(r.map((p) => p.id).sort((a, b) => Number(a) - Number(b))).toEqual([1, 4]);
   });
 
   it('filter with empty opts returns full list', () => {

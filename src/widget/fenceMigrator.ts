@@ -1,3 +1,4 @@
+import { isCodeHeading, isSectionBoundary } from '../notes/noteHeadings';
 // src/widget/fenceMigrator.ts
 //
 // Phase 21 Plan 21-09 — frontmatter repair path for the asymmetric
@@ -41,7 +42,7 @@
 //      first fence inside has recognized LC langSlug + has closer + note
 //      does NOT already contain a `\`\`\`leetcode-solve` fence.
 //   2. writeBackup(app, file, slug, fileText) — async; writes a per-note
-//      sidecar to .obsidian/plugins/obsidian-leetcode/migration-backup-{slug}-
+//      sidecar to .obsidian/plugins/leetcode-chinese/migration-backup-{slug}-
 //      {ISO}/{slug}.md via app.vault.adapter.write. Returns the backup path.
 //   3. migrateLegacyFenceIfNeeded(app, file, opts?) — async orchestrator.
 //      6-step pipeline: settings gate → read → predicate → backup →
@@ -71,7 +72,7 @@
 //                 match closes the partial-failure retry path: when
 //                 vault.process throws AFTER writeBackup succeeded, the next
 //                 re-entry must NOT write a second backup. The pre-existence
-//                 helper lists `.obsidian/plugins/obsidian-leetcode/`,
+//                 helper lists `.obsidian/plugins/leetcode-chinese/`,
 //                 matches each folder against the SSoT regex, and skips
 //                 writeBackup when a folder for THIS slug already exists.
 //
@@ -112,14 +113,11 @@ import { logger } from '../shared/logger';
  * config dirs (`--config-dir` launch flag) work correctly.
  */
 function pluginDir(app: App): string {
-  return `${app.vault.configDir}/plugins/obsidian-leetcode`;
+  return `${app.vault.configDir}/plugins/leetcode-chinese`;
 }
 
 // Sentinel string for resolveLangSlug — fenceTag → sentinel means unknown tag.
 const SLUG_SENTINEL = '__sentinel__';
-
-const H2_CODE_RE = /^\s*##\s+Code\s*$/;
-const H2_ANY_RE = /^\s*##\s+\S/;
 const FENCE_OPENER_RE = /^\s*```([A-Za-z0-9_+#-]*)\s*$/;
 const FENCE_CLOSER_RE = /^\s*```\s*$/;
 const LC_SOLVE_OPENER_RE = /^\s*```leetcode-solve\b/;
@@ -154,13 +152,15 @@ export function findFirstLeetCodeSolveFenceIndexInCodeSection(
 ): number | null {
   const lines = noteText.split(/\r?\n/);
   let inCodeSection = false;
+  let codeHeading = '## Code';
   let lcOpenerCount = 0;
   for (const line of lines) {
-    if (H2_CODE_RE.test(line)) {
+    if (isCodeHeading(line)) {
+      codeHeading = line;
       inCodeSection = true;
       continue;
     }
-    if (H2_ANY_RE.test(line)) {
+    if (isSectionBoundary(line, codeHeading)) {
       inCodeSection = false;
       continue;
     }
@@ -182,7 +182,7 @@ export function findFirstLeetCodeSolveFenceIndexInCodeSection(
  * `countLeetCodeSolveFenceOpeners` in `./fenceLocator.ts` (which keeps its
  * whole-note scope; other call sites depend on whole-note semantics).
  *
- * Walks lines forward; sets `inCodeSection = true` upon `H2_CODE_RE.test(line)`;
+ * Walks lines forward; sets `inCodeSection = true` upon `isCodeHeading(line)`;
  * sets `inCodeSection = false` upon any other H2 heading. Counts only when
  * `inCodeSection === true`. CRLF-tolerant via /\r?\n/.
  *
@@ -200,13 +200,15 @@ export function countLeetCodeSolveFenceOpenersInCodeSection(
 ): number {
   const lines = noteText.split(/\r?\n/);
   let inCodeSection = false;
+  let codeHeading = '## Code';
   let count = 0;
   for (const line of lines) {
-    if (H2_CODE_RE.test(line)) {
+    if (isCodeHeading(line)) {
+      codeHeading = line;
       inCodeSection = true;
       continue;
     }
-    if (H2_ANY_RE.test(line)) {
+    if (isSectionBoundary(line, codeHeading)) {
       inCodeSection = false;
       continue;
     }
@@ -260,13 +262,15 @@ export function isMigrationCandidate(
   // Clauses 2, 3, 4 — single forward scan.
   const lines = noteText.split(/\r?\n/);
   let inCodeSection = false;
+  let codeHeading = '## Code';
   for (let i = 0; i < lines.length; i++) {
     const text = lines[i] ?? '';
-    if (H2_CODE_RE.test(text)) {
+    if (isCodeHeading(text)) {
+      codeHeading = text;
       inCodeSection = true;
       continue;
     }
-    if (H2_ANY_RE.test(text)) {
+    if (isSectionBoundary(text, codeHeading)) {
       inCodeSection = false;
       continue;
     }
@@ -284,7 +288,7 @@ export function isMigrationCandidate(
     // Clause 4 — scan forward for closer before next H2 / EOF.
     for (let j = i + 1; j < lines.length; j++) {
       const t = lines[j] ?? '';
-      if (H2_ANY_RE.test(t)) return false;
+      if (isSectionBoundary(t, codeHeading)) return false;
       if (FENCE_CLOSER_RE.test(t)) return true;
     }
     return false; // EOF before closer
@@ -295,7 +299,7 @@ export function isMigrationCandidate(
 
 /**
  * Build the canonical backup folder path:
- *   .obsidian/plugins/obsidian-leetcode/migration-backup-{slug}-{ts}
+ *   .obsidian/plugins/leetcode-chinese/migration-backup-{slug}-{ts}
  * where {ts} is the current ISO timestamp sanitized for cross-OS filesystem
  * safety: `:` → `-`, milliseconds stripped (D-backup-01; Pitfall 3).
  *
@@ -311,7 +315,7 @@ function buildBackupPaths(slug: string): { dir: string; file: string } {
     .toISOString()
     .replace(/:/g, '-')
     .replace(/\.\d{3}Z$/, 'Z');
-  const dir = `.obsidian/plugins/obsidian-leetcode/migration-backup-${slug}-${ts}`;
+  const dir = `.obsidian/plugins/leetcode-chinese/migration-backup-${slug}-${ts}`;
   const file = `${dir}/${slug}.md`;
   return { dir, file };
 }
@@ -333,7 +337,7 @@ function buildBackupPaths(slug: string): { dir: string; file: string } {
  * (Pattern S-05) covers any propagation; this helper's internal catch is
  * defensive layering for the common first-install case.
  *
- * Strips the `.obsidian/plugins/obsidian-leetcode/` prefix from each
+ * Strips the `.obsidian/plugins/leetcode-chinese/` prefix from each
  * `adapter.list` result so `BACKUP_FOLDER_RE` matches the bare folder
  * name (the regex is anchored on `^migration-backup-`, not on the prefix).
  */
@@ -366,7 +370,7 @@ async function backupAlreadyExistsForSlug(
  * `migrateLegacyFenceIfNeeded` BEFORE any rewrite (T-21-backup invariant).
  *
  * Path shape (D-backup-01):
- *   .obsidian/plugins/obsidian-leetcode/migration-backup-{slug}-{ISO}/{slug}.md
+ *   .obsidian/plugins/leetcode-chinese/migration-backup-{slug}-{ISO}/{slug}.md
  *
  * Uses app.vault.adapter.write (raw filesystem) rather than app.vault.create
  * — backups are plugin-internal, NOT vault-visible. The `:` in the ISO
@@ -565,15 +569,17 @@ export function isFrontmatterRepairCandidate(
   // structure but inlined here so the closer-presence check shares state.
   const lines = noteText.split(/\r?\n/);
   let inCodeSection = false;
+  let codeHeading = '## Code';
   let sawCodeHeading = false;
   for (let i = 0; i < lines.length; i++) {
     const text = lines[i] ?? '';
-    if (H2_CODE_RE.test(text)) {
+    if (isCodeHeading(text)) {
+      codeHeading = text;
       inCodeSection = true;
       sawCodeHeading = true;
       continue;
     }
-    if (H2_ANY_RE.test(text)) {
+    if (isSectionBoundary(text, codeHeading)) {
       inCodeSection = false;
       continue;
     }
@@ -582,7 +588,7 @@ export function isFrontmatterRepairCandidate(
       // Clause 4 — scan forward for closer before next H2 / EOF.
       for (let j = i + 1; j < lines.length; j++) {
         const t = lines[j] ?? '';
-        if (H2_ANY_RE.test(t)) return false;
+        if (isSectionBoundary(t, codeHeading)) return false;
         if (FENCE_CLOSER_RE.test(t)) return true;
       }
       return false; // EOF before closer

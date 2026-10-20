@@ -66,7 +66,7 @@ describe('KnowledgeGraphWriter.onAccepted — re-AC (D-24)', () => {
     // legacy runtime/memory frontmatter writes are no longer emitted.
     // UAT 2026-05-13: lc-solved-date write removed — no production reader.
     expect(fm['lc-language']).toBe('java');
-    expect(fm['lc-status']).toBe('accepted');
+    expect(fm['lc-status']).toBe('已完成');
     expect(fm['lc-solved-date']).toBeUndefined();
   });
 });

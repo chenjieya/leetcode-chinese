@@ -38,8 +38,8 @@ import {
 
 } from './pollingOrchestrator';
 
-const BASE_URL = 'https://leetcode.com';
-const USER_AGENT = 'Mozilla/5.0 (compatible; obsidian-leetcode-plugin)';
+const BASE_URL = 'https://leetcode.cn';
+const USER_AGENT = 'Mozilla/5.0 (compatible; leetcode-chinese-plugin)';
 
 /** Minimal settings facade the orchestrator consumes. Matches the Wave 0
  *  FakeSettings contract in tests/solve/mocks/fakeSettingsStore.ts so tests
@@ -236,7 +236,7 @@ export class SubmissionOrchestrator {
     // Gate 1 — active problem note required.
     if (!this.deps.slug) {
        
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇力扣题目笔记。', 4000);
       return;
     }
     const slug = this.deps.slug;
@@ -245,7 +245,7 @@ export class SubmissionOrchestrator {
     if (this.inFlight) {
        
       new Notice(
-        'A submission is already in progress. Cancel it first or wait for the verdict.',
+        '正在提交，请先取消或等待判题结果。',
         6000,
       );
       return;
@@ -264,7 +264,7 @@ export class SubmissionOrchestrator {
       if (raw.trim().length === 0) {
 
         new Notice(
-          'Add code to your solution before running.',
+          '请先填写解答代码，再运行或提交。',
           6000,
         );
         return;
@@ -294,7 +294,7 @@ export class SubmissionOrchestrator {
       if (!extracted) {
 
         new Notice(
-          'No code block found. Add a fenced block with your solution.',
+          '未找到解答代码块，请先在代码章节填写解答。',
           6000,
         );
         return;

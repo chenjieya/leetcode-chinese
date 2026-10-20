@@ -94,7 +94,7 @@ describe('Phase 07 AIPROV-05 — LC modules do not import obsidianFetch', () => 
     for (const f of allTs) {
       const content = await readFileSafe(f);
       if (content && /export\s+function\s+obsidianFetch\b/.test(content)) {
-        definers.push(f);
+        definers.push(f.replace(/\\/g, '/'));
       }
     }
     expect(definers).toEqual(['src/ai/obsidianFetch.ts']);

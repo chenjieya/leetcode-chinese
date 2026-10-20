@@ -75,10 +75,10 @@ describe('mountActionRow — DOM shape (D-action-03 lock + UI-SPEC §1)', () => 
     expect(row.children[0]!.classList.contains('leetcode-language-chevron-wrapper')).toBe(true);
     // Child[1] = Retrieve icon-button
     expect(row.children[1]!.classList.contains('leetcode-code-action-icon')).toBe(true);
-    expect((row.children[1] as HTMLButtonElement).title).toBe('Retrieve last submission');
+    expect((row.children[1] as HTMLButtonElement).title).toBe("取回最近一次提交");
     // Child[2] = Reset icon-button
     expect(row.children[2]!.classList.contains('leetcode-code-action-icon')).toBe(true);
-    expect((row.children[2] as HTMLButtonElement).title).toBe('Reset to starter code');
+    expect((row.children[2] as HTMLButtonElement).title).toBe("重置为初始代码");
     // Child[3] = AI Solution
     expect(row.children[3]!.classList.contains('leetcode-code-action-ai-solution')).toBe(true);
     // Child[4] = Run
@@ -139,7 +139,7 @@ describe('mountActionRow — adapter routing (*FromActive → *FromWidget per D-
     const { row } = mountActionRow(ctl as never, { path: 'p' } as never, 'python3', document);
 
     const resetBtn = Array.from(row.querySelectorAll<HTMLButtonElement>('button.leetcode-code-action-icon'))
-      .find((b) => b.title === 'Reset to starter code');
+      .find((b) => b.title === "重置为初始代码");
     expect(resetBtn).toBeDefined();
     resetBtn!.click();
     expect(ctl.plugin.resetFromWidget).toHaveBeenCalledTimes(1);
@@ -151,7 +151,7 @@ describe('mountActionRow — adapter routing (*FromActive → *FromWidget per D-
     const { row } = mountActionRow(ctl as never, { path: 'p' } as never, 'python3', document);
 
     const retrieveBtn = Array.from(row.querySelectorAll<HTMLButtonElement>('button.leetcode-code-action-icon'))
-      .find((b) => b.title === 'Retrieve last submission');
+      .find((b) => b.title === "取回最近一次提交");
     expect(retrieveBtn).toBeDefined();
     retrieveBtn!.click();
     expect(ctl.plugin.retrieveLastSubmissionFromWidget).toHaveBeenCalledTimes(1);

@@ -67,7 +67,7 @@ describe('resetCodeWithConfirm helper (D-07)', () => {
     const body = m.getContent('LeetCode/1-two-sum.md')!;
     expect(body).toContain('class S: pass');
     expect(body).not.toContain('OLD');
-    expect(notices).toEqual(['Code reset to starter.']);
+    expect(notices).toEqual(['已恢复初始代码。']);
   });
 
   it('when fence is non-empty, force-injects starter + fires success Notice', async () => {
@@ -94,7 +94,7 @@ describe('resetCodeWithConfirm helper (D-07)', () => {
     const body = m.getContent('LeetCode/1-two-sum.md')!;
     expect(body).toContain('class S: pass');
     expect(body).not.toContain('OLD');
-    expect(notices).toEqual(['Code reset to starter.']);
+    expect(notices).toEqual(['已恢复初始代码。']);
   });
 
   it('when fence is empty, writes starter immediately (no confirm)', async () => {
@@ -120,7 +120,7 @@ describe('resetCodeWithConfirm helper (D-07)', () => {
     expect(m.spies.process).toHaveBeenCalledTimes(1);
     const body = m.getContent('LeetCode/1-two-sum.md')!;
     expect(body).toContain('class S: pass');
-    expect(notices).toEqual(['Code reset to starter.']);
+    expect(notices).toEqual(['已恢复初始代码。']);
   });
 
   it('when detail is null, falls back to empty starter (still fires Notice)', async () => {
@@ -141,7 +141,7 @@ describe('resetCodeWithConfirm helper (D-07)', () => {
     });
 
     expect(m.spies.process).toHaveBeenCalledTimes(1);
-    expect(notices).toEqual(['Code reset to starter.']);
+    expect(notices).toEqual(['已恢复初始代码。']);
   });
 });
 
@@ -431,10 +431,10 @@ describe('src/main.ts wiring (D-05, D-07 grep gates)', () => {
     expect(src).not.toMatch(/Insert starter code/);
   });
 
-  it('D-07: registers `reset-code` command with name "Reset code"', () => {
+  it("D-07: registers `reset-code` command with name \"重置代码\"", () => {
     // id is quoted in the addCommand literal
     expect(src).toMatch(/id:\s*'reset-code'/);
-    expect(src).toMatch(/name:\s*'Reset code'/);
+    expect(src).toMatch(/name:\s*'重置代码'/);
   });
 
   it('D-06: registers workspace.on("file-open") via registerEvent', () => {

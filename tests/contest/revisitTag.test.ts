@@ -135,7 +135,7 @@ describe('#revisit tagging (CONTEST-08)', () => {
       settings: mockSettings,
     });
 
-    const fm = mockApp._frontmatters.get('LeetCode/202-attempted-problem.md');
+    const fm = mockApp._frontmatters.get('LeetCode/202. Attempted Problem.md');
     expect(fm).toBeDefined();
     expect(fm!.tags).toContain('revisit');
   });
@@ -149,7 +149,7 @@ describe('#revisit tagging (CONTEST-08)', () => {
       settings: mockSettings,
     });
 
-    const fm = mockApp._frontmatters.get('LeetCode/203-unsolved-problem.md');
+    const fm = mockApp._frontmatters.get('LeetCode/203. Unsolved Problem.md');
     expect(fm).toBeDefined();
     expect(fm!.tags).toContain('revisit');
   });
@@ -163,7 +163,7 @@ describe('#revisit tagging (CONTEST-08)', () => {
       settings: mockSettings,
     });
 
-    const fm = mockApp._frontmatters.get('LeetCode/201-accepted-problem.md');
+    const fm = mockApp._frontmatters.get('LeetCode/201. Accepted Problem.md');
     expect(fm).toBeDefined();
     // Should have lc-contest-id but NOT revisit
     expect(fm!['lc-contest-id']).toBe('weekly-contest-400');

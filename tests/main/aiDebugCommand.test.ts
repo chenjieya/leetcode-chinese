@@ -34,9 +34,9 @@ const REPO_ROOT = process.cwd();
 const SRC_MAIN = fs.readFileSync(path.join(REPO_ROOT, 'src/main.ts'), 'utf-8');
 
 describe('src/main.ts grep gates — Phase 08 Plan 04 wiring (AIDBG-01)', () => {
-  it("registers `ai-debug` palette command with verbatim label 'AI: Debug current code'", () => {
+  it("registers `ai-debug` palette command with verbatim label 'AI：调试当前代码'", () => {
     expect(SRC_MAIN).toMatch(/id:\s*'ai-debug'/);
-    expect(SRC_MAIN).toMatch(/name:\s*'AI: Debug current code'/);
+    expect(SRC_MAIN).toMatch(/name:\s*'AI：调试当前代码'/);
   });
 
   it('palette command ID has NO plugin-id prefix (clean ID per FOUND-03)', () => {
@@ -100,7 +100,7 @@ describe('src/main.ts grep gates — Phase 08 Plan 04 wiring (AIDBG-01)', () => 
   it('openAIDebug surfaces the locked no-provider Notice', () => {
     // Sentence case per eslint-plugin-obsidianmd ui/sentence-case rule —
     // 'settings' is lowercased.
-    expect(SRC_MAIN).toMatch(/'No AI provider configured\. Open settings → AI\.'/);
+    expect(SRC_MAIN).toMatch(/'尚未配置 AI 服务，请打开设置中的 AI 配置。'/);
   });
 
   it('aiDebugFromActive uses getActiveViewOfType(MarkdownView) — never workspace.activeLeaf', () => {

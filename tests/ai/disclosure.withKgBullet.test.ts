@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 
 const VERBATIM_BULLET =
-  'AI Knowledge Graph sends the problem statement and your accepted code for pattern classification';
+  'AI 知识图谱会发送题目内容和你已通过的代码，用于解题模式分类';
 
 describe('Phase 11 Plan 01 — withKgBullet factory', () => {
   it('returns a FRESH object; DISCLOSURE_BASE_COPY is unchanged', async () => {

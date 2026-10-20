@@ -19,7 +19,7 @@ More thoughts.
     expect(after).toContain('## Notes');
     expect(after).toContain('More thoughts.');
     // Regenerated ## Problem goes in at the top, above the user's sections.
-    expect(after).toContain('## Problem');
+    expect(after).toContain('## 题目');
     expect(after).toContain('REGENERATED STATEMENT');
   });
 });

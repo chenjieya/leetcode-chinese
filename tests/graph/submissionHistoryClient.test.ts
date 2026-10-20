@@ -78,7 +78,7 @@ describe('submissionHistoryClient (D-27, D-28, D-29, D-30)', () => {
       body: string;
       throw: boolean;
     };
-    expect(call.url).toBe('https://leetcode.com/graphql/');
+    expect(call.url).toBe('https://leetcode.cn/graphql/');
     expect(call.method).toBe('POST');
     expect(call.throw).toBe(false);
     expect(call.headers['content-type']).toBe('application/json');
@@ -108,10 +108,10 @@ describe('submissionHistoryClient (D-27, D-28, D-29, D-30)', () => {
   it('detail calls submissionDetails GraphQL', async () => {
     // Drive detailForSubmission against the live-captured GraphQL detail
     // fixture. Transport: POST /graphql/ with operationName='submissionDetails',
-    // query submissionDetails($submissionId: Int!). The submissionId variable
+    // query submissionDetails($submissionId: ID!). The submissionId variable
     // MUST be an Int (LC enforces) — client parses the id string and passes
     // a number. Referer MUST be /submissions/detail/{id}/ per D-29 revised.
-    const fixtureJson = loadDetailFixture('detail-ac.graphql');
+    const fixtureJson = loadDetailFixture('detail-cn.graphql');
     mockThrottledRequestUrl.mockResolvedValueOnce({
       status: 200,
       headers: { 'content-type': 'application/json' },
@@ -128,19 +128,19 @@ describe('submissionHistoryClient (D-27, D-28, D-29, D-30)', () => {
       headers: Record<string, string>;
       body: string;
     };
-    expect(call.url).toBe('https://leetcode.com/graphql/');
+    expect(call.url).toBe('https://leetcode.cn/graphql/');
     expect(call.method).toBe('POST');
-    expect(call.headers['referer']).toBe('https://leetcode.com/submissions/detail/123456789/');
+    expect(call.headers['referer']).toBe('https://leetcode.cn/submissions/detail/123456789/');
 
     const body = JSON.parse(call.body) as {
       operationName: string;
       query: string;
-      variables: { submissionId: number };
+      variables: { submissionId: string };
     };
     expect(body.operationName).toBe('submissionDetails');
-    expect(body.query).toContain('submissionDetails($submissionId: Int!)');
-    expect(body.variables.submissionId).toBe(123456789);
-    expect(typeof body.variables.submissionId).toBe('number');
+    expect(body.query).toContain('submissionDetails($submissionId: ID!)');
+    expect(body.variables.submissionId).toBe('123456789');
+    expect(typeof body.variables.submissionId).toBe('string');
 
     // Response shape — parsed submissionDetails object with expected keys.
     expect(detail).toBeDefined();

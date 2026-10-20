@@ -102,11 +102,11 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     noticeCalls.length = 0;
   });
 
-  it('emits "Pick an AI provider first." Notice (3000ms) when active provider is null', async () => {
+  it("emits \"请先选择 AI 服务提供商。\" Notice (3000ms) when active provider is null", async () => {
     const fake = makeFake({ active: null });
     await callTestActiveAIConnection(fake);
     expect(noticeCalls).toHaveLength(1);
-    expect(noticeCalls[0]).toEqual({ text: 'Pick an AI provider first.', duration: 3000 });
+    expect(noticeCalls[0]).toEqual({ text: "请先选择 AI 服务提供商。", duration: 3000 });
   });
 
   it('emits empty-key Notice for Anthropic and does NOT call probe', async () => {
@@ -115,7 +115,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     await callTestActiveAIConnection(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter an API key for Anthropic first.',
+      text: '请先填写 Anthropic 的 API 密钥。',
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     const fake = makeFake({ active: 'openai', cfg: makeProviderConfig({ apiKey: '' }), probe });
     await callTestActiveAIConnection(fake);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter an API key for OpenAI first.',
+      text: '请先填写 OpenAI 的 API 密钥。',
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -137,7 +137,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     const fake = makeFake({ active: 'openrouter', cfg: makeProviderConfig({ apiKey: '' }), probe });
     await callTestActiveAIConnection(fake);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter an API key for OpenRouter first.',
+      text: '请先填写 OpenRouter 的 API 密钥。',
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     await callTestActiveAIConnection(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter a Base URL for Custom (OpenAI-compatible) first.',
+      text: "请先填写 自定义（OpenAI 兼容） 的服务地址。",
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -205,7 +205,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     await callTestActiveAIConnection(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter a Base URL for Ollama first.',
+      text: '请先填写 Ollama 的服务地址。',
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -232,7 +232,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     await callTestActiveAIConnection(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter a Base URL for Custom (OpenAI-compatible) first.',
+      text: "请先填写 自定义（OpenAI 兼容） 的服务地址。",
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -249,7 +249,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     await callTestActiveAIConnection(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'Enter a Base URL for Ollama first.',
+      text: '请先填写 Ollama 的服务地址。',
       duration: 3000,
     });
     expect(probe).not.toHaveBeenCalled();
@@ -295,7 +295,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     expect(probe).toHaveBeenCalledTimes(1);
     // Only ONE success Notice — the second call returned early without
     // emitting anything.
-    const successNotices = noticeCalls.filter((n) => n.text.includes('OK'));
+    const successNotices = noticeCalls.filter((n) => n.text.includes('AI 服务连接成功'));
     expect(successNotices).toHaveLength(1);
   });
 
@@ -321,7 +321,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     });
     await callTestActiveAIConnection(fake);
     expect(noticeCalls[0]).toEqual({
-      text: 'AI provider connection OK (Anthropic)',
+      text: 'Anthropic 服务连接成功。',
       duration: 4000,
     });
   });
@@ -334,7 +334,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
       probe,
     });
     await callTestActiveAIConnection(fake);
-    expect(noticeCalls[0]?.text).toBe('AI provider connection OK (OpenAI, 5 models available)');
+    expect(noticeCalls[0]?.text).toBe('AI 服务连接成功（OpenAI，5 个可用模型）');
     expect(noticeCalls[0]?.duration).toBe(4000);
   });
 
@@ -347,7 +347,7 @@ describe('LeetCodePlugin.testActiveAIConnection — Plan 07-04 Task 1', () => {
     });
     await callTestActiveAIConnection(fake);
     expect(noticeCalls[0]?.text).toContain('ollama pull llama3.2');
-    expect(noticeCalls[0]?.text).toContain('Ollama reachable');
+    expect(noticeCalls[0]?.text).toContain('Ollama 已连接');
     expect(noticeCalls[0]?.duration).toBe(6000);
   });
 

@@ -1,0 +1,21 @@
+{
+  "data": {
+    "submissionDetails": {
+      "id": "123456789",
+      "code": "class Solution {\n      public int[] twoSum(int[] nums, int target) {\n          Map<Integer, Integer> map = new HashMap<>();\n          int n = nums.length;\n          for (int i = 0; i < n; i++) {\n              if (map.containsKey(target - nums[i])) {\n                  return new int[]{map.get(target - nums[i]), i};\n              }\n              map.put(nums[i], i);\n          }\n          return null;\n      }\n  }",
+      "runtime": "2 ms",
+      "memory": "47.1 MB",
+      "rawMemory": 47120000,
+      "statusDisplay": "Accepted",
+      "timestamp": "1778296594",
+      "lang": "java",
+      "question": {
+        "questionId": "1",
+        "titleSlug": "two-sum",
+        "hasFrontendPreview": false
+      },
+      "outputDetail": null,
+      "submissionComment": null
+    }
+  }
+}

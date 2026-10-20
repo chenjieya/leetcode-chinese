@@ -19,7 +19,8 @@ export type { AuthCookies } from '../auth/types';
  *  ~10–50 KB per entry; 7-day TTL enforced by callers (NoteWriter.CACHE_TTL_MS). */
 export interface DetailCacheEntry {
   fetchedAt: number;
-  id: number;
+  translationCheckedAt?: number;
+  id: number | string;
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   url: string;
@@ -50,6 +51,7 @@ export interface DetailCacheEntry {
 
 export interface PluginData {
   version: 1;
+  leetcodeSite: 'cn';
   auth: AuthCookies | null;
   username: string | null;
   /** Whether the signed-in user has LC Premium. Controls the default-hide-premium
@@ -111,7 +113,7 @@ export interface PluginData {
   autoBacklinksEnabled: boolean;
   /** Phase 5 POLISH-01 D-15 — user-visible override for the technique folder.
    *  Empty string '' means "use the derived default"
-   *  (`{problemsFolder}/Techniques`), preserving Phase 4 behavior for users
+   *  (`{problemsFolder}/techniques`), preserving Phase 4 behavior for users
    *  who never touch this setting. A non-empty value takes precedence
    *  verbatim. Shape-guard coerces non-string raw data.json values to ''
    *  (T-05-02-01 mitigation). UI layer trims trailing slashes before set;
@@ -155,6 +157,8 @@ export interface PluginData {
    *  is in progress. Shape-guard validates structure at load time; malformed
    *  values collapse to null (no orphan contest state). */
   contestSession: ContestSession | null;
+  /** 切站前未结束的国际站竞赛存档，保留其中的用户代码，不在中国站继续提交。 */
+  archivedInternationalContestSession?: ContestSession;
   /** Phase 10 CONTEST-08 — opt-in auto AI contest analysis on contest end.
    *  Default false (user must explicitly enable). Shape-guard collapses
    *  non-boolean to false so corrupt data.json never enables AI calls. */
@@ -256,10 +260,11 @@ const DEFAULT_PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig | BedrockProvi
 
 const DEFAULT_DATA: PluginData = {
   version: 1,
+  leetcodeSite: 'cn',
   auth: null,
   username: null,
   isPremium: null,
-  problemsFolder: 'LeetCode',
+  problemsFolder: 'leetcode',
   defaultLanguage: 'python3',
   // Phase 16 INDENT-04 D-06 — 'auto' = per-language default applies. Go
   // always uses '\t' regardless of override (gofmt non-negotiable);
@@ -330,7 +335,7 @@ function isValidIndexedProblem(v: unknown): v is IndexedProblem {
   if (!v || typeof v !== 'object') return false;
   const p = v as Partial<IndexedProblem>;
   return (
-    typeof p.id === 'number' &&
+    (typeof p.id === 'number' || typeof p.id === 'string') &&
     typeof p.slug === 'string' &&
     typeof p.title === 'string' &&
     typeof p.diff === 'string' && VALID_DIFFICULTIES.has(p.diff) &&
@@ -407,7 +412,7 @@ function isValidDetailCacheEntry(v: unknown): v is DetailCacheEntry {
   if (!v || typeof v !== 'object') return false;
   const d = v as Partial<DetailCacheEntry>;
   if (typeof d.fetchedAt !== 'number') return false;
-  if (typeof d.id !== 'number') return false;
+  if (typeof d.id !== 'number' && typeof d.id !== 'string') return false;
   if (typeof d.title !== 'string') return false;
   if (typeof d.difficulty !== 'string' || !VALID_DIFFICULTIES.has(d.difficulty)) return false;
   if (typeof d.url !== 'string') return false;
@@ -663,6 +668,7 @@ export class SettingsStore {
       : {};
     const data: PluginData = {
       version: 1,
+      leetcodeSite: 'cn',
       auth: isValidAuthCookies(raw.auth) ? raw.auth : DEFAULT_DATA.auth,
       username: typeof raw.username === 'string' ? raw.username : DEFAULT_DATA.username,
       isPremium: typeof raw.isPremium === 'boolean' ? raw.isPremium : DEFAULT_DATA.isPremium,
@@ -784,6 +790,8 @@ export class SettingsStore {
       contestSession: isValidContestSession(raw.contestSession)
         ? raw.contestSession
         : DEFAULT_DATA.contestSession,
+      archivedInternationalContestSession: isValidContestSession(raw.archivedInternationalContestSession)
+        ? raw.archivedInternationalContestSession : undefined,
       autoAIContestAnalysis: typeof raw.autoAIContestAnalysis === 'boolean'
         ? raw.autoAIContestAnalysis
         : DEFAULT_DATA.autoAIContestAnalysis,
@@ -818,6 +826,22 @@ export class SettingsStore {
       if (inputKeys !== keptKeys) {
         logger.warn(`settings.load: dropped ${inputKeys - keptKeys} malformed problemDetails entries`);
       }
+    }
+    if (raw.leetcodeSite !== 'cn') {
+      // 国际站会话、进度、竞赛状态和内部判题 ID 不能跨站复用。
+      // 保留题目缓存用于离线阅读与定位已有笔记，打开时再刷新中国站内容。
+      data.auth = null;
+      data.username = null;
+      data.isPremium = null;
+      data.problemIndex = null;
+      if (data.contestSession) data.archivedInternationalContestSession = data.contestSession;
+      data.contestIndex = null;
+      data.contestSession = null;
+      data.problemDetails = Object.fromEntries(Object.entries(data.problemDetails).map(([slug, detail]) => [slug, {
+        ...detail, fetchedAt: 0, translationCheckedAt: undefined, internalQuestionId: undefined,
+        url: `https://leetcode.cn/problems/${slug}/`,
+      }]));
+      await plugin.saveData(data);
     }
     return new SettingsStore(plugin, data);
   }
@@ -1017,14 +1041,14 @@ export class SettingsStore {
 
   /** Phase 5 POLISH-01 D-15 — override-aware Techniques folder path. Returns
    *  the user's override verbatim when non-empty; otherwise derives from
-   *  `{problemsFolder}/Techniques` (Phase 4 D-15 behavior preserved for users
+   *  `{problemsFolder}/techniques` (Phase 4 D-15 behavior preserved for users
    *  who never touch the new setting). Respects sanitizeFolder's
    *  no-trailing-slash invariant from Phase 1 D-10. */
   getTechniquesFolder(): string {
     const override = this.data.techniquesFolderOverride;
     return override && override.length > 0
       ? override
-      : `${this.getProblemsFolder()}/Techniques`;
+      : `${this.getProblemsFolder()}/techniques`;
   }
 
   /** Read the cached detail for a slug. D-15. Returns null if missing. */

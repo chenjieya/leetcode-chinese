@@ -43,10 +43,11 @@
 import { throttledRequestUrl } from '../api/throttle';
 import { SessionExpiredError } from '../shared/errors';
 import { isSessionExpired } from '../api/LeetCodeClient';
+import { resolveLangSlug } from '../solve/languages';
 import { authHeaders } from '../solve/leetcodeRest';
 import type { AuthCookies } from '../settings/SettingsStore';
 
-const BASE_URL = 'https://leetcode.com';
+const BASE_URL = 'https://leetcode.cn';
 const GRAPHQL_URL = `${BASE_URL}/graphql/`;
 
 // ── Wire types — captured from live LC 2026-05-09 ─────────────────────────
@@ -126,39 +127,9 @@ export interface SubmissionDetail {
  *  a bounded page (20 rows by default) plus `hasNext` + `lastKey` for
  *  pagination. Phase 4 requests a single page; pagination is a Phase 5
  *  Polish item if users want to scroll past 20 submissions per problem. */
-const LIST_QUERY = `query submissionList($offset: Int!, $limit: Int!, $lastKey: String, $questionSlug: String!, $lang: Int, $status: Int) {
-  questionSubmissionList(
-    offset: $offset
-    limit: $limit
-    lastKey: $lastKey
-    questionSlug: $questionSlug
-    lang: $lang
-    status: $status
-  ) {
-    lastKey
-    hasNext
-    submissions {
-      id
-      title
-      titleSlug
-      status
-      statusDisplay
-      lang
-      langName
-      runtime
-      timestamp
-      url
-      isPending
-      memory
-      hasNotes
-      notes
-      flagType
-      frontendId
-      topicTags {
-        name
-        slug
-      }
-    }
+const LIST_QUERY = `query submissionList($offset: Int!, $limit: Int!, $lastKey: String, $questionSlug: String!) {
+  questionSubmissionList: submissionList(offset: $offset, limit: $limit, lastKey: $lastKey, questionSlug: $questionSlug) {
+    lastKey hasNext submissions { id title status statusDisplay lang langName: lang runtime timestamp url memory }
   }
 }`;
 
@@ -166,46 +137,12 @@ const LIST_QUERY = `query submissionList($offset: Int!, $limit: Int!, $lastKey: 
  *  typed `Int!` — LC enforces this at the schema level (string coercion
  *  returns a schema-validation error). Referer header must point at the
  *  detail URL or LC returns 403 (D-29 revised). */
-const DETAIL_QUERY = `query submissionDetails($submissionId: Int!) {
-  submissionDetails(submissionId: $submissionId) {
-    runtime
-    runtimeDisplay
-    runtimePercentile
-    memory
-    memoryDisplay
-    memoryPercentile
-    code
-    timestamp
-    statusCode
-    user {
-      username
-      profile {
-        realName
-        userAvatar
-      }
-    }
-    lang {
-      name
-      verboseName
-    }
-    question {
-      questionId
-      titleSlug
-      hasFrontendPreview
-    }
-    notes
-    flagType
-    topicTags {
-      tagId
-      slug
-      name
-    }
-    runtimeError
-    compileError
-    fullCodeOutput
-    testDescriptions
-    testBodies
-    testInfo
+const DETAIL_QUERY = `query submissionDetails($submissionId: ID!) {
+  submissionDetails: submissionDetail(submissionId: $submissionId) {
+    id code runtime memory rawMemory statusDisplay timestamp lang
+    question { titleSlug title translatedTitle questionId }
+    ... on GeneralSubmissionNode { outputDetail { codeOutput expectedOutput input compileError runtimeError lastTestcase } }
+    submissionComment { comment flagType }
   }
 }`;
 
@@ -270,7 +207,7 @@ export async function listSubmissionsForSlug(
     };
   };
   const raw = payload.data?.questionSubmissionList?.submissions ?? [];
-  return raw.map(mapListRow);
+  return raw.map(row => ({ ...mapListRow(row), titleSlug: slug }));
 }
 
 /** Map LC's wire-shape submission entry into our normalised SubmissionRow.
@@ -312,7 +249,7 @@ function mapListRow(raw: Record<string, unknown>): SubmissionRow {
     id: String(idPrimitive),
     title: typeof raw.title === 'string' ? raw.title : '',
     titleSlug: typeof raw.titleSlug === 'string' ? raw.titleSlug : '',
-    status: typeof raw.status === 'number' ? raw.status : 0,
+    status: typeof raw.status === 'number' || typeof raw.status === 'string' ? Number(raw.status) || 0 : 0,
     statusDisplay: typeof raw.statusDisplay === 'string' ? raw.statusDisplay : '',
     lang: typeof raw.lang === 'string' ? raw.lang : '',
     langName: typeof raw.langName === 'string' ? raw.langName : '',
@@ -365,7 +302,7 @@ export async function detailForSubmission(
   const body = {
     operationName: 'submissionDetails',
     query: DETAIL_QUERY,
-    variables: { submissionId }, // Int, not string — LC enforces via schema.
+    variables: { submissionId: id }, // 中国站的 submissionId 使用 ID!。
   };
 
   // D-29 revised: referer MUST point at the submission detail URL. LC returns
@@ -395,7 +332,7 @@ export async function detailForSubmission(
   }
 
   const payload = res.json as {
-    data?: { submissionDetails?: SubmissionDetail | null };
+    data?: { submissionDetails?: ChineseSubmissionDetail | null };
   };
   const detail = payload.data?.submissionDetails;
   if (!detail) {
@@ -403,5 +340,34 @@ export async function detailForSubmission(
       `detailForSubmission: missing submissionDetails in response for id ${id}`,
     );
   }
-  return detail;
+  return normalizeChineseSubmission(detail);
+}
+
+interface ChineseSubmissionDetail {
+  code: string; runtime: string; memory: string; rawMemory?: number;
+  statusDisplay: string; timestamp: string | number; lang: string;
+  question: { questionId: string; titleSlug: string };
+  outputDetail?: { codeOutput?: string; input?: string; compileError?: string; runtimeError?: string; lastTestcase?: string } | null;
+  submissionComment?: { comment?: string; flagType?: string } | null;
+}
+
+/** 中国站详情只提供状态文案，转换成原有展示模型，不伪造百分位数据。 */
+export function normalizeChineseSubmission(raw: ChineseSubmissionDetail): SubmissionDetail {
+  const codes: Record<string, number> = {
+    Accepted: 10, '通过': 10, 'Wrong Answer': 11, '解答错误': 11,
+    'Memory Limit Exceeded': 12, '超出内存限制': 12, 'Output Limit Exceeded': 13, '超出输出限制': 13,
+    'Time Limit Exceeded': 14, '超出时间限制': 14, 'Runtime Error': 15, '执行出错': 15,
+    'Internal Error': 16, '内部出错': 16, 'Compile Error': 20, '编译出错': 20,
+  };
+  return {
+    runtime: Number.parseFloat(raw.runtime) || 0, runtimeDisplay: raw.runtime,
+    runtimePercentile: null, memory: raw.rawMemory ?? 0, memoryDisplay: raw.memory, memoryPercentile: null,
+    code: raw.code, timestamp: Number(raw.timestamp) || 0, statusCode: codes[raw.statusDisplay] ?? 0,
+    user: { username: '', profile: null }, lang: { name: resolveLangSlug(raw.lang, raw.lang.toLowerCase()), verboseName: raw.lang },
+    question: { ...raw.question, hasFrontendPreview: false },
+    notes: raw.submissionComment?.comment ?? '', flagType: raw.submissionComment?.flagType ?? '', topicTags: [],
+    runtimeError: raw.outputDetail?.runtimeError ?? null, compileError: raw.outputDetail?.compileError ?? null,
+    fullCodeOutput: raw.outputDetail?.codeOutput ?? null, testDescriptions: raw.outputDetail?.input ?? null,
+    testBodies: raw.outputDetail?.lastTestcase ?? null, testInfo: null,
+  };
 }

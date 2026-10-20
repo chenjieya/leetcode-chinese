@@ -1,38 +1,36 @@
-# Phase 06 FOUND-02 — first GitHub Actions workflow in the repo.
-# Adopted verbatim from .planning/phases/06-foundations-preview-mode/06-RESEARCH.md
-# §Code Examples §Example 7. Step order is locked by 06-CONTEXT.md §E and is
-# asserted by tests/foundations/ci-workflow.test.ts.
-name: CI
+name: 质量检查
 on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      # Phase 22.5 — lint gate is enforced (was advisory under Phase 22 with
-      # `continue-on-error: true` while the 81-error baseline was tracked in
-      # `deferred-items.md`). Baseline cleared in `chore/re-enable-lint-gate`:
-      # 88 errors / 110 warnings → 0 / 0 across auto-fix + 4 manual sweeps.
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-      - run: npm run check:bundle-size
-      - name: Upload build artifact
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm run check:bundle-size
+      - name: 保存插件安装文件
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
-          name: obsidian-leetcode-${{ github.sha }}
+          name: leetcode-chinese-${{ github.sha }}
           path: |
             main.js
             manifest.json
             styles.css
-          if-no-files-found: ignore
+          if-no-files-found: error

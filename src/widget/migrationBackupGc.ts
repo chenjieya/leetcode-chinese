@@ -52,7 +52,7 @@ import { logger } from '../shared/logger';
  * it's literally this plugin's id.
  */
 function pluginBackupRoot(app: App): string {
-  return `${app.vault.configDir}/plugins/obsidian-leetcode`;
+  return `${app.vault.configDir}/plugins/leetcode-chinese`;
 }
 
 /**
@@ -186,7 +186,7 @@ export async function runMigrationBackupGc(app: App): Promise<void> {
     for (const folderFull of listing.folders ?? []) {
       // Strip the baseDir prefix to get the bare folder name.
       // adapter.list returns paths relative to the vault root, e.g.
-      //   '<configDir>/plugins/obsidian-leetcode/migration-backup-two-sum-...'
+      //   '<configDir>/plugins/leetcode-chinese/migration-backup-two-sum-...'
       // We want just 'migration-backup-two-sum-...' for regex matching.
       const prefix = `${baseDir}/`;
       const folderName = folderFull.startsWith(prefix)

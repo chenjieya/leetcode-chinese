@@ -22,17 +22,17 @@ const FIELD_DEFS: FieldDef[] = [
   // Icon choices mirror LC's own iconography (see user-provided screenshots).
   // `gauge` gives the speedometer used for Difficulty. Icons without a direct
   // Lucide match use the closest available primitive.
-  { key: 'status',      label: 'Status',      icon: 'check-square',
+  { key: 'status',      label: '状态',      icon: 'check-square',
     blank: () => ({ field: 'status', op: 'is', values: [] }) },
-  { key: 'difficulty',  label: 'Difficulty',  icon: 'gauge',
+  { key: 'difficulty',  label: '难度',  icon: 'gauge',
     blank: () => ({ field: 'difficulty', op: 'is', values: [] }) },
-  { key: 'topics',      label: 'Topics',      icon: 'tag',
+  { key: 'topics',      label: '知识点',      icon: 'tag',
     blank: () => ({ field: 'topics', op: 'is', values: [] }) },
-  { key: 'question-id', label: 'Question ID', icon: 'list-ordered',
+  { key: 'question-id', label: '题号', icon: 'list-ordered',
     blank: () => ({ field: 'question-id', op: 'range', min: null, max: null }) },
-  { key: 'acceptance',  label: 'Acceptance',  icon: 'cloud',
+  { key: 'acceptance',  label: '通过率',  icon: 'cloud',
     blank: () => ({ field: 'acceptance', op: 'range', min: null, max: null }) },
-  { key: 'premium',     label: 'Premium',     icon: 'crown',
+  { key: 'premium',     label: '会员',     icon: 'crown',
     // Phase 5.2 D-03 — premium now uses the multi-value shape shared with
     // status/difficulty/topics. blank rule starts with no values selected.
     blank: () => ({ field: 'premium', op: 'is', values: [] }) },
@@ -53,25 +53,50 @@ const PREPOPULATED_FIELDS: FilterRule['field'][] = ['status', 'difficulty', 'top
 export const DEFERRED_STUB_FIELDS: { key: string; label: string; icon: string; reason: string }[] = [];
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: 'untouched', label: 'Todo' },
-  { value: 'attempted', label: 'Attempted' },
-  { value: 'solved',    label: 'Solved' },
+  { value: 'untouched', label: '未开始' },
+  { value: 'attempted', label: '已尝试' },
+  { value: 'solved',    label: '已通过' },
 ];
 
 const DIFFICULTY_OPTIONS: { value: string; label: string }[] = [
-  { value: 'Easy',   label: 'Easy' },
-  { value: 'Medium', label: 'Medium' },
-  { value: 'Hard',   label: 'Hard' },
+  { value: 'Easy',   label: '简单' },
+  { value: 'Medium', label: '中等' },
+  { value: 'Hard',   label: '困难' },
 ];
 
 const PREMIUM_OPTIONS: { value: 'premium' | 'non-premium'; label: string }[] = [
-  { value: 'premium',     label: 'Premium Content' },
-  { value: 'non-premium', label: 'Non-Premium Content' },
+  { value: 'premium',     label: '会员题目' },
+  { value: 'non-premium', label: '免费题目' },
 ];
 
 /** Turn a topic slug ('hash-table') into a display label ('Hash Table'). */
 function formatTopicLabel(slug: string): string {
-  return slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const labels: Readonly<Record<string, string>> = {
+    array: '数组', string: '字符串', 'hash-table': '哈希表', 'dynamic-programming': '动态规划',
+    math: '数学', sorting: '排序', greedy: '贪心', 'depth-first-search': '深度优先搜索',
+    'binary-search': '二分查找', database: '数据库', 'breadth-first-search': '广度优先搜索',
+    tree: '树', matrix: '矩阵', 'two-pointers': '双指针', 'bit-manipulation': '位运算',
+    'binary-tree': '二叉树', 'heap-priority-queue': '堆（优先队列）', stack: '栈',
+    'prefix-sum': '前缀和', simulation: '模拟', graph: '图', design: '设计',
+    backtracking: '回溯', counting: '计数', 'sliding-window': '滑动窗口',
+    'linked-list': '链表', 'union-find': '并查集', 'ordered-set': '有序集合',
+    'monotonic-stack': '单调栈', enumeration: '枚举', recursion: '递归',
+    'divide-and-conquer': '分治', trie: '字典树', 'binary-search-tree': '二叉搜索树',
+    bitmask: '状态压缩', queue: '队列', 'number-theory': '数论', 'segment-tree': '线段树',
+    memoization: '记忆化搜索', geometry: '几何', 'topological-sort': '拓扑排序',
+    'binary-indexed-tree': '树状数组', 'hash-function': '哈希函数', 'game-theory': '博弈',
+    'shortest-path': '最短路', 'string-matching': '字符串匹配', combinatorics: '组合数学',
+    'rolling-hash': '滚动哈希', 'interactive': '交互', 'data-stream': '数据流',
+    'monotonic-queue': '单调队列', 'randomized': '随机化', 'merge-sort': '归并排序',
+    'doubly-linked-list': '双向链表', 'probability-and-statistics': '概率与统计',
+    'quickselect': '快速选择', 'bucket-sort': '桶排序', 'suffix-array': '后缀数组',
+    'minimum-spanning-tree': '最小生成树', 'counting-sort': '计数排序',
+    'shell': 'Shell', 'concurrency': '多线程', 'line-sweep': '扫描线',
+    'eulerian-circuit': '欧拉回路', 'radix-sort': '基数排序', 'biconnected-component': '双连通分量',
+    'strongly-connected-component': '强连通分量', 'rejection-sampling': '拒绝采样',
+    'reservoir-sampling': '水塘抽样',
+  };
+  return labels[slug] ?? slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 /** Phase 5.2 D-04 — remove the `__autoDefault: true` marker from each rule
@@ -142,16 +167,16 @@ export class FilterModal extends Modal {
 
   private renderMatchHeader(parent: HTMLElement): void {
     const wrap = parent.createDiv({ cls: 'lc-fm__match' });
-    wrap.createSpan({ text: 'Match ' });
+    wrap.createSpan({ text: '匹配 ' });
     // Chevron picker for All/Any so it looks like the value pickers below,
     // matching LC's uniform "everything is a dropdown" aesthetic.
     this.renderChevronSingleSelect(wrap, [
-      { value: 'all', label: 'All' },
-      { value: 'any', label: 'Any' },
+      { value: 'all', label: '全部' },
+      { value: 'any', label: '任意' },
     ], this.draft.match, (next) => {
       this.draft.match = next as 'all' | 'any';
     });
-    wrap.createSpan({ text: ' of the following filters:' });
+    wrap.createSpan({ text: '以下筛选条件：' });
   }
 
   /** Small single-select chevron picker for fixed-option fields like
@@ -240,7 +265,7 @@ export class FilterModal extends Modal {
     this.renderValueEditor(row, rule, idx);
 
     // Remove button
-    const rm = row.createDiv({ cls: 'lc-fm__rule-rm', attr: { 'aria-label': 'Remove rule' } });
+    const rm = row.createDiv({ cls: 'lc-fm__rule-rm', attr: { 'aria-label': '删除规则' } });
     setIcon(rm, 'minus');
     rm.addEventListener('click', () => {
       this.draft.rules.splice(idx, 1);
@@ -251,7 +276,7 @@ export class FilterModal extends Modal {
   private renderOperator(row: HTMLElement, rule: FilterRule, _idx: number): void {
     const cell = row.createDiv({ cls: 'lc-fm__rule-op' });
     if (rule.field === 'question-id' || rule.field === 'acceptance') {
-      cell.setText('Range');
+      cell.setText('范围');
       return;
     }
     if (rule.field === 'premium') {
@@ -259,14 +284,14 @@ export class FilterModal extends Modal {
       // first letter for UI text rendered via `setText`. The chevron picker
       // labels below stay lowercase because they're handled inside the
       // chevron component (which the rule does not currently recurse into).
-      cell.setText('Is');
+      cell.setText('为');
       return;
     }
     // status / difficulty / topics → is / is-not chevron picker (matches the
     // other dropdowns in the modal; no native select chrome).
     this.renderChevronSingleSelect(cell, [
       { value: 'is',     label: 'is' },
-      { value: 'is-not', label: 'is not' },
+      { value: 'is-not', label: '不是' },
     ], rule.op, (next) => {
       if (rule.field === 'status' || rule.field === 'difficulty' || rule.field === 'topics') {
         rule.op = next as 'is' | 'is-not';
@@ -286,7 +311,7 @@ export class FilterModal extends Modal {
       case 'topics': {
         const topicOpts = this.topicSlugs.map((s) => ({ value: s, label: formatTopicLabel(s) }));
         if (topicOpts.length === 0) {
-          cell.createSpan({ text: '(load problems first)', cls: 'lc-fm__empty-hint' });
+          cell.createSpan({ text: '（请先加载题库）', cls: 'lc-fm__empty-hint' });
         } else {
           this.renderMultiSelect(cell, rule, topicOpts);
         }
@@ -399,7 +424,7 @@ export class FilterModal extends Modal {
   ): void {
     const wrap = parent.createDiv({ cls: 'lc-fm__range' });
     const minInput = wrap.createEl('input', {
-      attr: { type: 'number', placeholder: `min${suffix}`, 'aria-label': 'Minimum' },
+      attr: { type: 'number', placeholder: `最小值${suffix}`, 'aria-label': '最小值' },
     });
     if (rule.min !== null) minInput.value = String(rule.min);
     minInput.addEventListener('input', () => {
@@ -407,7 +432,7 @@ export class FilterModal extends Modal {
     });
     wrap.createSpan({ text: ' – ', cls: 'lc-fm__range-sep' });
     const maxInput = wrap.createEl('input', {
-      attr: { type: 'number', placeholder: `max${suffix}`, 'aria-label': 'Maximum' },
+      attr: { type: 'number', placeholder: `最大值${suffix}`, 'aria-label': '最大值' },
     });
     if (rule.max !== null) maxInput.value = String(rule.max);
     maxInput.addEventListener('input', () => {
@@ -422,7 +447,7 @@ export class FilterModal extends Modal {
 
   private renderAddButton(parent: HTMLElement): void {
     const wrap = parent.createDiv({ cls: 'lc-fm__add' });
-    const btn = wrap.createDiv({ cls: 'lc-fm__add-btn', attr: { 'aria-label': 'Add filter rule' } });
+    const btn = wrap.createDiv({ cls: 'lc-fm__add-btn', attr: { 'aria-label': '添加筛选规则' } });
     setIcon(btn, 'plus');
     btn.addEventListener('click', () => {
       // Offer a picker of field types not yet used (LC allows duplicates, but
@@ -430,7 +455,7 @@ export class FilterModal extends Modal {
       const used = new Set(this.draft.rules.map((r) => r.field));
       const available = FIELD_DEFS.filter((d) => !used.has(d.key));
       if (available.length === 0) {
-        new Notice('All filter fields are in use.', 3000);
+        new Notice('所有筛选字段都已使用。', 3000);
         return;
       }
       this.openAddMenu(btn, available);
@@ -477,18 +502,18 @@ export class FilterModal extends Modal {
     // Save as Smart List — stubbed; disabled with tooltip.
     const saveBtn = footer.createEl('button', {
       cls: 'lc-fm__save',
-      attr: { disabled: 'true', title: 'Smart lists coming in a future release' },
+      attr: { disabled: 'true', title: '智能列表将在后续版本提供' },
     });
     const saveIc = saveBtn.createSpan({ cls: 'lc-fm__save-icon' });
     setIcon(saveIc, 'bookmark-plus');
-    saveBtn.createSpan({ text: 'Save as Smart List' });
+    saveBtn.createSpan({ text: '保存为智能列表' });
 
     const rightGroup = footer.createDiv({ cls: 'lc-fm__footer-right' });
 
     const resetBtn = rightGroup.createEl('button', { cls: 'lc-fm__reset' });
     const resetIc = resetBtn.createSpan({ cls: 'lc-fm__reset-icon' });
     setIcon(resetIc, 'rotate-ccw');
-    resetBtn.createSpan({ text: 'Reset' });
+    resetBtn.createSpan({ text: '重置' });
     resetBtn.addEventListener('click', () => {
       this.draft = { match: 'all', rules: [] };
       this.onOpen(); // full re-render
@@ -496,7 +521,7 @@ export class FilterModal extends Modal {
 
     const applyBtn = rightGroup.createEl('button', {
       cls: 'lc-fm__apply mod-cta',
-      text: 'Apply',
+      text: '应用',
     });
     applyBtn.addEventListener('click', () => {
       // Phase 5.2 D-04 — strip any `__autoDefault` markers from the draft

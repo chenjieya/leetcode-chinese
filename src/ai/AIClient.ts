@@ -129,7 +129,7 @@ export class AIClient {
       const adapter = resolveAdapter(provider, cfg, fetcher);
       return await adapter.probe();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : '未知错误';
       return { ok: false, errorMessage: message.slice(0, 200) };
     }
   }
@@ -157,7 +157,7 @@ export class AIClient {
   async invoke(req: AIRequest): Promise<AIResponse> {
     const provider = this.settings.getActiveAIProvider();
     if (provider === null) {
-      throw new Error('No AI provider configured');
+      throw new Error('尚未配置 AI 服务');
     }
     let cfg = this.settings.getProviderConfig(provider);
     if (!cfg.disclosureAcknowledged) {
@@ -223,7 +223,7 @@ export class AIClient {
   async invokeStream(req: AIRequest): Promise<InvokeStreamResult> {
     const provider = this.settings.getActiveAIProvider();
     if (provider === null) {
-      throw new Error('No AI provider configured');
+      throw new Error('尚未配置 AI 服务');
     }
     let cfg = this.settings.getProviderConfig(provider);
     if (!cfg.disclosureAcknowledged) {

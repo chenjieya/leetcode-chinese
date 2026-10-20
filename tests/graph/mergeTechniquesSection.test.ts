@@ -20,10 +20,10 @@ describe('mergeTechniquesSection (GRAPH-03, D-13)', () => {
     const body = '## Problem\nfoo\n\n## Notes\nbar\n';
     const tags = [{ name: 'Two Pointers', slug: 'two-pointers' }];
     const out = mergeTechniquesSection(body, tags);
-    expect(out).toContain('## Techniques');
-    expect(out).toContain('- [[Two Pointers]]');
+    expect(out).toContain('## 解题技巧');
+    expect(out).toContain('- [[Two Pointers|双指针]]');
     // Insertion after ## Notes — Techniques heading must follow Notes in the text.
-    expect(out.indexOf('## Notes')).toBeLessThan(out.indexOf('## Techniques'));
+    expect(out.indexOf('## Notes')).toBeLessThan(out.indexOf('## 解题技巧'));
   });
 
   it('writes wikilink per topic tag', () => {
@@ -34,9 +34,9 @@ describe('mergeTechniquesSection (GRAPH-03, D-13)', () => {
       { name: 'Sliding Window', slug: 'sliding-window' },
     ];
     const out = mergeTechniquesSection(body, tags);
-    expect(out).toContain('- [[Two Pointers]]');
+    expect(out).toContain('- [[Two Pointers|双指针]]');
     expect(out).toContain('- [[Hash Table]]');
-    expect(out).toContain('- [[Sliding Window]]');
+    expect(out).toContain('- [[Sliding Window|滑动窗口]]');
   });
 
   it('insertion after ## Notes', () => {
@@ -63,7 +63,7 @@ describe('mergeTechniquesSection (GRAPH-03, D-13)', () => {
     const out = mergeTechniquesSection(body, tags);
     // Must land BETWEEN ## Notes and ## Custom Tests, not at EOF.
     const notesIdx = out.indexOf('## Notes');
-    const techIdx = out.indexOf('## Techniques');
+    const techIdx = out.indexOf('## 解题技巧');
     const customIdx = out.indexOf('## Custom Tests');
     expect(notesIdx).toBeGreaterThan(-1);
     expect(techIdx).toBeGreaterThan(-1);
@@ -86,7 +86,7 @@ describe('mergeTechniquesSection (GRAPH-03, D-13)', () => {
     ].join('\n');
     const tags = [{ name: 'Two Pointers', slug: 'two-pointers' }];
     const out = mergeTechniquesSection(body, tags);
-    expect(out).toContain('- [[Two Pointers]]');
+    expect(out).toContain('- [[Two Pointers|双指针]]');
     expect(out).toContain('- [[My Own Custom Tag]]');
   });
 
@@ -127,7 +127,7 @@ describe('mergeTechniquesSection (GRAPH-03, D-13)', () => {
     ];
     const out = mergeTechniquesSection(body, tags);
     // Both existing links recognised → neither re-added.
-    const twoPointerHits = (out.match(/\[\[Two Pointers\]\]/g) ?? []).length;
+    const twoPointerHits = (out.match(/\[\[Two Pointers\|双指针\]\]/g) ?? []).length;
     const hashHits = (out.match(/\[\[Hash Table\]\]/g) ?? []).length;
     expect(twoPointerHits).toBe(1);
     expect(hashHits).toBe(1);

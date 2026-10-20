@@ -43,6 +43,29 @@ vi.mock('obsidian', async () => {
 import { renderVerdict } from '../../src/solve/verdictModalRenderer';
 import { VerdictModal } from '../../src/solve/VerdictModal';
 
+it('通过后的模式标签显示中文，打开小写目录中的原模式文件', () => {
+  vi.useFakeTimers();
+  try {
+    const openLinkText = vi.fn();
+    const app = {
+      metadataCache: { getFileCache: () => ({ frontmatter: { 'lc-pattern': ['Arrays & Hashing'] } }) },
+      workspace: { openLinkText },
+    };
+    const modal = new VerdictModal(app as never, {
+      problemTitle: '两数之和', onCancel: vi.fn(), file: { path: 'leetcode/1. 两数之和.md' } as never,
+    });
+    modal.renderVerdict({ state: 'SUCCESS', status_code: 10, status_msg: 'Accepted' }, '两数之和');
+    const chip = modal.contentEl.querySelector<HTMLElement>('[data-lc-role="pattern-chip"]')!;
+    expect(chip.textContent).toBe('数组与哈希');
+    expect(chip.getAttribute('aria-label')).toBe('打开数组与哈希模式索引');
+    chip.click();
+    expect(openLinkText).toHaveBeenCalledWith('leetcode/patterns/Arrays & Hashing.md', '', false);
+  } finally {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  }
+});
+
 interface RenderArgs {
   onCopyFailingInput?: (input: string) => void;
   onOpenAIDebug?: () => void;
@@ -63,19 +86,19 @@ function render(payload: unknown, args: RenderArgs = {}): { titleEl: HTMLElement
 
 function getAIDebugBtn(contentEl: HTMLElement): HTMLButtonElement | undefined {
   return Array.from(contentEl.querySelectorAll('button')).find(
-    (b) => (b.textContent ?? '') === 'AI: Debug',
+    (b) => (b.textContent ?? '') === "AI 调试",
   ) as HTMLButtonElement | undefined;
 }
 
 function getCopyFailingBtn(contentEl: HTMLElement): HTMLButtonElement | undefined {
   return Array.from(contentEl.querySelectorAll('button')).find((b) =>
-    /Copy failing testcase/i.test(b.textContent ?? ''),
+    /将失败用例复制到自定义输入/i.test(b.textContent ?? ''),
   ) as HTMLButtonElement | undefined;
 }
 
 function getCopyErrorBtn(contentEl: HTMLElement): HTMLButtonElement | undefined {
   return Array.from(contentEl.querySelectorAll('button')).find((b) =>
-    (b.textContent ?? '') === 'Copy error',
+    (b.textContent ?? '') === "复制错误",
   ) as HTMLButtonElement | undefined;
 }
 
@@ -168,7 +191,7 @@ describe('verdictModalRenderer — AI Debug button visibility union (Plan 08-05)
     const { contentEl } = render(wa, { onOpenAIDebug });
     const btn = getAIDebugBtn(contentEl);
     expect(btn).toBeDefined();
-    expect(btn?.textContent).toBe('AI: Debug');
+    expect(btn?.textContent).toBe("AI 调试");
   });
 
   it('PRESENT for status_code=12 (MLE, kind=mle)', () => {
@@ -260,11 +283,11 @@ describe('verdictModalRenderer — AI Debug button visibility union (Plan 08-05)
     expect(footer).not.toBeNull();
     const buttons = Array.from(footer!.querySelectorAll('button'));
     expect(buttons.length).toBe(2);
-    expect(buttons[0]?.textContent).toMatch(/Copy failing testcase/);
-    expect(buttons[1]?.textContent).toBe('AI: Debug');
+    expect(buttons[0]?.textContent).toMatch(/将失败用例复制到自定义输入/);
+    expect(buttons[1]?.textContent).toBe("AI 调试");
   });
 
-  it('DOM order for kind=ce with both callbacks: [Copy error][AI: Debug]', () => {
+  it("DOM order for kind=ce with both callbacks: [复制错误][AI: Debug]", () => {
     const onOpenAIDebug = vi.fn();
     const onCopyFailingInput = vi.fn();
     const { contentEl } = render(ce, { onOpenAIDebug, onCopyFailingInput });
@@ -272,8 +295,8 @@ describe('verdictModalRenderer — AI Debug button visibility union (Plan 08-05)
     expect(footer).not.toBeNull();
     const buttons = Array.from(footer!.querySelectorAll('button'));
     expect(buttons.length).toBe(2);
-    expect(buttons[0]?.textContent).toBe('Copy error');
-    expect(buttons[1]?.textContent).toBe('AI: Debug');
+    expect(buttons[0]?.textContent).toBe("复制错误");
+    expect(buttons[1]?.textContent).toBe("AI 调试");
   });
 
   // ── Color contract: NO mod-cta on AI Debug button ──────────────────────
@@ -296,7 +319,7 @@ describe('verdictModalRenderer — AI Debug button visibility union (Plan 08-05)
   });
 
   // ── Co-existence guard — Copy error button still works on CE ───────────
-  it('Copy error still present on CE when full_compile_error is non-empty', () => {
+  it("复制错误 still present on CE when full_compile_error is non-empty", () => {
     const { contentEl } = render(ce, { onOpenAIDebug: vi.fn() });
     expect(getCopyErrorBtn(contentEl)).toBeDefined();
     expect(getAIDebugBtn(contentEl)).toBeDefined();

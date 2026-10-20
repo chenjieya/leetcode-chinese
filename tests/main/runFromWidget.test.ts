@@ -49,7 +49,7 @@ describe('Phase 22 dead-code TODO markers (Plan 20-10 Task 5)', () => {
     const src = fs.readFileSync(
       path.join(process.cwd(), 'src/main.ts'),
       'utf-8',
-    );
+    ).replace(/\r\n/g, '\n');
     // Find runInterpretedInput body and check for the TODO Phase 22 marker.
     const start = src.indexOf('private async runInterpretedInput(');
     expect(start).toBeGreaterThan(0);
@@ -66,7 +66,7 @@ describe('Phase 22 dead-code TODO markers (Plan 20-10 Task 5)', () => {
     const src = fs.readFileSync(
       path.join(process.cwd(), 'src/solve/submissionOrchestrator.ts'),
       'utf-8',
-    );
+    ).replace(/\r\n/g, '\n');
     expect(src).toMatch(/TODO Phase 22/);
     // The marker must reference the legacy fall-through site.
     const todoIdx = src.indexOf('TODO Phase 22');
@@ -205,11 +205,9 @@ describe('SubmissionOrchestrator — getCurrentCode seam (Plan 20-10 Task 5 / T7
     // Some Notice fires informing the user.
     const calls = await getNoticeCalls();
     expect(calls.length).toBeGreaterThan(0);
-    // Match either the legacy "No code block found" copy OR the new
-    // "Add code to your solution" copy — both gates produce a Notice.
+    // 空白编辑器应提示填写代码，且不能调用提交接口。
     const matched = calls.some((c) =>
-      c.message.includes('No code block') ||
-      c.message.toLowerCase().includes('add code'),
+      c.message.includes('请先填写解答代码'),
     );
     expect(matched).toBe(true);
   });
@@ -222,7 +220,7 @@ describe('runInterpretedInput — ctx.currentCode seam (Plan 20-10 Task 5 / T7 f
     const src = fs.readFileSync(
       path.join(process.cwd(), 'src/main.ts'),
       'utf-8',
-    );
+    ).replace(/\r\n/g, '\n');
     // The interface declaration must include the new currentCode field.
     const interfaceIdx = src.indexOf('interface ProblemContext');
     expect(interfaceIdx).toBeGreaterThan(0);
@@ -239,7 +237,7 @@ describe('runInterpretedInput — ctx.currentCode seam (Plan 20-10 Task 5 / T7 f
     const src = fs.readFileSync(
       path.join(process.cwd(), 'src/main.ts'),
       'utf-8',
-    );
+    ).replace(/\r\n/g, '\n');
     const fnIdx = src.indexOf('private async runInterpretedInput(');
     expect(fnIdx).toBeGreaterThan(0);
     const fnEnd = src.indexOf('\n  }\n', fnIdx);
@@ -255,7 +253,7 @@ describe('runInterpretedInput — ctx.currentCode seam (Plan 20-10 Task 5 / T7 f
     const src = fs.readFileSync(
       path.join(process.cwd(), 'src/main.ts'),
       'utf-8',
-    );
+    ).replace(/\r\n/g, '\n');
     const fnIdx = src.indexOf('async runFromWidget(');
     expect(fnIdx).toBeGreaterThan(0);
     const fnEnd = src.indexOf('\n  }\n', fnIdx);
@@ -273,7 +271,7 @@ describe('runInterpretedInput — ctx.currentCode seam (Plan 20-10 Task 5 / T7 f
     const src = fs.readFileSync(
       path.join(process.cwd(), 'src/main.ts'),
       'utf-8',
-    );
+    ).replace(/\r\n/g, '\n');
     const fnIdx = src.indexOf('async submitFromWidget(');
     expect(fnIdx).toBeGreaterThan(0);
     const fnEnd = src.indexOf('\n  }\n', fnIdx);

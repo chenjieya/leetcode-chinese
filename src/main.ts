@@ -22,6 +22,8 @@
 import { Component, MarkdownRenderer, MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import type { RequestUrlParam, RequestUrlResponse } from 'obsidian';
 import { SettingsStore } from './settings/SettingsStore';
+import { resolveProblemNotePath } from './notes/NoteTemplate';
+import { registerChineseHeadings } from './main/chineseHeadings';
 import { installRequestUrlFetcher, throttledRequestUrl } from './api/requestUrlFetcher';
 import { LeetCodeClient } from './api/LeetCodeClient';
 import { AIClient } from './ai/AIClient';
@@ -189,6 +191,7 @@ import { ConflictModal } from './widget/ConflictModal';
 import { StatePersistenceMap } from './widget/statePersistence';
 // Phase 4 Plan 05 — knowledge-graph wiring.
 import { KnowledgeGraphWriter } from './graph/KnowledgeGraphWriter';
+import { migrateManagedFolders } from './notes/migrateManagedFolders';
 import { PatternClusterEngine } from './graph/PatternClusterEngine';
 import { ClusterHubWriter, sanitizeHubFilename } from './graph/ClusterHubWriter';
 import { SubmissionHistoryStore } from './graph/SubmissionHistoryStore';
@@ -411,6 +414,19 @@ export default class LeetCodePlugin extends Plugin {
 
     // Step 1 — load persisted settings (cookies, folder, language, index)
     this.lcSettings = await SettingsStore.load(this);
+    try {
+      await migrateManagedFolders(this.app, this.lcSettings.getProblemsFolder());
+      const oldTechniques = `${this.lcSettings.getProblemsFolder()}/Techniques`;
+      if (this.lcSettings.getTechniquesFolderOverride() === oldTechniques) {
+        await this.lcSettings.setTechniquesFolderOverride(
+          `${this.lcSettings.getProblemsFolder()}/techniques`,
+        );
+      }
+    } catch (err) {
+      new Notice(`LeetCode 目录迁移失败：${err instanceof Error ? err.message : '请检查目录权限后重新启用插件。'}`, 10000);
+      throw err;
+    }
+    registerChineseHeadings(this);
 
     // Phase 21 Plan 21-04 Task 1 (MIGRATE-05; D-backup-03; T-21-load) —
     // schedule a fire-and-forget microtask to sweep `migration-backup-*`
@@ -447,6 +463,12 @@ export default class LeetCodePlugin extends Plugin {
     // Row-click in ProblemBrowserView delegates to plugin.openProblem(slug)
     // which in turn delegates to this.notes.openProblem(slug).
     this.notes = new NoteWriter(this.app, this.client, this.lcSettings);
+    const chineseRefreshes = new Set<string>();
+    this.registerEvent(this.app.workspace.on('file-open', (file) => {
+      if (!file || chineseRefreshes.has(file.path)) return;
+      chineseRefreshes.add(file.path);
+      void this.notes.refreshChineseNote(file).catch(() => undefined).finally(() => chineseRefreshes.delete(file.path));
+    }));
     // Phase 5 D-21 — wire the sticky session-expired Notice's Log in action.
     this.notes.setLogin(() => { void this.auth.login(); });
 
@@ -664,7 +686,7 @@ export default class LeetCodePlugin extends Plugin {
 
     // Step 6b — ribbon icon (BROWSE-01). Lucide name from UI-SPEC.md § Icons.
 
-    this.addRibbonIcon('code-2', 'Open LeetCode browser', () => {
+    this.addRibbonIcon('code-2', '打开 LeetCode 题库', () => {
       void this.activateBrowser();
     });
 
@@ -676,7 +698,7 @@ export default class LeetCodePlugin extends Plugin {
     // ("LeetCode: Open problem browser"), so the id is kept generic.
     this.addCommand({
       id: 'open-problem-browser',
-      name: 'Open problem browser',
+      name: '打开题库',
       callback: () => { void this.activateBrowser(); },
     });
 
@@ -688,7 +710,7 @@ export default class LeetCodePlugin extends Plugin {
     // sentence-case name does not start with the plugin name.
     this.addCommand({
       id: 'quick-search',
-      name: 'Quick search problems',
+      name: '快速搜索题目',
       callback: () => { this.openQuickSearch(); },
     });
 
@@ -712,7 +734,7 @@ export default class LeetCodePlugin extends Plugin {
     // lint rules introduced by 06-01's eslint-plugin-obsidianmd@0.3.0 bump.
     this.addCommand({
       id: 'open-in-preview',
-      name: 'Open in preview',
+      name: '预览当前题目',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -738,7 +760,7 @@ export default class LeetCodePlugin extends Plugin {
     // available; gating is internal (provider null → empty-state Notice).
     this.addCommand({
       id: 'test-ai-connection',
-      name: 'Test AI connection',
+      name: '测试 AI 连接',
       callback: () => { void this.testActiveAIConnection(); },
     });
 
@@ -751,7 +773,7 @@ export default class LeetCodePlugin extends Plugin {
     // name — Obsidian's palette already prefixes it with "LeetCode: ".
     this.addCommand({
       id: 'reset-ai-disclosures',
-      name: 'Reset AI provider disclosures',
+      name: '重置 AI 服务授权提示',
       callback: () => { void this.resetAIDisclosures(); },
     });
 
@@ -768,7 +790,7 @@ export default class LeetCodePlugin extends Plugin {
     // re-pasting from provider dashboard is trivial recovery.
     this.addCommand({
       id: 'clear-ai-key',
-      name: 'Clear AI key',
+      name: '清除 AI 密钥',
       callback: () => { void this.clearActiveAIKey(); },
     });
 
@@ -779,7 +801,7 @@ export default class LeetCodePlugin extends Plugin {
       // (`LeetCode: Refresh current problem from LeetCode`). Keeping it short
       // also satisfies the obsidianmd/commands/no-plugin-name-in-command-name
       // lint rule.
-      name: 'Refresh current problem',
+      name: '刷新当前题目（获取中文题面）',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -803,7 +825,7 @@ export default class LeetCodePlugin extends Plugin {
     // autoMigrateOnOpen setting per D-auto-03).
     this.addCommand({
       id: 'migrate-current-note',
-      name: 'Migrate current note',
+      name: '迁移当前笔记',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -853,7 +875,7 @@ export default class LeetCodePlugin extends Plugin {
     // lambda wraps the orchestrator with VerdictModal lifecycle glue.
     this.addCommand({
       id: 'submit',
-      name: 'Submit',
+      name: '提交',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -879,7 +901,7 @@ export default class LeetCodePlugin extends Plugin {
     // single-sourced (locked T-08-04-T-host mitigation).
     this.addCommand({
       id: 'ai-debug',
-      name: 'AI: Debug current code',
+      name: 'AI：调试当前代码',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -898,7 +920,7 @@ export default class LeetCodePlugin extends Plugin {
     // FOUND-03), sentence-case name. NO default hotkey per project rule.
     this.addCommand({
       id: 'rerun-ai-review',
-      name: 'Re-run AI review on current note',
+      name: '重新生成当前笔记的 AI 复盘',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -917,7 +939,7 @@ export default class LeetCodePlugin extends Plugin {
     // an existing fence is non-empty (D-11 keeps the modal class alive).
     this.addCommand({
       id: 'reset-code',
-      name: 'Reset code',
+      name: '重置代码',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -937,7 +959,7 @@ export default class LeetCodePlugin extends Plugin {
     this.addCommand({
       id: 'view-past-submissions',
       // Name per 04-CONTEXT §D-03 — sentence-case, no plugin-id prefix.
-      name: 'View past submissions',
+      name: '查看历史提交',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -954,7 +976,7 @@ export default class LeetCodePlugin extends Plugin {
     // its next three-point check.
     this.addCommand({
       id: 'cancel-submission',
-      name: 'Cancel running submission',
+      name: '取消正在进行的提交',
       checkCallback: (checking) => {
         if (!this.activeSolve) return false;
         if (!checking) {
@@ -973,23 +995,23 @@ export default class LeetCodePlugin extends Plugin {
     // Per D-03: start-random-contest from palette.
     this.addCommand({
       id: 'start-random-contest',
-      name: 'Start random contest',
+      name: '开始随机竞赛',
       callback: () => { void this.handleStartRandomContest(); },
     });
 
     // Per CONTEST-06: pause/resume toggle.
     this.addCommand({
       id: 'pause-contest',
-      name: 'Pause contest',
+      name: '暂停竞赛',
       callback: () => {
         const session = this.contestSessionManager.getSession();
         if (!session) return;
         if (session.isPaused) {
           this.contestSessionManager.resume();
-          new Notice('Contest resumed.', 3000);
+          new Notice('竞赛已继续。', 3000);
         } else {
           this.contestSessionManager.pause();
-          new Notice('Contest paused.', 3000);
+          new Notice('竞赛已暂停。', 3000);
         }
       },
     });
@@ -997,7 +1019,7 @@ export default class LeetCodePlugin extends Plugin {
     // Per CONTEST-06: abort with confirmation modal (D-07).
     this.addCommand({
       id: 'abort-contest',
-      name: 'Abort contest',
+      name: '中止竞赛',
       callback: () => {
         if (!this.contestSessionManager.isActive()) return;
         const session = this.contestSessionManager.getSession();
@@ -1017,7 +1039,7 @@ export default class LeetCodePlugin extends Plugin {
     // editorCheckCallback gates on lc-contest-id frontmatter (T-10-14 mitigation).
     this.addCommand({
       id: 'generate-contest-analysis',
-      name: 'Generate contest analysis',
+      name: '生成竞赛分析',
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
@@ -1033,13 +1055,62 @@ export default class LeetCodePlugin extends Plugin {
     // No editorCheckCallback — always available (reconcile is vault-wide, not note-specific).
     this.addCommand({
       id: 'reconcile-pattern-hubs',
-      name: 'Reconcile pattern hubs',
+      name: '同步模式汇总笔记',
       callback: () => {
         void this.hubWriter.reconcile().then(() => {
-          new Notice('Pattern hubs reconciled');
+          new Notice('模式汇总笔记已同步');
         }).catch((err) => {
           logger.debug('reconcile-pattern-hubs: failed', err);
         });
+      },
+    });
+
+    // 显式重生成入口：旧分类默认不重复调用 AI，用户可在此更新英文关联说明。
+    let refreshingKnowledgeGraph = false;
+    this.addCommand({
+      id: 'refresh-current-knowledge-graph',
+      name: '重新生成当前题目的知识图谱',
+      callback: async () => {
+        if (refreshingKnowledgeGraph) {
+          new Notice('正在生成知识图谱，请稍候。');
+          return;
+        }
+        const ctx = this.getActiveProblemContext();
+        if (!ctx) {
+          new Notice('请先打开一篇已通过的题目笔记。');
+          return;
+        }
+        const status: unknown = this.app.metadataCache.getFileCache(ctx.file)?.frontmatter?.['lc-status'];
+        if (status !== '已完成' && status !== 'accepted') {
+          new Notice('请先提交并通过这道题，再生成知识图谱。');
+          return;
+        }
+        if (!this.lcSettings.getActiveAIProvider()) {
+          new Notice('尚未配置 AI 服务，请打开设置中的 AI 配置。');
+          return;
+        }
+        const detail = this.lcSettings.getProblemDetail(ctx.slug);
+        const extracted = extractFirstFencedBlock(ctx.currentBody(), {
+          'lc-language': ctx.lcLanguage ?? this.lcSettings.getDefaultLanguage(),
+        });
+        if (!detail?.contentHtml || !extracted?.code.trim()) {
+          new Notice('请先刷新题面，并确认代码章节中已有解答。');
+          return;
+        }
+        refreshingKnowledgeGraph = true;
+        new Notice('正在重新生成解题模式和相关变式…');
+        try {
+          const updated = await patternClusterEngine.onAccepted(
+            ctx.file, ctx.slug, detail.contentHtml, extracted.code,
+            extracted.lang ?? this.lcSettings.getDefaultLanguage(), { force: true },
+          );
+          new Notice(updated ? '解题模式和相关变式已更新。' : '知识图谱未能完成更新，请检查 AI 服务配置或取消状态。');
+        } catch (err) {
+          logger.debug('refresh-current-knowledge-graph: failed', err);
+          new Notice('知识图谱更新失败，请稍后重试。');
+        } finally {
+          refreshingKnowledgeGraph = false;
+        }
       },
     });
 
@@ -1832,7 +1903,7 @@ export default class LeetCodePlugin extends Plugin {
   openQuickSearch(): void {
     const problems = this.lcSettings.getProblemIndex()?.problems ?? [];
     if (problems.length === 0) {
-      new Notice('LeetCode: open the problem browser to populate the index.');
+      new Notice('LeetCode：请先打开题库加载题目索引。');
       return;
     }
     new QuickProblemSearchModal(this.app, problems, (p) => {
@@ -1988,15 +2059,15 @@ export default class LeetCodePlugin extends Plugin {
       });
     } catch (err) {
       logger.debug('contest.finalize: failed', err);
-      new Notice('Contest finalization failed. Check the console for details.', 6000);
+      new Notice('竞赛归档失败，请查看控制台错误详情。', 6000);
       return;
     }
 
     // Notice per UI-SPEC: context-sensitive text.
     if (aborted) {
-      new Notice(`Contest aborted. Summary written to ${summaryPath}.`, 4000);
+      new Notice(`竞赛已放弃，总结已保存至 ${summaryPath}。`, 4000);
     } else {
-      new Notice(`Time’s up! Contest ended. Summary written to ${summaryPath}.`, 4000);
+      new Notice(`时间已到，竞赛结束。总结已保存至 ${summaryPath}。`, 4000);
     }
 
     // Run knowledge graph on AC'd problems (pattern classification + variants)
@@ -2005,7 +2076,8 @@ export default class LeetCodePlugin extends Plugin {
       if (problem.verdict !== 'accepted') continue;
       const detail = this.lcSettings.getProblemDetail(problem.slug);
       if (!detail) continue;
-      const notePath = `${folder}/${detail.id}-${problem.slug}.md`;
+      const notePath = resolveProblemNotePath(this.app, folder, problem.slug, detail);
+      if (!notePath) continue;
       const noteAbstract = this.app.vault.getAbstractFileByPath(notePath);
       const noteFile = noteAbstract instanceof TFile ? noteAbstract : null;
       if (!noteFile) continue;
@@ -2051,14 +2123,14 @@ export default class LeetCodePlugin extends Plugin {
   private async runContestAnalysis(summaryPath: string, session: import('./contest/types').ContestSession): Promise<void> {
     const file = this.app.vault.getAbstractFileByPath(summaryPath);
     if (!(file instanceof TFile)) {
-      new Notice('Summary note not found — cannot generate contest analysis.', 4000);
+      new Notice('未找到竞赛总结笔记，无法生成竞赛分析。', 4000);
       return;
     }
 
     // Gate on active provider.
     const provider = this.lcSettings.getActiveAIProvider();
     if (provider === null) {
-      new Notice('No AI provider configured. Open settings → AI.', 4000);
+      new Notice('尚未配置 AI 服务，请打开设置中的 AI 配置。', 4000);
       return;
     }
     const providerCfg = this.lcSettings.getProviderConfig(provider);
@@ -2096,7 +2168,7 @@ export default class LeetCodePlugin extends Plugin {
       prompt,
       aiClient: this.aiClient,
       model: providerCfg.model,
-      title: `Contest analysis — ${prettyName(provider)}`,
+      title: `竞赛分析 — ${prettyName(provider)}`,
       disclosureCopy: withContestAnalysisBullet(DISCLOSURE_BASE_COPY),
       onStreamComplete: async (fullText: string) => {
         // Build attribution line.
@@ -2104,13 +2176,13 @@ export default class LeetCodePlugin extends Plugin {
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
-        const attributionLine = `*Analyzed by ${prettyName(provider)} (${providerCfg.model ?? 'unknown'}) — ${yyyy}-${mm}-${dd}*`;
+        const attributionLine = `*分析生成：${prettyName(provider)}（${providerCfg.model ?? '未知模型'}） — ${yyyy}-${mm}-${dd}*`;
         const analysisContent = fullText + '\n\n' + attributionLine;
 
         await this.app.vault.process(file, (body) =>
           mergeAIContestAnalysisSection(body, analysisContent),
         );
-        new Notice(`Contest analysis written to ${summaryPath}.`, 4000);
+        new Notice(`竞赛分析已保存至 ${summaryPath}。`, 4000);
       },
     }).open();
   }
@@ -2122,7 +2194,7 @@ export default class LeetCodePlugin extends Plugin {
   private async handleStartRandomContest(): Promise<void> {
     const contest = await this.contestListService.surpriseMe();
     if (!contest) {
-      new Notice('No contests available. Check your connection or try again.', 4000);
+      new Notice('暂无可用竞赛，请检查网络后重试。', 4000);
       return;
     }
     new ContestPreviewModal(this.app, contest, this.client, async (questions) => {
@@ -2155,7 +2227,7 @@ export default class LeetCodePlugin extends Plugin {
           };
         }),
       });
-      new Notice(`Contest started: ${contest.title}`, 3000);
+      new Notice(`竞赛已开始：${contest.title}`, 3000);
     }).open();
   }
 
@@ -2170,7 +2242,7 @@ export default class LeetCodePlugin extends Plugin {
     const fm = cache?.frontmatter as Record<string, unknown> | undefined;
     if (!fm) return;
 
-    const contestTitle = (fm['lc-contest-id'] as string) ?? 'Unknown Contest';
+    const contestTitle = (fm['lc-contest-id'] as string) ?? '未知竞赛';
     const contestType = (fm['lc-contest-type'] as 'weekly' | 'biweekly') ?? 'weekly';
     const durationMin = typeof fm['duration'] === 'number' ? fm['duration'] : 90;
 
@@ -2188,7 +2260,7 @@ export default class LeetCodePlugin extends Plugin {
     // Gate on active provider.
     const provider = this.lcSettings.getActiveAIProvider();
     if (provider === null) {
-      new Notice('No AI provider configured. Open settings → AI.', 4000);
+      new Notice('尚未配置 AI 服务，请打开设置中的 AI 配置。', 4000);
       return;
     }
     const providerCfg = this.lcSettings.getProviderConfig(provider);
@@ -2205,20 +2277,20 @@ export default class LeetCodePlugin extends Plugin {
       prompt,
       aiClient: this.aiClient,
       model: providerCfg.model,
-      title: `Contest analysis — ${prettyName(provider)}`,
+      title: `竞赛分析 — ${prettyName(provider)}`,
       disclosureCopy: withContestAnalysisBullet(DISCLOSURE_BASE_COPY),
       onStreamComplete: async (fullText: string) => {
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
-        const attributionLine = `*Analyzed by ${prettyName(provider)} (${providerCfg.model ?? 'unknown'}) — ${yyyy}-${mm}-${dd}*`;
+        const attributionLine = `*分析生成：${prettyName(provider)}（${providerCfg.model ?? '未知模型'}） — ${yyyy}-${mm}-${dd}*`;
         const analysisContent = fullText + '\n\n' + attributionLine;
 
         await this.app.vault.process(file, (body) =>
           mergeAIContestAnalysisSection(body, analysisContent),
         );
-        new Notice(`Contest analysis written to ${file.path}.`, 4000);
+        new Notice(`竞赛分析已保存至 ${file.path}。`, 4000);
       },
     }).open();
   }
@@ -2272,7 +2344,7 @@ export default class LeetCodePlugin extends Plugin {
     if (!this.activeSolve) return true;
 
     new Notice(
-      'A submission is already in progress. Cancel it first or wait for the verdict.',
+      '已有提交正在进行，请取消或等待判题结果。',
       6000,
     );
     return false;
@@ -2332,7 +2404,7 @@ export default class LeetCodePlugin extends Plugin {
     const provider = this.lcSettings.getActiveAIProvider();
     if (!provider) {
 
-      new Notice('Pick an AI provider first.', 3000);
+      new Notice('请先选择 AI 服务提供商。', 3000);
       return;
     }
     const cfg = this.lcSettings.getProviderConfig(provider);
@@ -2341,7 +2413,7 @@ export default class LeetCodePlugin extends Plugin {
       cfg.apiKey === ''
     ) {
 
-      new Notice(`Enter an API key for ${prettyName(provider)} first.`, 3000);
+      new Notice(`请先填写 ${prettyName(provider)} 的 API 密钥。`, 3000);
       return;
     }
     // Phase 07 Plan 07 — CR-02 main.ts guard. Symmetric with the apiKey
@@ -2363,7 +2435,7 @@ export default class LeetCodePlugin extends Plugin {
       !cfg.baseUrl?.trim()
     ) {
 
-      new Notice(`Enter a Base URL for ${prettyName(provider)} first.`, 3000);
+      new Notice(`请先填写 ${prettyName(provider)} 的服务地址。`, 3000);
       return;
     }
     if (this.aiProbeInflight.has(provider)) {
@@ -2380,13 +2452,13 @@ export default class LeetCodePlugin extends Plugin {
         if (result.modelCount === null) {
           // Anthropic — no public model-list endpoint, modelCount is null.
 
-          new Notice('AI provider connection OK (Anthropic)', 4000);
+          new Notice('Anthropic 服务连接成功。', 4000);
         } else if (result.modelCount === 0 && provider === 'ollama') {
           // Ollama reachable but no models pulled yet — special-case copy
           // (07-UI-SPEC §"Notice copy" with the pull-suggestion hint).
 
           new Notice(
-            'Ollama reachable, 0 models installed — run `ollama pull llama3.2`',
+            'Ollama 已连接，但尚未安装模型，请先执行 ollama pull llama3.2。',
             6000,
           );
         } else {
@@ -2395,7 +2467,7 @@ export default class LeetCodePlugin extends Plugin {
           // the 07-UI-SPEC copy renders the number directly.
 
           new Notice(
-            `AI provider connection OK (${prettyName(provider)}, ${String(result.modelCount ?? 0)} models available)`,
+            `AI 服务连接成功（${prettyName(provider)}，${String(result.modelCount ?? 0)} 个可用模型）`,
             4000,
           );
         }
@@ -2405,7 +2477,8 @@ export default class LeetCodePlugin extends Plugin {
         // on the COMBINED prefix+message string per 07-UI-SPEC §"Error state
         // copy posture" (200 chars TOTAL including the `{provider name}: `
         // prefix).
-        const combined = `${prettyName(provider)}: ${result.errorMessage ?? 'unknown error'}`;
+        const message = result.errorMessage === 'AI call cancelled' ? '已取消 AI 请求。' : (result.errorMessage ?? '未知错误');
+        const combined = `${prettyName(provider)}: ${message}`;
 
         new Notice(combined.slice(0, 200), 6000);
       }
@@ -2450,7 +2523,7 @@ export default class LeetCodePlugin extends Plugin {
           if (!resolved) {
             resolved = true;
 
-            new Notice('AI call cancelled', 3000);
+            new Notice('已取消 AI 请求。', 3000);
             resolve(false);
           }
         },
@@ -2484,7 +2557,7 @@ export default class LeetCodePlugin extends Plugin {
     }
 
     new Notice(
-      'AI provider disclosures reset. The disclosure modal will show on the next AI call.',
+      'AI 数据发送确认已重置，下次调用 AI 时会重新提示。',
       4000,
     );
   }
@@ -2510,13 +2583,13 @@ export default class LeetCodePlugin extends Plugin {
     const provider = this.lcSettings.getActiveAIProvider();
     if (!provider) {
 
-      new Notice('No active AI provider — nothing to clear.', 3000);
+      new Notice('未启用 AI 服务，无需清除。', 3000);
       return;
     }
     const cfg = this.lcSettings.getProviderConfig(provider);
     await this.lcSettings.setProviderConfig(provider, { ...cfg, apiKey: '' });
 
-    new Notice(`Cleared AI key for ${prettyName(provider)}`, 3000);
+    new Notice(`已清除 ${prettyName(provider)} 的 AI 密钥。`, 3000);
   }
 
   /**
@@ -2567,7 +2640,7 @@ export default class LeetCodePlugin extends Plugin {
     // and this method running, bail with the generic Notice.
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view || !view.file) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const body = view.editor.getValue();
@@ -2584,7 +2657,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const extracted = extractFirstFencedBlock(body, fm);
     if (!extracted) {
-      new Notice('No `## Code` block found. Add a fenced block with your solution.', 6000);
+      new Notice('未找到代码区域，请添加用于解题的代码块。', 6000);
       return;
     }
     const language = extracted.lang ?? this.lcSettings.getDefaultLanguage() ?? 'plaintext';
@@ -2605,12 +2678,12 @@ export default class LeetCodePlugin extends Plugin {
       try {
         const fetched = await this.client.getProblemDetail(slug);
         if (!fetched) {
-          new Notice('Problem details unavailable. Refresh the note and try again.', 6000);
+          new Notice('题目详情不可用，请刷新笔记后重试。', 6000);
           return;
         }
         problemHtml = fetched.content ?? '';
       } catch {
-        new Notice('Problem details unavailable. Refresh the note and try again.', 6000);
+        new Notice('题目详情不可用，请刷新笔记后重试。', 6000);
         return;
       }
     }
@@ -2637,7 +2710,7 @@ export default class LeetCodePlugin extends Plugin {
       // Sentence case per Obsidian community-plugin guidelines
       // (eslint-plugin-obsidianmd ui/sentence-case rule). The "settings"
       // word is lowercased to match plugin store expectations.
-      new Notice('No AI provider configured. Open settings → AI.', 4000);
+      new Notice('尚未配置 AI 服务，请打开设置中的 AI 配置。', 4000);
       return;
     }
     const providerCfg = this.lcSettings.getProviderConfig(provider);
@@ -2709,7 +2782,7 @@ export default class LeetCodePlugin extends Plugin {
 
     // Show a loading indicator immediately so user knows review is in progress.
     const spinnerEl = reviewAreaEl.createDiv({ cls: 'leetcode-ai-review-loading' });
-    spinnerEl.setText('Reviewing…');
+    spinnerEl.setText('正在复盘…');
 
     const promise = (async () => {
       // Step 1 — resolve problem markdown for prompt assembly.
@@ -2851,7 +2924,7 @@ export default class LeetCodePlugin extends Plugin {
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const dd = String(now.getDate()).padStart(2, '0');
-      const attributionLine = `*Reviewed by ${prettyName(provider)} (${providerCfg.model ?? 'unknown'}) — ${yyyy}-${mm}-${dd}*`;
+      const attributionLine = `*复盘生成：${prettyName(provider)}（${providerCfg.model ?? '未知模型'}） — ${yyyy}-${mm}-${dd}*`;
       const reviewContent = buffer + '\n\n' + attributionLine;
 
       await this.app.vault.process(ctx.file, (noteBody) =>
@@ -2865,7 +2938,7 @@ export default class LeetCodePlugin extends Plugin {
       }
       // D-11: non-blocking failure — subtle Notice, no vault write.
       const reason = err instanceof Error ? err.message : String(err);
-      new Notice(`AI review skipped — ${reason.slice(0, 100)}`, 4000);
+      new Notice(`AI 复盘未完成：${reason.slice(0, 100)}`, 4000);
       void this.aiClient.addCost(0);
     });
 
@@ -2890,7 +2963,7 @@ export default class LeetCodePlugin extends Plugin {
     // Step 1 — gate on active provider (same pattern as openAIDebug Step 6).
     const provider = this.lcSettings.getActiveAIProvider();
     if (provider === null) {
-      new Notice('No AI provider configured. Open settings → AI.', 4000);
+      new Notice('尚未配置 AI 服务，请打开设置中的 AI 配置。', 4000);
       return;
     }
     const providerCfg = this.lcSettings.getProviderConfig(provider);
@@ -2898,7 +2971,7 @@ export default class LeetCodePlugin extends Plugin {
     // Step 2 — resolve the active MarkdownView for reading the editor body.
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view || !view.file) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const body = view.editor.getValue();
@@ -2911,7 +2984,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const extracted = extractFirstFencedBlock(body, fm);
     if (!extracted) {
-      new Notice('No `## Code` block found. Add a fenced block with your solution.', 6000);
+      new Notice('未找到代码区域，请添加用于解题的代码块。', 6000);
       return;
     }
     const language = extracted.lang ?? this.lcSettings.getDefaultLanguage() ?? 'plaintext';
@@ -2925,12 +2998,12 @@ export default class LeetCodePlugin extends Plugin {
       try {
         const fetched = await this.client.getProblemDetail(slug);
         if (!fetched) {
-          new Notice('Problem details unavailable. Refresh the note and try again.', 6000);
+          new Notice('题目详情不可用，请刷新笔记后重试。', 6000);
           return;
         }
         problemHtml = fetched.content ?? '';
       } catch {
-        new Notice('Problem details unavailable. Refresh the note and try again.', 6000);
+        new Notice('题目详情不可用，请刷新笔记后重试。', 6000);
         return;
       }
     }
@@ -2945,7 +3018,7 @@ export default class LeetCodePlugin extends Plugin {
       prompt,
       aiClient: this.aiClient,
       model: providerCfg.model,
-      title: `AI Review — ${prettyName(provider)}`,
+      title: `AI 复盘 — ${prettyName(provider)}`,
       disclosureCopy: withReviewBullet(DISCLOSURE_BASE_COPY),
       onStreamComplete: async (fullText: string) => {
         // Build attribution line (D-03 format).
@@ -2953,7 +3026,7 @@ export default class LeetCodePlugin extends Plugin {
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
-        const attributionLine = `*Reviewed by ${prettyName(provider)} (${providerCfg.model ?? 'unknown'}) — ${yyyy}-${mm}-${dd}*`;
+        const attributionLine = `*复盘生成：${prettyName(provider)}（${providerCfg.model ?? '未知模型'}） — ${yyyy}-${mm}-${dd}*`;
         const reviewContent = fullText + '\n\n' + attributionLine;
 
         // D-20/D-21: vault.process is atomic + idempotent (replaces existing).
@@ -2983,7 +3056,7 @@ export default class LeetCodePlugin extends Plugin {
   async aiDebugFromActive(): Promise<void> {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view || !view.file) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const fm = this.app.metadataCache.getFileCache(view.file)?.frontmatter as
@@ -2991,7 +3064,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const slug = fm?.['lc-slug'];
     if (!isValidSlug(slug)) {
-      new Notice('Active note has no `lc-slug` frontmatter.', 4000);
+      new Notice('当前笔记缺少 lc-slug 属性。', 4000);
       return;
     }
     await this.openAIDebug(slug);
@@ -3000,7 +3073,7 @@ export default class LeetCodePlugin extends Plugin {
   async aiSolutionFromActive(): Promise<void> {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view || !view.file) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const fm = this.app.metadataCache.getFileCache(view.file)?.frontmatter as
@@ -3008,7 +3081,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const slug = fm?.['lc-slug'];
     if (!isValidSlug(slug)) {
-      new Notice('Active note has no `lc-slug` frontmatter.', 4000);
+      new Notice('当前笔记缺少 lc-slug 属性。', 4000);
       return;
     }
     await this.aiSolutionWithSlug(view.file, slug);
@@ -3030,7 +3103,7 @@ export default class LeetCodePlugin extends Plugin {
   async resetFromActive(): Promise<void> {
     const ctx = this.getActiveProblemContext();
     if (!ctx) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.resetWithSlug(ctx.file, ctx.slug);
@@ -3051,7 +3124,7 @@ export default class LeetCodePlugin extends Plugin {
   async retrieveLastSubmissionFromActive(): Promise<void> {
     const ctx = this.getActiveProblemContext();
     if (!ctx) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.retrieveLastSubmissionWithSlug(ctx.file, ctx.slug);
@@ -3069,7 +3142,7 @@ export default class LeetCodePlugin extends Plugin {
       // suspenders with the EMPTY_TTL_MS short-TTL change in
       // SubmissionHistoryStore: the in-store TTL bounds the empty-result
       // blackout; this invalidate covers the case where a non-empty cache
-      // entry has gone stale (e.g., the user submitted from leetcode.com
+      // entry has gone stale (e.g., the user submitted from leetcode.cn
       // between the cache fill and this retrieve). Same primitive as the
       // existing post-AC invalidate (this file's submitWithCode path).
       // The contract is well-defined: invalidate drops the cache entry
@@ -3078,19 +3151,19 @@ export default class LeetCodePlugin extends Plugin {
       this.submissionHistory.invalidate(slug);
       const rows = await this.submissionHistory.get(slug);
       if (!rows || rows.length === 0) {
-        new Notice('No past submissions found for this problem.', 4000);
+        new Notice('这道题暂无历史提交。', 4000);
         return;
       }
       const latest = rows[0]!;
       const cookies = this.lcSettings.getAuthCookies();
       if (!cookies) {
-        new Notice('Not logged in.', 4000);
+        new Notice('尚未登录。', 4000);
         return;
       }
       const { detailForSubmission } = await import('./graph/submissionHistoryClient');
       const detail = await detailForSubmission(latest.id, cookies);
       if (!detail?.code) {
-        new Notice('Could not retrieve submission code.', 4000);
+        new Notice('无法获取提交代码。', 4000);
         return;
       }
       const { copyToCode } = await import('./graph/copyToCode');
@@ -3098,9 +3171,9 @@ export default class LeetCodePlugin extends Plugin {
       // `## Code` is wrapped in backticks so the sentence-case rule treats
       // the literal section heading as code-fenced (matches the existing
       // 'No `## Code` block found.' Notices elsewhere in this file).
-      new Notice('Last submission copied to `## Code`.', 3000);
+      new Notice('最近一次提交已复制到代码区域。', 3000);
     } catch (err) {
-      new Notice('Failed to retrieve submission.', 4000);
+      new Notice('获取提交记录失败。', 4000);
       console.error('[leetcode] retrieveLastSubmission:', err);
     }
   }
@@ -3136,7 +3209,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const lcSlugRaw = fm?.['lc-slug'];
     if (typeof lcSlugRaw !== 'string' || lcSlugRaw.length === 0) {
-      new Notice('This widget is not on a LeetCode note.', 4000);
+      new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
       return;
     }
     const lcSlug = lcSlugRaw;
@@ -3205,7 +3278,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const lcSlugRaw = fm?.['lc-slug'];
     if (typeof lcSlugRaw !== 'string' || lcSlugRaw.length === 0) {
-      new Notice('This widget is not on a LeetCode note.', 4000);
+      new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
       return;
     }
     const lcSlug = lcSlugRaw;
@@ -3248,7 +3321,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const lcSlug = fm?.['lc-slug'];
     if (typeof lcSlug !== 'string' || lcSlug.length === 0) {
-      new Notice('This widget is not on a LeetCode note.', 4000);
+      new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.aiSolutionWithSlug(file, lcSlug);
@@ -3265,7 +3338,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const lcSlug = fm?.['lc-slug'];
     if (typeof lcSlug !== 'string' || lcSlug.length === 0) {
-      new Notice('This widget is not on a LeetCode note.', 4000);
+      new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.resetWithSlug(file, lcSlug);
@@ -3283,7 +3356,7 @@ export default class LeetCodePlugin extends Plugin {
       | undefined;
     const lcSlug = fm?.['lc-slug'];
     if (typeof lcSlug !== 'string' || lcSlug.length === 0) {
-      new Notice('This widget is not on a LeetCode note.', 4000);
+      new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.retrieveLastSubmissionWithSlug(file, lcSlug);
@@ -3356,7 +3429,7 @@ export default class LeetCodePlugin extends Plugin {
   private async openAISolution(slug: string): Promise<void> {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view || !view.file) {
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const fm = this.app.metadataCache.getFileCache(view.file)?.frontmatter as
@@ -3371,12 +3444,12 @@ export default class LeetCodePlugin extends Plugin {
       try {
         const fetched = await this.client.getProblemDetail(slug);
         if (!fetched) {
-          new Notice('Problem details unavailable. Refresh the note and try again.', 6000);
+          new Notice('题目详情不可用，请刷新笔记后重试。', 6000);
           return;
         }
         problemHtml = fetched.content ?? '';
       } catch {
-        new Notice('Problem details unavailable. Refresh the note and try again.', 6000);
+        new Notice('题目详情不可用，请刷新笔记后重试。', 6000);
         return;
       }
     }
@@ -3385,11 +3458,11 @@ export default class LeetCodePlugin extends Plugin {
     const starterCode = cached?.codeSnippets?.find(s => s.langSlug === language)?.code ?? '';
     const starterSection = starterCode ? `\n\n## Starter Code\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour solution MUST use the exact same class/method signature as the starter code above.` : '';
 
-    const prompt = `You are a LeetCode expert. Given the problem below, provide:\n\n1. **Approach** — Explain the optimal algorithm and data structures to use. Include time and space complexity.\n2. **Solution** — Write a clean, well-commented solution in ${language}.${starterSection}\n\n## Problem\n\n${problemMd}\n\nRespond with the approach explanation first, then the complete solution code in a fenced code block.`;
+    const prompt = `You are a LeetCode expert. Given the problem below, provide:\n\n1. **Approach** — Explain the optimal algorithm and data structures to use. Include time and space complexity.\n2. **Solution** — Write a clean, well-commented solution in ${language}.${starterSection}\n\n## Problem\n\n${problemMd}\n\n请使用简体中文回答，使用“解题思路”和“代码实现”作为小节标题。先解释思路、时间和空间复杂度，再在代码围栏中给出完整解答。解释和代码注释使用中文，保留编程语言关键字及要求的类名、方法名和参数名。`;
 
     const provider = this.lcSettings.getActiveAIProvider();
     if (provider === null) {
-      new Notice('No AI provider configured. Open settings → AI.', 4000);
+      new Notice('尚未配置 AI 服务，请打开设置中的 AI 配置。', 4000);
       return;
     }
     const providerCfg = this.lcSettings.getProviderConfig(provider);
@@ -3399,7 +3472,7 @@ export default class LeetCodePlugin extends Plugin {
       prompt,
       aiClient: this.aiClient,
       model: providerCfg.model,
-      title: `AI Solution — ${prettyName(provider)}`,
+      title: `AI 解题 — ${prettyName(provider)}`,
       disclosureCopy: withDebugBullet(DISCLOSURE_BASE_COPY),
     });
     if (modal.modalEl) {
@@ -3420,7 +3493,7 @@ export default class LeetCodePlugin extends Plugin {
     const ctx = this.getActiveProblemContext();
     if (!ctx) {
 
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.submitWithCode(ctx.file, ctx.slug, ctx.title, ctx.lcLanguage, ctx.currentBody);
@@ -3500,7 +3573,7 @@ export default class LeetCodePlugin extends Plugin {
           : undefined,
       // Phase 12 Plan 03 (D-03/D-04) — pattern chip on AC (suppress during contest).
       file: this.contestSessionManager.getSession() ? null : file,
-      getPatternHubPath: (p) => `${this.lcSettings.getProblemsFolder()}/Patterns/${sanitizeHubFilename(normalizePatternName(p))}.md`,
+      getPatternHubPath: (p) => `${this.lcSettings.getProblemsFolder()}/patterns/${sanitizeHubFilename(normalizePatternName(p))}.md`,
     });
     modal.open();
 
@@ -3624,17 +3697,17 @@ export default class LeetCodePlugin extends Plugin {
       } else if (isNetworkError(err)) {
         // D-19 LOCKED copy + D-22 command-palette Notice surface.
 
-        new Notice("Couldn't reach LeetCode. Check your connection.", 8000);
+        new Notice('无法连接 LeetCode，请检查网络连接。', 8000);
         try { modal.close(); } catch { /* headless */ }
       } else if (err instanceof TimeoutError || (err as Error).name === 'TimeoutError') {
         // D-20 LOCKED copy + D-22 command-palette Notice surface.
 
-        new Notice('LeetCode is slow to respond. Try again.', 8000);
+        new Notice('LeetCode 响应超时，请重试。', 8000);
         try { modal.close(); } catch { /* headless */ }
       } else if (err instanceof RateLimitError) {
         const seconds = Math.ceil(err.retryAfterMs / 1000);
 
-        new Notice(`LeetCode rate limit reached. Wait ${String(seconds)}s before retrying.`, 6000);
+        new Notice(`力扣请求过于频繁，请等待 ${String(seconds)} 秒后重试。`, 6000);
         try { modal.close(); } catch { /* headless */ }
       } else {
         logger.debug('solve.submit: unexpected error', err);
@@ -3657,7 +3730,7 @@ export default class LeetCodePlugin extends Plugin {
     const ctx = this.getActiveProblemContext();
     if (!ctx) {
 
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     await this.runWithCode(
@@ -3756,7 +3829,7 @@ export default class LeetCodePlugin extends Plugin {
     const ctx = this.getActiveProblemContext();
     if (!ctx) {
 
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const detail = this.lcSettings.getProblemDetail(ctx.slug);
@@ -3800,7 +3873,7 @@ export default class LeetCodePlugin extends Plugin {
       if (raw.trim().length === 0) {
 
         new Notice(
-          'Add code to your solution before running.',
+          '请先填写解题代码再运行。',
           6000,
         );
         return;
@@ -3827,7 +3900,7 @@ export default class LeetCodePlugin extends Plugin {
       if (!extracted) {
 
         new Notice(
-          'No code block found. Add a fenced block with your solution.',
+          '未找到代码块，请先添加解题代码。',
           6000,
         );
         return;
@@ -3909,17 +3982,17 @@ export default class LeetCodePlugin extends Plugin {
       } else if (isNetworkError(err)) {
         // D-19 LOCKED copy + D-22 command-palette Notice surface.
 
-        new Notice("Couldn't reach LeetCode. Check your connection.", 8000);
+        new Notice('无法连接 LeetCode，请检查网络连接。', 8000);
         try { modal.close(); } catch { /* headless */ }
       } else if (err instanceof TimeoutError || (err as Error).name === 'TimeoutError') {
         // D-20 LOCKED copy + D-22 command-palette Notice surface.
 
-        new Notice('LeetCode is slow to respond. Try again.', 8000);
+        new Notice('LeetCode 响应超时，请重试。', 8000);
         try { modal.close(); } catch { /* headless */ }
       } else if (err instanceof RateLimitError) {
         const seconds = Math.ceil(err.retryAfterMs / 1000);
 
-        new Notice(`LeetCode rate limit reached. Wait ${String(seconds)}s before retrying.`, 6000);
+        new Notice(`力扣请求过于频繁，请等待 ${String(seconds)} 秒后重试。`, 6000);
         try { modal.close(); } catch { /* headless */ }
       } else {
         logger.debug('solve.run: unexpected error', err);
@@ -3943,7 +4016,7 @@ export default class LeetCodePlugin extends Plugin {
     const ctx = this.getActiveProblemContext();
     if (!ctx) {
 
-      new Notice('Open a LeetCode problem note first.', 4000);
+      new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
     const picker = new SubmissionPickerModal(this.app, {
@@ -3998,18 +4071,18 @@ export default class LeetCodePlugin extends Plugin {
       if (isNetworkError(err)) {
         // D-19 LOCKED copy + D-22 command-palette Notice surface.
 
-        new Notice("Couldn't reach LeetCode. Check your connection.", 8000);
+        new Notice('无法连接 LeetCode，请检查网络连接。', 8000);
         return;
       }
       if (err instanceof TimeoutError || (err as Error).name === 'TimeoutError') {
         // D-20 LOCKED copy + D-22 command-palette Notice surface.
 
-        new Notice('LeetCode is slow to respond. Try again.', 8000);
+        new Notice('LeetCode 响应超时，请重试。', 8000);
         return;
       }
       logger.debug('graph.openSubmissionDetail: fetch failed', err);
 
-      new Notice("Couldn't load submission. Check your connection.", 4000);
+      new Notice('提交记录加载失败，请检查网络连接。', 4000);
       return;
     }
     const verdictDisplay = classifyStatus(detail.statusCode).displayName;
@@ -4162,7 +4235,7 @@ export async function runLegacyBaseCheck(deps: {
   if (contents == null) return;   // no .base yet — nothing to migrate
   if (!isLegacyLeetcodeBaseV010(contents)) return;
   deps.showNotice(
-    'LeetCode.base may need to be regenerated. Delete it to get the updated view.',
+    'LeetCode.base 视图配置可能需要更新。备份自定义设置后，删除该文件并重新打开题目即可生成新版视图。',
     8000,
   );
   await deps.settings.markLegacyBaseNoticeShown();

@@ -388,14 +388,14 @@ describe('SettingsTab — AI section (Phase 07 Plan 03)', () => {
     // The AI section renders only the heading row with toggle OFF — no provider
     // dropdown or sub-form. Find the AI coach heading.
     const headings = Array.from(tab.containerEl.querySelectorAll('h3'));
-    const aiHeading = headings.find((h) => h.textContent === 'AI coach');
+    const aiHeading = headings.find((h) => h.textContent === 'AI 解题助手');
     expect(aiHeading).toBeDefined();
 
     // The next heading after AI coach must be Knowledge graph (Contest was
     // merged into the AI features card which is hidden when toggle is off).
     const aiHeadingIdx = headings.indexOf(aiHeading!);
     const nextHeading = headings[aiHeadingIdx + 1];
-    expect(nextHeading?.textContent).toBe('Knowledge graph');
+    expect(nextHeading?.textContent).toBe("知识图谱");
 
     // No AI password input rendered when toggle is off.
     const passwordInputs = tab.containerEl.querySelectorAll('input[type="password"]');
@@ -493,7 +493,7 @@ describe('SettingsTab — AI section (Phase 07 Plan 03)', () => {
     expect(apiKeyInputs[0]?.value).toBe('sk-ant-123');
   });
 
-  it('clicking Test connection delegates to the plugin-level testActiveAIConnection method (Plan 07-04 wiring)', async () => {
+  it("clicking 测试连接 delegates to the plugin-level testActiveAIConnection method (Plan 07-04 wiring)", async () => {
     const obs = await import('obsidian');
     type ObsTest = typeof obs & {
       __resetButtonHandlers: () => void;
@@ -509,7 +509,7 @@ describe('SettingsTab — AI section (Phase 07 Plan 03)', () => {
 
     // Find the captured Test connection handler by tooltip and invoke it.
     const handlers = obsHelpers.__getButtonHandlers();
-    const testConn = handlers.find((h) => h.tooltip === 'Test connection');
+    const testConn = handlers.find((h) => h.tooltip === "测试连接");
     expect(testConn).toBeDefined();
 
     await testConn!.onClick();

@@ -1,7 +1,9 @@
 export interface IndexedProblem {
-  id: number;                       // questionFrontendId parsed to number
+  id: number | string;                       // questionFrontendId parsed to number
   slug: string;                     // titleSlug
   title: string;
+  /** 保留英文标题，中文展示时仍可用英文搜索。 */
+  originalTitle?: string;
   diff: 'Easy' | 'Medium' | 'Hard';
   paid: boolean;
   /**
@@ -24,5 +26,6 @@ export interface IndexedProblem {
 
 export interface ProblemIndex {
   fetchedAt: number;
+  translationCheckedAt?: number;
   problems: IndexedProblem[];
 }

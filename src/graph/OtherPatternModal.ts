@@ -44,27 +44,27 @@ export class OtherPatternModal extends Modal {
     contentEl.addClass('leetcode-other-pattern');
 
     contentEl.createEl('h3', {
-      text: 'AI could not classify this pattern',
+      text: 'AI 暂时无法确定解题模式',
     });
 
     contentEl.createEl('p', {
-      text: `Problem: ${this.problemTitle}`,
+      text: `题目：${this.problemTitle}`,
     });
 
     contentEl.createEl('p', {
-      text: 'Enter a custom pattern name, or accept "OTHER" to leave it unclassified.',
+      text: '请输入自定义模式名称，或保留“其他”表示暂未分类。',
     });
 
     const inputEl = contentEl.createEl('input', {
       type: 'text',
-      value: 'OTHER',
+      value: '其他',
       cls: 'leetcode-other-pattern-input',
     });
 
     const buttonContainer = contentEl.createDiv({ cls: 'leetcode-other-pattern-buttons' });
 
     const acceptBtn = buttonContainer.createEl('button', {
-      text: 'Accept',
+      text: '确定',
     });
     acceptBtn.addClass('mod-cta');
     acceptBtn.addEventListener('click', () => {

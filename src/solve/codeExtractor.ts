@@ -1,3 +1,4 @@
+import { isCodeHeading, isSectionBoundary } from '../notes/noteHeadings';
 // src/solve/codeExtractor.ts
 //
 // Pure string transform: given a note body, returns the FIRST fenced code
@@ -34,8 +35,6 @@
 
 const FENCE_OPEN = /^```([a-zA-Z0-9_+#-]*)\s*$/;
 const FENCE_CLOSE = /^```\s*$/;
-const CODE_HEADING = /^## Code\s*$/;
-const SECTION_BOUNDARY = /^## \S/;
 
 /**
  * Phase 21 Plan 21-03 — matches the v1.3 fence opener exactly. Mirrors
@@ -92,11 +91,24 @@ export function extractFirstFencedBlock(
   frontmatter?: { 'lc-language'?: string },
 ): ExtractedCode | null {
   const lines = noteBody.split('\n');
-  const codeHeadingIdx = lines.findIndex((ln) => CODE_HEADING.test(ln));
+  let inFence = false;
+  const codeHeadingIdx = lines.findIndex(line => {
+    if ((inFence ? FENCE_CLOSE : FENCE_OPEN).test(line)) {
+      inFence = !inFence;
+      return false;
+    }
+    return !inFence && isCodeHeading(line);
+  });
   if (codeHeadingIdx >= 0) {
     let sectionEnd = lines.length;
+    inFence = false;
     for (let j = codeHeadingIdx + 1; j < lines.length; j++) {
-      if (SECTION_BOUNDARY.test(lines[j] ?? '')) {
+      const line = lines[j] ?? '';
+      if ((inFence ? FENCE_CLOSE : FENCE_OPEN).test(line)) {
+        inFence = !inFence;
+        continue;
+      }
+      if (!inFence && isSectionBoundary(line, lines[codeHeadingIdx]!)) {
         sectionEnd = j;
         break;
       }

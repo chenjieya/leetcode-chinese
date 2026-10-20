@@ -215,7 +215,7 @@ export class DebouncedWriter {
       const actualCount = countLcOpeners(currentDisk);
       if (actualCount > expectedFenceIndex + 1) {
 
-        new Notice('Fence position changed; reload to continue editing.', 5000);
+        new Notice('代码块位置已变化，请重新打开笔记后继续编辑。', 5000);
         return;
       }
 

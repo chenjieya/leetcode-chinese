@@ -144,7 +144,7 @@ describe('LeetCodePlugin.resetAIDisclosures — Phase 07 Plan 05 Task 2', () => 
     await callResetAIDisclosures(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'AI provider disclosures reset. The disclosure modal will show on the next AI call.',
+      text: 'AI 数据发送确认已重置，下次调用 AI 时会重新提示。',
       duration: 4000,
     });
   });

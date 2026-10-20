@@ -87,13 +87,13 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // =============================
     //   Authentication section
     // =============================
-    new Setting(containerEl).setName('Authentication').setHeading();
+    new Setting(containerEl).setName('力扣中国站账号').setDesc('当前使用 LeetCode.cn，请登录中国站账号。国际站账号和提交记录不通用。').setHeading();
 
     const loggedIn = this.plugin.auth.isLoggedIn();
     const username = this.plugin.lcSettings.getUsername();
     const statusText = loggedIn
-      ? `Logged in as ${username ?? '…'}`
-      : 'Not logged in';
+      ? `已登录：${username ?? '…'}`
+      : '未登录';
 
     // Phase 5.2 D-01 — Status row and primary auth button merged into a single
     // Setting. Name+Desc render on the left via Obsidian's built-in
@@ -103,21 +103,21 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // Accent-modifier grep gate preserved: exactly one invocation of the
     // call-to-action modifier in this file, on the logged-out Log-in branch.
     new Setting(containerEl)
-      .setName('Status')
+      .setName('状态')
       .setDesc(statusText)
       .addButton((b) => {
         if (loggedIn) {
           // AUTH-05: immediate logout, no confirmation modal (UI-SPEC.md § Destructive actions).
-          b.setButtonText('Logout')
+          b.setButtonText('退出登录')
 
-            .setTooltip('Log out of LeetCode')
+            .setTooltip('退出 LeetCode 登录')
             .onClick(async () => {
               await this.plugin.auth.logout();
               this.renderTab();
             });
         } else {
           // Only button in this file that receives the call-to-action accent modifier.
-          b.setButtonText('Log in via embedded window')
+          b.setButtonText('通过内嵌窗口登录')
             .setCta()
             .onClick(async () => {
               await this.plugin.auth.login();
@@ -133,17 +133,17 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     let csrfVal = '';
 
     new Setting(containerEl)
-      .setName('Manual cookie (fallback)')
-      .setDesc("Paste your LeetCode session cookies if the embedded login doesn't work on your system.")
+      .setName('手动填写 Cookie（备用方式）')
+      .setDesc('如果内嵌登录窗口无法使用，请粘贴力扣中国站会话 Cookie。')
       .setHeading()
       .addButton((b) => {
         b.setIcon('save')
-          .setTooltip('Save cookies')
+          .setTooltip('保存 Cookie')
           .onClick(async () => {
             const session = sessionVal.trim();
             const csrf = csrfVal.trim();
             if (!session || !csrf) {
-              new Notice('Both fields are required.', 3000);
+              new Notice('两个字段都必须填写。', 3000);
               return;
             }
             const cookies: AuthCookies = {
@@ -176,15 +176,16 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // =============================
     //   Notes section
     // =============================
-    new Setting(containerEl).setName('Notes').setHeading();
+    new Setting(containerEl).setName('笔记').setHeading();
 
     const notesGroup = containerEl.createDiv('lc-settings-group');
     new Setting(notesGroup)
-      .setName('Problems folder')
-      .setDesc('Vault folder where problem notes are created.')
+      .setName('题目目录')
+      .setDesc('用于保存题目笔记的知识库目录。')
       .addText((t) => t
 
-        .setPlaceholder('LeetCode/')
+        // eslint-disable-next-line obsidianmd/ui/sentence-case -- 文件夹示例必须保持小写。
+        .setPlaceholder('leetcode/')
         .setValue(this.plugin.lcSettings.getProblemsFolder())
         .onChange(async (v) => {
           // D-10: strip trailing slash on persist (stored without trailing slash).
@@ -193,8 +194,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       );
 
     new Setting(notesGroup)
-      .setName('Default language')
-      .setDesc('Starter code language for new problems.')
+      .setName('默认编程语言')
+      .setDesc('新题目初始代码使用的编程语言。')
       .addDropdown((d) => d
         .addOptions(LANGUAGE_OPTIONS)
         .setValue(this.plugin.lcSettings.getDefaultLanguage())
@@ -204,11 +205,11 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       );
 
     new Setting(notesGroup)
-      .setName('Click behavior')
-      .setDesc('What happens when you click a problem in the LeetCode browser. Shift-click always opens the note directly.')
+      .setName('点击行为')
+      .setDesc('点击题目时执行的操作；按住 shift 点击始终直接打开笔记。')
       .addDropdown((d) => d
-        .addOption('preview', 'Preview first')
-        .addOption('open', 'Open note directly')
+        .addOption('preview', '先预览题目')
+        .addOption('open', '直接打开笔记')
         .setValue(this.plugin.lcSettings.getPreviewClickBehavior())
         .onChange(async (v) => {
           await this.plugin.lcSettings.setPreviewClickBehavior(v as 'preview' | 'open');
@@ -228,14 +229,14 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // addOptions Record literal) per the locked precedent for explicit-order
     // dropdowns in this file (Preview section). Dropdown values are strings
     // in Obsidian's API; coerce back to 'auto' | 2 | 4 | 8 in onChange.
-    new Setting(containerEl).setName('Code editor').setHeading();
+    new Setting(containerEl).setName('代码编辑器').setHeading();
 
     const codeEditorGroup = containerEl.createDiv('lc-settings-group');
     new Setting(codeEditorGroup)
-      .setName('Indent size')
-      .setDesc('Number of spaces per indent level in the code editor. "Auto" uses the language default (4 for Java/Python/C++, 2 for JS/TS, tab for Go).')
+      .setName('缩进大小')
+      .setDesc('代码编辑器每级缩进的空格数。“自动”使用语言默认值：Java、Python、C++ 为 4，JS、TS 为 2，Go 使用制表符。')
       .addDropdown((d) => d
-        .addOption('auto', 'Auto (language default)')
+        .addOption('auto', '自动（使用语言默认值）')
         .addOption('2', '2 spaces')
         .addOption('4', '4 spaces')
         .addOption('8', '8 spaces')
@@ -255,8 +256,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       );
 
     new Setting(codeEditorGroup)
-      .setName('Show relative line numbers in code editor')
-      .setDesc('When enabled, the code editor gutter shows distance from cursor line. Toggle takes effect on next note open.')
+      .setName('在代码编辑器中显示相对行号')
+      .setDesc('显示各行与光标所在行的距离，下次打开笔记时生效。')
       .addToggle((toggle) => toggle
         .setValue(this.plugin.lcSettings.getShowRelativeLineNumbers())
         .onChange(async (v) => {
@@ -271,7 +272,7 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // =============================
     //   Migration section
     // =============================
-    new Setting(containerEl).setName('Migration').setHeading();
+    new Setting(containerEl).setName('旧笔记迁移').setHeading();
 
     const expGroup = containerEl.createDiv('lc-settings-group');
 
@@ -283,8 +284,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // workspace.detachLeavesOfType or any reload path.
     new Setting(expGroup)
 
-      .setName('Auto-migrate v1.2 notes when opened')
-      .setDesc('When opening a LeetCode note from v1.2 or earlier, silently rewrite the fence to the v1.3 format. When off, a banner offers a manual [Migrate now] button.')
+      .setName('打开时自动迁移 v1.2 笔记')
+      .setDesc('打开旧版题目笔记时自动转换为 v1.3 代码块格式；关闭后可通过迁移提示手动执行。')
       .addToggle((toggle) => toggle
         .setValue(this.plugin.lcSettings.getAutoMigrateOnOpen())
         .onChange(async (v) => {
@@ -294,8 +295,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       );
 
     new Setting(expGroup)
-      .setName('Save delay')
-      .setDesc('Time after typing stops before saving to disk. Lower = snappier; higher = fewer file-watcher events.')
+      .setName('保存延迟')
+      .setDesc('停止输入后等待多久保存到磁盘；时间越短保存越及时，时间越长文件事件越少。')
       .addDropdown((d) => d
         .addOption('300', '300ms')
         .addOption('400', '400ms (default)')
@@ -337,11 +338,11 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     const active = this.plugin.lcSettings.getActiveAIProvider();
     const aiEnabled = active !== null;
 
-    new Setting(containerEl).setName('AI coach').setHeading()
-      .setDesc('AI-powered debug, review, and pattern classification.')
+    new Setting(containerEl).setName('AI 解题助手').setHeading()
+      .setDesc('使用 AI 辅助调试、复盘和解题模式分类。')
       .addButton((b) => {
         b.setIcon('refresh-cw')
-          .setTooltip('Test connection')
+          .setTooltip('测试连接')
           .onClick(async () => {
             b.setIcon('loader');
             b.setDisabled(true);
@@ -370,14 +371,14 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       const aiConnGroup = containerEl.createDiv('lc-settings-group');
 
       new Setting(aiConnGroup)
-        .setName('Provider')
-        .setDesc("Switching providers preserves keys you've already entered.")
+        .setName('服务提供商')
+        .setDesc('切换服务提供商时保留已填写的密钥。')
         .addDropdown((d) => d
           .addOption('anthropic',  'Anthropic')
           .addOption('openai',     'OpenAI')
           .addOption('openrouter', 'OpenRouter')
           .addOption('ollama',     'Ollama')
-          .addOption('custom',     'Custom (OpenAI-compatible)')
+          .addOption('custom',     '自定义（兼容 OpenAI）')
           .addOption('bedrock',    'AWS Bedrock')
           .setValue(active)
           .onChange(async (v) => {
@@ -391,8 +392,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       const aiFeatGroup = containerEl.createDiv('lc-settings-group');
 
       new Setting(aiFeatGroup)
-        .setName('Review on accepted')
-        .setDesc('Generate a review (approach, efficiency, style) each time you get accepted.')
+        .setName('通过后自动复盘')
+        .setDesc('每次通过后分析解题思路、效率和代码风格。')
         .addToggle((toggle) => toggle
           .setValue(this.plugin.lcSettings.getAutoAIReviewOnAC())
           .onChange(async (value) => {
@@ -401,8 +402,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         );
 
       new Setting(aiFeatGroup)
-        .setName('Pattern classification on accepted')
-        .setDesc('Classify solutions into algorithmic patterns and maintain hub notes.')
+        .setName('通过后自动分类解题模式')
+        .setDesc('将解答归类到算法模式并维护汇总笔记。')
         .addToggle((toggle) => toggle
           .setValue(this.plugin.lcSettings.getAutoAIKnowledgeGraph())
           .onChange(async (value) => {
@@ -411,8 +412,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         );
 
       new Setting(aiFeatGroup)
-        .setName('Look-ahead edges')
-        .setDesc('Suggest unsolved problems related to the pattern in hub notes.')
+        .setName('推荐后续练习')
+        .setDesc('在汇总笔记中推荐相同模式下尚未完成的题目。')
         .addToggle((toggle) => toggle
           .setValue(this.plugin.lcSettings.getFeatureFlags().lookAheadEdges)
           .onChange(async (value) => {
@@ -421,8 +422,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         );
 
       new Setting(aiFeatGroup)
-        .setName('Contest analysis')
-        .setDesc('Generate a performance summary when a virtual contest ends.')
+        .setName('竞赛分析')
+        .setDesc('模拟竞赛结束时生成表现总结。')
         .addToggle((toggle) => toggle
           .setValue(this.plugin.lcSettings.getAutoAIContestAnalysis())
           .onChange(async (value) => {
@@ -438,18 +439,18 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // Accent-modifier grep-gate preserved: no call-to-action modifier in
     // this block (the single accent invocation is the Authentication login
     // button above — see the top-of-file grep gate).
-    new Setting(containerEl).setName('Knowledge graph').setHeading();
+    new Setting(containerEl).setName('知识图谱').setHeading();
 
     const kgGroup = containerEl.createDiv('lc-settings-group');
     // D-15: technique folder visible override with derived default. Placeholder
     // is computed LIVE from the current `problemsFolder` setting so users see
-    // e.g. `LeetCode/Techniques` when no override is set, their typed value
+    // e.g. `LeetCode/techniques` when no override is set, their typed value
     // otherwise. Empty value preserves Phase 4 derived-default behavior.
     new Setting(kgGroup)
-      .setName('Technique folder override')
-      .setDesc('Vault folder for technique stub notes. Leave empty to use {Problems folder}/Techniques.')
+      .setName('自定义技巧笔记目录')
+      .setDesc('主题标签技巧笔记的保存目录，留空时使用题目目录下的 techniques。AI 模式汇总保存在 patterns 中，不受此设置影响。')
       .addText((t) => t
-        .setPlaceholder(`${this.plugin.lcSettings.getProblemsFolder()}/Techniques`)
+        .setPlaceholder(`${this.plugin.lcSettings.getProblemsFolder()}/techniques`)
         .setValue(this.plugin.lcSettings.getTechniquesFolderOverride())
         .onChange(async (v) => {
           // Phase 4 convention — UI layer owns trailing-slash sanitization.
@@ -462,9 +463,9 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // D-16 / D-32: auto-backlink toggle (behavior-first copy LOCKED).
     // Bound to the Phase 4 D-21 persistence field.
     new Setting(kgGroup)
-      .setName('Auto-create technique backlinks on accepted')
+      .setName('通过后自动创建技巧反向链接')
 
-      .setDesc('When enabled, an Accepted submission writes a ## Techniques section and creates stub notes for each LC topic tag. When disabled, only frontmatter tags (lc/{slug}) are written; no ## Techniques heading, no stubs.')
+      .setDesc('开启后，提交通过时自动更新“解题技巧”和关联笔记；使用 AI 分类还需开启“通过后自动分类解题模式”。关闭后仅更新题目状态和标签，保留已有内容。')
       .addToggle((t) => t
         .setValue(this.plugin.lcSettings.getAutoBacklinksEnabled())
         .onChange(async (v) => {
@@ -500,8 +501,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // skip-listed (Phase 07 — local Ollama has no API key).
     if (active !== 'ollama' && active !== 'bedrock') {
       new Setting(containerEl)
-        .setName('API key')
-        .setDesc(`Stored in plain text in data.json on this machine. Never transmitted anywhere except ${providerName}.`)
+        .setName('API 密钥')
+        .setDesc(`以明文保存在本机插件的 data.json 中，仅发送给 ${providerName}。`)
         .addText((t) => {
           t.inputEl.type = 'password';
           t.inputEl.addClass('lc-ai-input');
@@ -526,14 +527,14 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         // input field — UI-SPEC §Layout Contract specifies the URL displays
         // as descriptive text.
         new Setting(containerEl)
-          .setName('Base URL')
-          .setDesc(`Provider endpoint. Read-only; the plugin uses the canonical URL: ${cfg.baseUrl}`);
+          .setName('接口地址')
+          .setDesc(`服务地址（只读）：${cfg.baseUrl}`);
         break;
       }
       case 'ollama': {
         new Setting(containerEl)
-          .setName('Base URL')
-          .setDesc('Ollama host and port. Default is localhost:11434 — change if you run Ollama on another host.')
+          .setName('接口地址')
+          .setDesc('Ollama 主机和端口，默认为 localhost:11434，可修改为其他主机。')
           .addText((t) => {
             t.inputEl.addClass('lc-ai-input');
             t.setValue(cfg.baseUrl);
@@ -546,8 +547,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       }
       case 'custom': {
         new Setting(containerEl)
-          .setName('Base URL')
-          .setDesc('OpenAI-compatible endpoint URL. Must include /v1 suffix if the server expects it.')
+          .setName('接口地址')
+          .setDesc('兼容 OpenAI 协议的服务地址；如果服务要求，请包含 /v1 后缀。')
           .addText((t) => {
             t.inputEl.addClass('lc-ai-input');
             t.setPlaceholder('https://your-host.example.com/v1');
@@ -571,8 +572,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
 
         // Region row (text input, default 'us-east-1').
         new Setting(containerEl)
-          .setName('Region')
-          .setDesc('AWS region for Bedrock runtime endpoint. Default: us-east-1.')
+          .setName('区域')
+          .setDesc('Bedrock 运行时所在的 AWS 区域，默认为 us-east-1。')
           .addText((t) => {
             t.inputEl.addClass('lc-ai-input');
             t.setPlaceholder('us-east-1');
@@ -585,8 +586,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
 
         // Model ID row (replaces the generic Model row for Bedrock).
         new Setting(containerEl)
-          .setName('Model ID')
-          .setDesc('Bedrock model identifier (e.g. us.anthropic.claude-sonnet-4-6).')
+          .setName('模型 ID')
+          .setDesc('Bedrock 模型标识，例如 us.anthropic.claude-sonnet-4-6。')
           .addText((t) => {
             t.inputEl.addClass('lc-ai-input');
             t.setValue(bcfg.modelId);
@@ -599,13 +600,13 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         // Auth method dropdown — onChange triggers a re-render so the
         // conditional secret rows below swap atomically.
         new Setting(containerEl)
-          .setName('Credential source')
-          .setDesc('How the plugin obtains AWS credentials for Bedrock calls.')
+          .setName('凭据来源')
+          .setDesc('插件调用 Bedrock 时获取 AWS 凭据的方式。')
           .addDropdown((d) => d
-            .addOption('default-chain', 'Default credential chain (recommended)')
-            .addOption('access-keys',   'Explicit access keys')
-            .addOption('sso-profile',   'Profile name')
-            .addOption('api-key',       'Bedrock API key')
+            .addOption('default-chain', '默认凭据链（推荐）')
+            .addOption('access-keys',   '手动填写访问密钥')
+            .addOption('sso-profile',   '配置名称')
+            .addOption('api-key',       'Bedrock API 密钥')
             .setValue(bcfg.authMethod)
             .onChange(async (v) => {
               const current = this.plugin.lcSettings.getProviderConfig(active) as BedrockProviderConfig;
@@ -626,12 +627,12 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         if (bcfg.authMethod === 'default-chain') {
           // Helper-text-only row — no input.
           new Setting(containerEl)
-            .setName('Credentials source')
-            .setDesc('Plugin reads AWS credentials from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY env vars first, then falls back to AWS_PROFILE (or AWS_DEFAULT_PROFILE, or [default]) in ~/.aws/credentials and ~/.aws/config. Supports credential_process helpers and honors AWS_SHARED_CREDENTIALS_FILE / AWS_CONFIG_FILE overrides. Run aws sso login (or your usual helper) before launching Obsidian if your profile uses SSO.');
+            .setName('凭据来源')
+            .setDesc('优先读取 AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY 环境变量，其次读取 ~/.aws/credentials 和 ~/.aws/config 中 AWS_PROFILE、AWS_DEFAULT_PROFILE 或 default 配置。支持 credential_process 以及 AWS_SHARED_CREDENTIALS_FILE / AWS_CONFIG_FILE 指定的路径。使用 SSO 时，请在启动 Obsidian 前执行 aws sso login。');
         } else if (bcfg.authMethod === 'access-keys') {
           new Setting(containerEl)
-            .setName('Access key ID')
-            .setDesc('AWS access key ID. Stored in plain text in data.json on this machine.')
+            .setName('访问密钥 ID')
+            .setDesc('AWS 访问密钥 ID，以明文保存在本机 data.json 中。')
             .addText((t) => {
               t.inputEl.type = 'password';
               t.inputEl.addClass('lc-ai-input');
@@ -642,8 +643,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
               });
             });
           new Setting(containerEl)
-            .setName('Secret access key')
-            .setDesc('AWS secret access key. Stored in plain text in data.json on this machine.')
+            .setName('私有访问密钥')
+            .setDesc('AWS 私有访问密钥，以明文保存在本机 data.json 中。')
             .addText((t) => {
               t.inputEl.type = 'password';
               t.inputEl.addClass('lc-ai-input');
@@ -654,8 +655,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
               });
             });
           new Setting(containerEl)
-            .setName('Session token')
-            .setDesc('Required only for temporary STS credentials.')
+            .setName('会话令牌')
+            .setDesc('仅使用临时 STS 凭据时需要填写。')
             .addText((t) => {
               t.inputEl.type = 'password';
               t.inputEl.addClass('lc-ai-input');
@@ -667,8 +668,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
             });
         } else if (bcfg.authMethod === 'sso-profile') {
           new Setting(containerEl)
-            .setName('Profile name')
-            .setDesc('Any profile name from ~/.aws/credentials or ~/.aws/config. Use this if you want a specific profile without exporting AWS_PROFILE. Supports credential_process helpers (e.g. aws-vault, awsume).')
+            .setName('配置名称')
+            .setDesc('填写 ~/.aws/credentials 或 ~/.aws/config 中的配置名称，无需另行设置 AWS_PROFILE。支持 aws-vault、awsume 等 credential_process 辅助程序。')
             .addText((t) => {
               t.inputEl.addClass('lc-ai-input');
               t.setValue(bcfg.ssoProfile ?? '');
@@ -679,8 +680,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
             });
         } else if (bcfg.authMethod === 'api-key') {
           new Setting(containerEl)
-            .setName('Bedrock API key')
-            .setDesc('Long-term Bedrock API key from the AWS console (IAM > Users > Service-specific credentials). Stored in plain text in data.json on this machine.')
+            .setName('Bedrock API 密钥')
+            .setDesc('在 AWS 控制台的 IAM > Users > Service-specific credentials 中创建 Bedrock 长期 API 密钥。密钥以明文保存在本机插件的 data.json 中。')
             .addText((t) => {
               t.inputEl.type = 'password';
               t.inputEl.addClass('lc-ai-input');
@@ -703,8 +704,8 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // unused for Bedrock).
     if (active !== 'bedrock') {
       new Setting(containerEl)
-        .setName('Model')
-        .setDesc('Model identifier the provider expects. Defaults may rot — when "Test connection" reports "model not found", update this field.')
+        .setName('模型')
+        .setDesc('填写服务提供商支持的模型标识。如果连接测试提示找不到模型，请更新此字段。')
         .addText((t) => {
           t.inputEl.addClass('lc-ai-input');
           t.setPlaceholder(modelPlaceholder(active));

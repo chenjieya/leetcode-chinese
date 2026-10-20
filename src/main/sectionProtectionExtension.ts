@@ -1,3 +1,4 @@
+import { normalizeHeadingLine } from '../notes/noteHeadings';
 // Phase 20 — Section Protection (forked from sectionLockExtension at v1.3 per
 // D-protect-04). Drops fence-opener and fence-closer body lock; preserves
 // Problem body / Code heading + blank-line pocket / Techniques heading +
@@ -118,7 +119,7 @@ export function computeLockedRanges(
   const headings: HeadingHit[] = [];
   const total = state.doc.lines;
   for (let i = 1; i <= total; i++) {
-    const text = state.doc.line(i).text;
+    const text = normalizeHeadingLine(state.doc.line(i).text);
     if (text.startsWith('# ') && !text.startsWith('## ') && !headings.some(h => h.kind === 'title')) {
       headings.push({ kind: 'title', line: i });
     } else if (text === PROBLEM_HEADING_LINE) {
@@ -337,7 +338,7 @@ function buildLockedDecorations(state: EditorStateType): DecorationSet {
   if (total === 0) return b.finish();
   const lineDeco = Decoration.line({ class: 'leetcode-locked-heading-line' });
   for (let i = 1; i <= total; i++) {
-    const text = state.doc.line(i).text;
+    const text = normalizeHeadingLine(state.doc.line(i).text);
     if (
       text === PROBLEM_HEADING_LINE ||
       text === CODE_HEADING_LINE ||

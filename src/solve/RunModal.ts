@@ -73,7 +73,7 @@ export class RunModal extends Modal {
     addClass(contentEl, 'leetcode-run');
     const modalEl = (this as unknown as { modalEl?: HTMLElement }).modalEl;
     if (modalEl) addClass(modalEl, 'leetcode-run-modal');
-    if (titleEl) titleEl.textContent = 'Run';
+    if (titleEl) titleEl.textContent = '运行';
 
     // D-03: seed from store. If the user previously edited tabs in this
     // note-open session, they come back here; otherwise we get a fresh
@@ -100,7 +100,7 @@ export class RunModal extends Modal {
     textarea.setAttribute('role', 'tabpanel');
     textarea.setAttribute('rows', '10');
     textarea.setAttribute('spellcheck', 'false');
-    textarea.setAttribute('placeholder', 'Enter test input (one value per line)');
+    textarea.setAttribute('placeholder', '请输入测试数据（每行一个值）');
     textarea.value = this.cases[this.activeTab] ?? '';
     textarea.addEventListener('input', () => {
       this.cases[this.activeTab] = textarea.value;
@@ -112,7 +112,7 @@ export class RunModal extends Modal {
     // the space-between flex layout in styles.css.
     const footer = appendEl(contentEl, 'div', 'leetcode-run-footer');
     const resetBtn = appendEl(footer, 'button', 'leetcode-run-reset');
-    resetBtn.textContent = 'Reset to sample cases';
+    resetBtn.textContent = '恢复示例用例';
     resetBtn.addEventListener('click', () => {
       // D-05: wipe + re-seed from exampleTestcases (no confirmation).
       const reset = this.args.store.resetToSamples(
@@ -126,7 +126,7 @@ export class RunModal extends Modal {
       this.renderTabs();
     });
     const runBtn = appendEl(footer, 'button', 'leetcode-run-submit mod-cta');
-    runBtn.textContent = 'Run';
+    runBtn.textContent = '运行';
     runBtn.addEventListener('click', () => {
       // Sync the textarea content into the active tab so any in-progress
       // edit is captured before we hand off to onRun. (Phase 5 D-08 /
@@ -201,7 +201,7 @@ export class RunModal extends Modal {
       );
       tab.setAttribute('role', 'tab');
       tab.setAttribute('aria-selected', String(i === this.activeTab));
-      tab.textContent = `Case ${i + 1}`;
+      tab.textContent = `用例 ${i + 1}`;
       tab.addEventListener('click', () => this.switchTab(i));
       // D-06: `×` visible only when >1 tab (single-tab-minimum guard).
       if (this.cases.length > 1) {

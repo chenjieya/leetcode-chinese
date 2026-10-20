@@ -15,7 +15,7 @@
 
 import { TFile, type App } from 'obsidian';
 import type { DetailCacheEntry } from '../notes/types';
-import { buildNotePath } from '../notes/NoteTemplate';
+import { resolveProblemNotePath } from '../notes/NoteTemplate';
 
 /** Settings facade — only the two getters this helper needs. Structural shape
  *  so tests can pass `{ getProblemsFolder: () => 'LeetCode', getProblemDetail:
@@ -33,7 +33,7 @@ export interface PreviewSettingsFacade {
 export interface ExistingNoteState {
   fileExists: boolean;
   file?: TFile;
-  id?: number;
+  id?: number | string;
 }
 
 /**
@@ -45,11 +45,11 @@ export interface ExistingNoteState {
  *   1. const cached = settings.getProblemDetail(slug);
  *      → null when no cache entry → return `{ fileExists: false }`.
  *      We can't compute the canonical filename without `cached.id` (D-16
- *      filename pattern is `{id}-{slug}.md`), so missing cache short-circuits.
- *   2. const path = buildNotePath(folder, cached.id, slug);
+ *      filename pattern is `{id}. {title}.md`), so missing cache short-circuits.
+ *   2. const path = resolveProblemNotePath(app, folder, slug, cached);
  *      Pure helper from src/notes/NoteTemplate.ts:137 — strips trailing
  *      slashes from the folder and joins with the unpadded filename.
- *   3. const f = app.vault.getAbstractFileByPath(path);
+ *   3. const f = path ? app.vault.getAbstractFileByPath(path) : null;
  *      Returns `TAbstractFile | null`. Synchronous; reads from Obsidian's
  *      in-memory file index. No I/O.
  *   4. If `f instanceof TFile` → return `{ fileExists: true, file: f, id: cached.id }`.
@@ -67,8 +67,8 @@ export function detectExistingNote(
   const cached = settings.getProblemDetail(slug);
   if (!cached) return { fileExists: false };
   const folder = settings.getProblemsFolder();
-  const path = buildNotePath(folder, cached.id, slug);
-  const f = app.vault.getAbstractFileByPath(path);
+  const path = resolveProblemNotePath(app, folder, slug, cached);
+  const f = path ? app.vault.getAbstractFileByPath(path) : null;
   if (f instanceof TFile) {
     return { fileExists: true, file: f, id: cached.id };
   }

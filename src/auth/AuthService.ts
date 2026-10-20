@@ -30,7 +30,7 @@ export class AuthService {
         // D-04 silent cancel: exactly ONE Notice, no modal stacking, no auto-pivot to paste.
         // UI-SPEC.md Notice table — LOCKED copy; "LeetCode" is a proper-noun brand name.
 
-        new Notice('LeetCode login cancelled.', 4000);
+        new Notice('已取消力扣中国站登录。', 4000);
         return false;
       }
       case 'timeout': {
@@ -40,7 +40,7 @@ export class AuthService {
         // NEW copy — pending UI-SPEC.md ratification.
 
         new Notice(
-          'Login appeared to succeed but cookies could not be captured — try the manual paste fallback in settings.',
+          '未能获取登录 Cookie，请在设置中手动填写中国站 Cookie。',
           7000,
         );
         return false;
@@ -56,10 +56,17 @@ export class AuthService {
     // showing "Logged in as …" forever). whoami is a lightweight GraphQL query;
     // if it fails we persist null so the UI falls back to the placeholder.
     const who = await this.client.fetchWhoami();
+    if (!who) {
+      await this.settings.setAuthCookies(null);
+      await this.settings.setUsername(null);
+      await this.settings.setIsPremium(null);
+      new Notice('未能验证力扣中国站登录，请重试或填写 leetcode.cn 的 cookie。', 6000);
+      return false;
+    }
     await this.settings.setUsername(who?.username ?? null);
     await this.settings.setIsPremium(who?.isPremium ?? null);
      
-    new Notice('Logged in to LeetCode.', 4000);
+    new Notice('已登录力扣中国站。', 4000);
     return true;
   }
 
@@ -68,9 +75,16 @@ export class AuthService {
     await this.settings.setAuthCookies(cookies);
     await this.client.reauthenticate();
     const who = await this.client.fetchWhoami();
+    if (!who) {
+      await this.settings.setAuthCookies(null);
+      await this.settings.setUsername(null);
+      await this.settings.setIsPremium(null);
+      new Notice('中国站 cookie 无效或验证失败，请检查网络和 leetcode.cn 登录状态。', 6000);
+      return;
+    }
     await this.settings.setUsername(who?.username ?? null);
     await this.settings.setIsPremium(who?.isPremium ?? null);
-    new Notice('Cookies saved.', 3000);
+    new Notice('已验证并保存中国站 Cookie。', 3000);
   }
 
   /**
@@ -89,7 +103,7 @@ export class AuthService {
     await this.client.reauthenticate();
     await clearLeetCodePartitionCookies();
      
-    new Notice('Logged out of LeetCode.', 4000);
+    new Notice('已退出力扣中国站登录。', 4000);
   }
 
   isLoggedIn(): boolean {

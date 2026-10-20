@@ -145,7 +145,7 @@ describe('Integration: AC pipeline (section A — detail-ac fixture)', () => {
     const fm = deps.vault.getFrontmatter('LeetCode/1-two-sum.md');
     expect(fm).toBeDefined();
     if (!fm) throw new Error('frontmatter missing');
-    expect(fm['lc-status']).toBe('accepted');
+    expect(fm['lc-status']).toBe('已完成');
     // Phase 5.3 D-01/D-02: legacy runtime/memory frontmatter writes removed —
     // display path reads runtime/memory fresh from LC GraphQL on demand.
     // UAT 2026-05-13: lc-solved-date write removed — no production reader.
@@ -159,14 +159,14 @@ describe('Integration: AC pipeline (section A — detail-ac fixture)', () => {
 
     // ── Assertion 3: ## Techniques block written with wikilinks (GRAPH-03)─
     const body = await deps.app.vault.read(file as never);
-    expect(body).toContain('## Techniques');
+    expect(body).toContain('## 解题技巧');
     expect(body).toMatch(/\[\[Array\]\]/);
     expect(body).toMatch(/\[\[Hash Table\]\]/);
 
     // ── Assertion 4: stub technique notes created (GRAPH-04) ──────────────
-    const arrayStub = deps.app.vault.getAbstractFileByPath('LeetCode/Techniques/Array.md');
+    const arrayStub = deps.app.vault.getAbstractFileByPath('LeetCode/techniques/Array.md');
     const hashTableStub = deps.app.vault.getAbstractFileByPath(
-      'LeetCode/Techniques/Hash Table.md',
+      'LeetCode/techniques/Hash Table.md',
     );
     expect(arrayStub).toBeDefined();
     expect(hashTableStub).toBeDefined();
@@ -210,7 +210,7 @@ describe('Integration: picker → detail → copy-to-code (section C)', () => {
     expect(acRow).toBeDefined();
 
     // Step 2: detail query returns the AC detail fixture
-    const detailFixture = loadFixture('detail-ac.graphql.json') as {
+    const detailFixture = loadFixture('detail-cn.graphql.json') as {
       data: { submissionDetails: { code: string; lang: { name: string } } };
     };
     mockThrottledRequestUrl.mockResolvedValueOnce({

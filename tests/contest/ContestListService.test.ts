@@ -30,7 +30,7 @@ function makeMockClient(opts?: {
       return defaultPage;
     }),
     getContestQuestions: vi.fn(async () => {
-      if (opts?.getContestQuestionsError) throw new Error('Network error');
+      if (opts?.getContestQuestionsError) throw new Error('网络错误');
       return opts?.getContestQuestionsResult ?? {
         questions: [
           { credit: 3, title: 'Problem A', title_slug: 'problem-a', category_slug: 'algorithms', difficulty: 1 },
@@ -223,7 +223,7 @@ describe('ContestListService', () => {
       let callCount = 0;
       (threeContestsClient.getContestQuestions as ReturnType<typeof vi.fn>).mockImplementation(async () => {
         callCount++;
-        if (callCount <= 2) throw new Error('Network error');
+        if (callCount <= 2) throw new Error('网络错误');
         return {
           questions: [
             { credit: 3, title: 'A', title_slug: 'a', category_slug: 'alg', difficulty: 1 },

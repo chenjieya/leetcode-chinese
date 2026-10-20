@@ -19,9 +19,9 @@ const REPO_ROOT = process.cwd();
 const SRC_MAIN = fs.readFileSync(path.join(REPO_ROOT, 'src/main.ts'), 'utf-8');
 
 describe('src/main.ts grep gates — Phase 09 Plan 04 wiring (AIREV-05)', () => {
-  it("registers `rerun-ai-review` palette command with verbatim label 'Re-run AI review on current note'", () => {
+  it("registers `rerun-ai-review` palette command with verbatim label '重新生成当前笔记的 AI 复盘'", () => {
     expect(SRC_MAIN).toMatch(/id:\s*'rerun-ai-review'/);
-    expect(SRC_MAIN).toMatch(/name:\s*'Re-run AI review on current note'/);
+    expect(SRC_MAIN).toMatch(/name:\s*'重新生成当前笔记的 AI 复盘'/);
   });
 
   it('palette command ID has NO plugin-id prefix (clean ID per FOUND-03)', () => {
@@ -54,7 +54,7 @@ describe('src/main.ts grep gates — Phase 09 Plan 04 wiring (AIREV-05)', () => 
   });
 
   it('runAIReview surfaces the locked no-provider Notice', () => {
-    expect(SRC_MAIN).toMatch(/'No AI provider configured\. Open settings → AI\.'/);
+    expect(SRC_MAIN).toMatch(/'尚未配置 AI 服务，请打开设置中的 AI 配置。'/);
   });
 
   it('runAIReview opens AIStreamModal with withReviewBullet(DISCLOSURE_BASE_COPY)', () => {
@@ -194,6 +194,6 @@ describe('runAIReview provider-missing guard', () => {
     const block = SRC_MAIN.slice(idx, idx + 1500);
     expect(block).toMatch(/getActiveAIProvider\(\)/);
     expect(block).toMatch(/=== null/);
-    expect(block).toMatch(/No AI provider configured/);
+    expect(block).toMatch(/尚未配置 AI 服务/);
   });
 });

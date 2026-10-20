@@ -70,6 +70,28 @@ export const SEED_PATTERNS: readonly string[] = [
   'Simulation',
 ] as const;
 
+/** 内部模式名与文件名保持稳定，界面和笔记链接使用中文显示名。 */
+const PATTERN_LABELS: Readonly<Record<string, string>> = {
+  'Arrays & Hashing': '数组与哈希', 'Two Pointers': '双指针', 'Sliding Window': '滑动窗口',
+  Stack: '栈', 'Monotonic Stack': '单调栈', 'Monotonic Queue': '单调队列',
+  'Linked List': '链表', Trees: '树', Tries: '前缀树', 'Heap / Priority Queue': '堆与优先队列',
+  Graphs: '图', 'Advanced Graphs': '进阶图算法', 'Binary Search': '二分查找', Sorting: '排序',
+  '1-D Dynamic Programming': '一维动态规划', '2-D Dynamic Programming': '二维动态规划',
+  'Digit DP': '数位动态规划', 'Bitmask DP': '状态压缩动态规划', Greedy: '贪心',
+  Intervals: '区间', 'Sweep Line': '扫描线', 'String Matching': '字符串匹配', 'Rolling Hash': '滚动哈希',
+  'Math & Geometry': '数学与几何', 'Number Theory': '数论', Combinatorics: '组合数学',
+  'Bit Manipulation': '位运算', 'Prefix Sum': '前缀和', 'Segment Tree': '线段树',
+  'Binary Indexed Tree': '树状数组', 'Topological Sort': '拓扑排序', 'Union-Find': '并查集',
+  'Shortest Path': '最短路径', 'Minimum Spanning Tree': '最小生成树', Backtracking: '回溯',
+  'Divide & Conquer': '分治', 'Matrix Exponentiation': '矩阵快速幂',
+  'Meet In The Middle': '折半搜索', 'Game Theory': '博弈论', Simulation: '模拟', Other: '其他',
+};
+
+export function patternDisplayName(name: string): string {
+  const normalized = normalizePatternName(name);
+  return PATTERN_LABELS[normalized] ?? name;
+}
+
 /**
  * Normalize a pattern name. Seed-aware and capital-preserving:
  *   1. Trim and collapse internal whitespace to single spaces.
@@ -89,6 +111,8 @@ export const SEED_PATTERNS: readonly string[] = [
 export function normalizePatternName(name: string): string {
   const trimmed = name.trim().replace(/\s+/g, ' ');
   if (trimmed.length === 0) return '';
+  const english = Object.keys(PATTERN_LABELS).find(key => PATTERN_LABELS[key] === trimmed);
+  if (english) return english;
 
   const lower = trimmed.toLowerCase();
   for (const seed of SEED_PATTERNS) {

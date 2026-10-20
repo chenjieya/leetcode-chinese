@@ -130,9 +130,9 @@ export function renderVerdict(args: RenderVerdictArgs): void {
 // ── Render state: Timeout ────────────────────────────────────────────────
 
 function renderTimeout(titleEl: HTMLElement, contentEl: HTMLElement): void {
-  setText(titleEl, 'Judge timeout');
+  setText(titleEl, '判题超时');
   const p = appendEl(contentEl, 'p');
-  setText(p, 'LeetCode judge timed out. Try again or check leetcode.com.');
+  setText(p, 'LeetCode 判题超时，请稍后重试或检查站点状态。');
 }
 
 // ── Render state: Run (sample / custom) ──────────────────────────────────
@@ -263,10 +263,10 @@ function renderRunResult(
   );
   const titleText = aggregatePass
     ? statusInfo.kind === 'ac'
-      ? 'Accepted'
+      ? '通过'
       : statusInfo.displayName
     : statusInfo.kind === 'ac' || statusInfo.kind === 'unknown'
-      ? 'Wrong Answer'
+      ? '答案错误'
       : statusInfo.displayName;
   const titleModifier = aggregatePass
     ? 'leetcode-verdict-title--success'
@@ -277,8 +277,8 @@ function renderRunResult(
   addClass(titleEl, titleModifier);
 
   const runtimeText = typeof res.status_runtime === 'string' && res.status_runtime.length > 0
-    ? `Runtime: ${res.status_runtime}`
-    : 'Runtime: —';
+    ? `运行时间：${res.status_runtime}`
+    : '运行时间：—';
   const runtimeRow = appendEl(contentEl, 'div', 'leetcode-verdict-runtime');
   setText(runtimeRow, runtimeText);
 
@@ -326,15 +326,15 @@ function renderRunResult(
     if (state === 'threw') {
       const section = appendEl(caseBody, 'div', 'leetcode-verdict-section');
       const label = appendEl(section, 'div', 'leetcode-verdict-section-label');
-      setText(label, 'Error');
-      label.setAttribute('aria-label', 'Error');
+      setText(label, '运行错误');
+      label.setAttribute('aria-label', '运行错误');
       const pre = appendEl(section, 'pre', 'leetcode-verdict-error-pre');
       setText(pre, errText);
       // Expected still rendered below for context (LC computed it).
       if ((expected[activeIdx] ?? '').length > 0) {
         renderValueSection(
           caseBody,
-          'Expected',
+          '预期输出',
           expected[activeIdx] ?? '',
           'leetcode-verdict-expected-value',
         );
@@ -355,14 +355,14 @@ function renderRunResult(
     if (state === 'skipped') {
       const section = appendEl(caseBody, 'div', 'leetcode-verdict-section');
       const label = appendEl(section, 'div', 'leetcode-verdict-section-label');
-      setText(label, 'Output');
-      label.setAttribute('aria-label', 'Output');
+      setText(label, '实际输出');
+      label.setAttribute('aria-label', '实际输出');
       const note = appendEl(section, 'div', 'leetcode-verdict-skipped-note');
-      setText(note, 'Not executed — an earlier case raised an exception.');
+      setText(note, '未执行：前面的用例发生异常。');
       if ((expected[activeIdx] ?? '').length > 0) {
         renderValueSection(
           caseBody,
-          'Expected',
+          '预期输出',
           expected[activeIdx] ?? '',
           'leetcode-verdict-expected-value',
         );
@@ -401,7 +401,7 @@ function renderRunResult(
     if (stdout.length > 0) {
       renderValueSection(
         caseBody,
-        'Stdout',
+        '标准输出',
         stdout,
         'leetcode-verdict-output-value',
       );
@@ -410,7 +410,7 @@ function renderRunResult(
     // ── Step 7c: Output section ──────────────────────────────────────────
     renderValueSection(
       caseBody,
-      'Output',
+      '实际输出',
       outputs[activeIdx] ?? '',
       'leetcode-verdict-output-value',
     );
@@ -419,7 +419,7 @@ function renderRunResult(
     if (state !== null) {
       renderValueSection(
         caseBody,
-        'Expected',
+        '预期输出',
         expected[activeIdx] ?? '',
         'leetcode-verdict-expected-value',
       );
@@ -439,14 +439,14 @@ function renderRunResult(
     tab.setAttribute('type', 'button');
     tab.setAttribute('role', 'tab');
     const labelSpan = appendEl(tab, 'span', 'leetcode-verdict-case-tab-label');
-    setText(labelSpan, `Case ${String(i + 1)}`);
+    setText(labelSpan, `用例 ${String(i + 1)}`);
     const state = caseStates[i];
     if (state !== null) {
       const variant: Record<Exclude<CaseState, null>, { cls: string; text: string }> = {
-        pass:    { cls: 'leetcode-verdict-case-chip--pass',    text: 'PASS' },
-        fail:    { cls: 'leetcode-verdict-case-chip--fail',    text: 'FAIL' },
-        threw:   { cls: 'leetcode-verdict-case-chip--threw',   text: 'ERROR' },
-        skipped: { cls: 'leetcode-verdict-case-chip--skipped', text: 'SKIP' },
+        pass:    { cls: 'leetcode-verdict-case-chip--pass',    text: '通过' },
+        fail:    { cls: 'leetcode-verdict-case-chip--fail',    text: '失败' },
+        threw:   { cls: 'leetcode-verdict-case-chip--threw',   text: '异常' },
+        skipped: { cls: 'leetcode-verdict-case-chip--skipped', text: '跳过' },
       };
       const def = variant[state as Exclude<CaseState, null>];
       const chip = appendEl(tab, 'span', `leetcode-verdict-case-chip ${def.cls}`);
@@ -470,7 +470,7 @@ function renderRunResult(
   // every case passes (treated as no-op success on Run; user can submit).
   if (!aggregatePass && onOpenAIDebug) {
     const aiBtn = appendEl(footer, 'button', 'leetcode-ai-debug-action');
-    setText(aiBtn, 'AI: Debug');
+    setText(aiBtn, 'AI 调试');
     aiBtn.addEventListener('click', () => {
       onOpenAIDebug();
     });
@@ -496,7 +496,7 @@ function renderRunErrorBlock(
 
   if (typeof res.status_runtime === 'string' && res.status_runtime.length > 0) {
     const runtimeRow = appendEl(contentEl, 'div', 'leetcode-verdict-runtime');
-    setText(runtimeRow, `Runtime: ${res.status_runtime}`);
+    setText(runtimeRow, `运行时间：${res.status_runtime}`);
   }
 
   const body = appendEl(contentEl, 'div', 'leetcode-verdict-body');
@@ -516,7 +516,7 @@ function renderRunErrorBlock(
   // should expose AI Debug like Submit-side ce/re do.
   if (onOpenAIDebug) {
     const aiBtn = appendEl(footer, 'button', 'leetcode-ai-debug-action');
-    setText(aiBtn, 'AI: Debug');
+    setText(aiBtn, 'AI 调试');
     aiBtn.addEventListener('click', () => {
       onOpenAIDebug();
     });
@@ -547,8 +547,8 @@ function renderInputSection(
   // weight consistent with Output/Expected's surfaced `<pre>`.
   const section = appendEl(parent, 'div', 'leetcode-verdict-section');
   const label = appendEl(section, 'div', 'leetcode-verdict-section-label');
-  setText(label, 'Input');
-  label.setAttribute('aria-label', 'Input');
+  setText(label, '输入');
+  label.setAttribute('aria-label', '输入');
 
   const lines = chunk.length === 0 ? [] : chunk.split('\n');
   if (md && md.params.length >= 1 && lines.length === md.params.length) {
@@ -624,7 +624,7 @@ function renderSubmitVerdict(
   const memory = typeof res.status_memory === 'string' ? res.status_memory : '';
   if ((runtime.length > 0 || memory.length > 0) && kind !== 'ce') {
     const row = appendEl(contentEl, 'div', 'leetcode-verdict-runtime');
-    setText(row, `Runtime: ${runtime || '—'} · Memory: ${memory || '—'}`);
+    setText(row, `运行时间：${runtime || '—'} · 内存：${memory || '—'}`);
     // Put runtime row just before the body.
     contentEl.insertBefore(row, body);
   }
@@ -667,7 +667,7 @@ function renderSubmitVerdict(
   if (kind === 'wa' || kind === 'tle' || kind === 're') {
     if (onCopyFailingInput && failingInput.length > 0) {
       const copyBtn = appendEl(footer, 'button');
-      setText(copyBtn, 'Copy failing testcase to custom input');
+      setText(copyBtn, '将失败用例复制到自定义输入');
       copyBtn.addEventListener('click', () => {
         onCopyFailingInput(failingInput);
       });
@@ -676,7 +676,7 @@ function renderSubmitVerdict(
     const errText = firstNonEmpty(res.full_compile_error, res.compile_error);
     if (errText.length > 0) {
       const copyBtn = appendEl(footer, 'button');
-      setText(copyBtn, 'Copy error');
+      setText(copyBtn, '复制错误');
       copyBtn.addEventListener('click', () => {
         void writeClipboard(errText);
       });
@@ -692,7 +692,7 @@ function renderSubmitVerdict(
     kind === 'wa' || kind === 'tle' || kind === 'mle' || kind === 're' || kind === 'ce';
   if (showAIDebugButton && onOpenAIDebug) {
     const aiBtn = appendEl(footer, 'button', 'leetcode-ai-debug-action');
-    setText(aiBtn, 'AI: Debug');
+    setText(aiBtn, 'AI 调试');
     aiBtn.addEventListener('click', () => {
       onOpenAIDebug();
     });
@@ -701,13 +701,13 @@ function renderSubmitVerdict(
 
 function renderAcBody(body: HTMLElement, res: SubmitCheckResponse): void {
   const display = appendEl(body, 'div', 'leetcode-verdict-ac-display');
-  setText(display, 'Accepted');
+  setText(display, '通过');
   const hasPercentile = typeof res.runtime_percentile === 'number' || typeof res.memory_percentile === 'number';
   if (hasPercentile) {
     const pct = appendEl(body, 'div', 'leetcode-verdict-percentile');
     const rt = typeof res.runtime_percentile === 'number' ? res.runtime_percentile.toFixed(1) : '—';
     const mem = typeof res.memory_percentile === 'number' ? res.memory_percentile.toFixed(1) : '—';
-    setText(pct, `Beats ${rt}% (runtime) · ${mem}% (memory)`);
+    setText(pct, `运行时间击败 ${rt}% · 内存击败 ${mem}%`);
   }
 }
 
@@ -715,29 +715,29 @@ function renderWaBody(body: HTMLElement, res: SubmitCheckResponse): void {
   const input = firstNonEmpty(res.input, res.last_testcase);
   const output = firstNonEmpty(res.std_output, asString(res.code_output));
   const expected = firstNonEmpty(res.expected_output, asString(res.expected_code_answer));
-  makeSection(body, 'Input', input, 'leetcode-verdict-diff-input');
-  makeSection(body, 'Output', output, 'leetcode-verdict-diff-actual', 'leetcode-verdict-section-label--output');
-  makeSection(body, 'Expected', expected, 'leetcode-verdict-diff-expected', 'leetcode-verdict-section-label--expected');
+  makeSection(body, '输入', input, 'leetcode-verdict-diff-input');
+  makeSection(body, '实际输出', output, 'leetcode-verdict-diff-actual', 'leetcode-verdict-section-label--output');
+  makeSection(body, '预期输出', expected, 'leetcode-verdict-diff-expected', 'leetcode-verdict-section-label--expected');
 }
 
 function renderTleBody(body: HTMLElement, res: SubmitCheckResponse): void {
   const input = firstNonEmpty(res.input, res.last_testcase);
-  makeSection(body, 'Input', input, 'leetcode-verdict-diff-input');
+  makeSection(body, '输入', input, 'leetcode-verdict-diff-input');
   const lastOutput = asString(res.code_output);
   if (lastOutput.length > 0) {
-    makeSection(body, 'Last output', lastOutput, 'leetcode-verdict-diff-input');
+    makeSection(body, '最后输出', lastOutput, 'leetcode-verdict-diff-input');
   }
 }
 
 function renderMleBody(body: HTMLElement, res: SubmitCheckResponse): void {
   // MLE shows failing input only; no action button per UI-SPEC.
   const input = firstNonEmpty(res.input, res.last_testcase);
-  makeSection(body, 'Input', input, 'leetcode-verdict-diff-input');
+  makeSection(body, '输入', input, 'leetcode-verdict-diff-input');
 }
 
 function renderCeBody(body: HTMLElement, res: SubmitCheckResponse): void {
   const label = appendEl(body, 'div', 'leetcode-verdict-section-label');
-  setText(label, 'Compile error');
+  setText(label, '编译错误');
   const errText = firstNonEmpty(res.full_compile_error, res.compile_error);
   const pre = appendEl(body, 'pre', 'leetcode-verdict-error-pre');
   setText(pre, errText);
@@ -745,13 +745,13 @@ function renderCeBody(body: HTMLElement, res: SubmitCheckResponse): void {
 
 function renderReBody(body: HTMLElement, res: SubmitCheckResponse): void {
   const label = appendEl(body, 'div', 'leetcode-verdict-section-label');
-  setText(label, 'Error');
+  setText(label, '运行错误');
   const errText = firstNonEmpty(res.full_runtime_error, res.runtime_error);
   const pre = appendEl(body, 'pre', 'leetcode-verdict-error-pre');
   setText(pre, errText);
   const input = firstNonEmpty(res.input, res.last_testcase);
   if (input.length > 0) {
-    makeSection(body, 'Input', input, 'leetcode-verdict-diff-input');
+    makeSection(body, '输入', input, 'leetcode-verdict-diff-input');
   }
 }
 
@@ -764,23 +764,23 @@ function renderUnknownVerdict(
   problemTitle: string | undefined,
 ): void {
   setText(titleEl, problemTitle
-    ? `Unrecognized verdict — ${problemTitle}`
-    : 'Unrecognized verdict');
+    ? `未知判题结果 — ${problemTitle}`
+    : '未知判题结果');
 
   const body = appendEl(contentEl, 'div', 'leetcode-verdict-body');
   body.setAttribute('aria-live', 'polite');
   const intro = appendEl(body, 'p');
-  setText(intro, 'LeetCode returned an unrecognized status. Copy the payload to file a bug report.');
+  setText(intro, 'LeetCode 返回了未知状态，可复制响应数据用于反馈问题。');
 
   const details = appendEl(body, 'details', 'leetcode-verdict-unknown-details');
   const summary = appendEl(details, 'summary');
-  setText(summary, 'Raw response');
+  setText(summary, '原始响应');
   const pre = appendEl(details, 'pre');
   setText(pre, safeStringify(payload).slice(0, PAYLOAD_DISPLAY_MAX));
 
   const footer = appendEl(contentEl, 'div', 'leetcode-verdict-footer leetcode-verdict-action-row');
-  const copyBtn = appendEl(footer, 'button');
-  setText(copyBtn, 'Copy payload');
+  const copyBtn = appendEl(footer, 'button', 'leetcode-copy-payload');
+  setText(copyBtn, '复制响应数据');
   copyBtn.addEventListener('click', () => {
     void writeClipboard(safeStringify(payload));
   });

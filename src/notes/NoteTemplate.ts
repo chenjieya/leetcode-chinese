@@ -1,3 +1,4 @@
+import { localizeNoteHeadings } from './noteHeadings';
 // src/notes/NoteTemplate.ts
 // Schema single source of truth for Phase 2 note creation (D-03).
 //
@@ -5,7 +6,7 @@
 //   - `lc-` prefixed frontmatter key names (PLUGIN_LC_KEYS)
 //   - the `lc/` tag namespace (LC_TAG_PREFIX)
 //   - the `lc-status` value vocabulary (LC_STATUS_VALUES)
-//   - the `{id}-{slug}.md` filename pattern (buildNoteFilename)
+//   - the `{lc-id}. {lc-title}.md` filename pattern (buildNoteFilename)
 //   - the two-heading body layout (`## Problem` + `## Notes`) (buildNoteBody)
 //
 // Phase 2 writes exactly 7 lc-* keys + aliases + the difficulty tag. Phase 4
@@ -20,7 +21,7 @@
 // vocabulary ('solved' | 'attempted' | 'untouched'); we return the
 // frontmatter vocabulary ('accepted' | 'attempted' | 'untouched').
 
-import type { App, TFile } from 'obsidian';
+import { TFile, type App } from 'obsidian';
 import type { DetailCacheEntry } from './types';
 
 /** The 7 lc-* frontmatter keys Phase 2 writes. Ordered to match D-03 YAML. */
@@ -37,6 +38,8 @@ export const PLUGIN_LC_KEYS = [
 /** Canonical tag namespace prefix. All LC-derived tags begin with this. */
 export const LC_TAG_PREFIX = 'lc/' as const;
 
+// 这些常量保留为旧版章节身份键。比较时通过 normalizeHeadingLine 兼容中文、
+// 编号及层级；新建正文通过 localizeNoteHeadings/persistedHeading 写入中文。
 // Schema SSoT for every plugin-owned H2 heading across Phases 2, 3, and 4.
 // Canonical anchor order in problem notes (Phase 4 D-14):
 //   ## Problem → ## Code → ## Notes → ## Techniques → ## Custom Tests
@@ -107,17 +110,21 @@ export function codeBlockFor(starterCode: string): string {
 }
 
 /**
- * Vocabulary for the `lc-status` frontmatter field. Single source of truth (D-03).
- * Phase 2 writes 'untouched' or 'attempted' on first open; Phase 4 will flip to
- * 'accepted' on first Accepted submission. GAP-2a lets Phase 2 also write
- * 'accepted' or 'attempted' on first open when the user's LC submission history
- * already reflects that status.
+ * lc-status 的持久化中文值。输入仍兼容旧英文，已完成状态不得在刷新时降级。
  */
-export const LC_STATUS_VALUES = ['accepted', 'attempted', 'untouched'] as const;
-export type LcStatus = typeof LC_STATUS_VALUES[number];
+export const LC_STATUS_VALUES = ['已完成', '已尝试', '未开始'] as const;
+
+/** 只转换已知旧状态；保留用户自定义值。 */
+export function localizeNoteStatus(value: unknown): unknown {
+  if (value === 'accepted') return '已完成';
+  if (value === 'attempted') return '已尝试';
+  if (value === 'untouched') return '未开始';
+  return value;
+}
+export type LcStatus = typeof LC_STATUS_VALUES[number] | 'accepted' | 'attempted' | 'untouched';
 
 export interface NoteTemplateInput {
-  id: number;
+  id: number | string;
   slug: string;
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
@@ -141,23 +148,44 @@ export interface NoteTemplateInput {
   initialStatus?: LcStatus;
 }
 
-/** D-16: unpadded filename like `1-two-sum.md`, `10-regular-expression-matching.md`, `100-same-tree.md`. */
-export function buildNoteFilename(id: number, slug: string): string {
-  return `${id}-${slug}.md`;
+/** 使用题号和题名命名；替换文件系统和 Obsidian 链接中的特殊字符。 */
+export function buildNoteFilename(id: number | string, title: string): string {
+  const clean = (value: string): string => value
+    .replace(/[\\/:*?"<>|#[\]^]/g, '-').replace(/\p{Cc}/gu, '-')
+    .trim().replace(/[. ]+$/, '');
+  return `${clean(String(id))}. ${clean(title) || '未命名题目'}.md`;
 }
 
 /** Strip trailing slashes from the folder, join with the unpadded filename. */
-export function buildNotePath(folder: string, id: number, slug: string): string {
+export function buildNotePath(folder: string, id: number | string, title: string): string {
   const trimmed = folder.replace(/[\\/]+$/, '');
-  return `${trimmed}/${buildNoteFilename(id, slug)}`;
+  return `${trimmed}/${buildNoteFilename(id, title)}`;
+}
+
+/** 新文件采用题名；旧 slug 文件、翻译前题名及手动改名的笔记仍按 lc-slug 复用。 */
+export function resolveProblemNotePath(
+  app: App, folder: string, slug: string,
+  detail: Pick<DetailCacheEntry, 'id' | 'title'> | null,
+): string | null {
+  const root = folder.replace(/[\\/]+$/, '');
+  const canonical = detail ? buildNotePath(root, detail.id, detail.title) : null;
+  const legacy = detail ? `${root}/${String(detail.id).replace(/[\\/:*?"<>|]/g, '-')}-${slug}.md` : null;
+  for (const path of [canonical, legacy]) {
+    if (!path) continue;
+    const file = app.vault.getAbstractFileByPath(path);
+    if (file instanceof TFile || (file && 'extension' in file && file.extension === 'md')) return path;
+  }
+  const matched = app.vault.getMarkdownFiles?.().find(file =>
+    file.path.startsWith(`${root}/`) && app.metadataCache.getFileCache(file)?.frontmatter?.['lc-slug'] === slug);
+  return matched?.path ?? canonical;
 }
 
 /**
  * Map IndexedProblem.status → lc-status frontmatter value (GAP-2a SSoT).
- *   'solved'    → 'accepted'   (LC's `ac` means Accepted)
- *   'attempted' → 'attempted'
- *   'untouched' → 'untouched'
- *   undefined   → 'untouched'  (no hint from caller; safe default)
+ *   'solved'    → '已完成'
+ *   'attempted' → '已尝试'
+ *   'untouched' → '未开始'
+ *   undefined   → '未开始'
  *
  * This is the ONE place that translates the internal IndexedProblem vocabulary
  * to the on-disk lc-status vocabulary. D-03 bans any other module from
@@ -166,9 +194,9 @@ export function buildNotePath(folder: string, id: number, slug: string): string 
 export function mapStatusDisplay(
   indexStatus: 'solved' | 'attempted' | 'untouched' | undefined,
 ): LcStatus {
-  if (indexStatus === 'solved') return 'accepted';
-  if (indexStatus === 'attempted') return 'attempted';
-  return 'untouched';
+  if (indexStatus === 'solved') return '已完成';
+  if (indexStatus === 'attempted') return '已尝试';
+  return '未开始';
 }
 
 /**
@@ -200,7 +228,7 @@ export function buildNoteBody(input: {
   // emitter rewrite collapsed it to a single newline). Visual breathing
   // room + reader-source consistency. Mirrors the existing `## Notes\n\n`
   // pattern at the end of the body.
-  return `${h1}## Problem\n${input.problemMarkdown.trim()}\n\n${CODE_HEADING_LINE}\n\n${codeBlock}\n\n## Notes\n\n`;
+  return localizeNoteHeadings(`${h1}## Problem\n${input.problemMarkdown.trim()}\n\n${CODE_HEADING_LINE}\n\n${codeBlock}\n\n## Notes\n\n`);
 }
 
 /**
@@ -233,7 +261,7 @@ export function buildFrontmatterInput(
 
 /**
  * Recover the slug from the detail.url (preferred) or fall back to a title-derived slug
- * if url is empty. detail.url matches `https://leetcode.com/problems/{slug}/`.
+ * if url is empty. detail.url matches `https://leetcode.cn/problems/{slug}/`.
  */
 function slugFromUrl(url: string, titleFallback: string): string {
   const m = /\/problems\/([^/]+)\/?/.exec(url);
@@ -276,12 +304,14 @@ export async function applyFrontmatter(
     // status is 'attempted' are also preserved (we only upgrade from empty /
     // 'untouched'); callers who want to flip 'attempted' → 'accepted' must
     // go through Phase 4's solve-time writer.
-    const existingStatus = fm['lc-status'];
+    const existingStatus = localizeNoteStatus(fm['lc-status']);
     const existingIsEmpty = typeof existingStatus !== 'string'
       || existingStatus === ''
-      || existingStatus === 'untouched';
+      || existingStatus === '未开始';
     if (existingIsEmpty) {
-      fm['lc-status'] = input.initialStatus ?? 'untouched';
+      fm['lc-status'] = localizeNoteStatus(input.initialStatus) ?? '未开始';
+    } else {
+      fm['lc-status'] = existingStatus;
     }
     // else: keep existing ('accepted' or 'attempted') — never downgrade.
     fm['lc-language'] = input.language;
@@ -380,7 +410,7 @@ export async function applySolveTimeFrontmatter(
 ): Promise<void> {
   await app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
     // Status — always 'accepted' on AC. D-24: re-AC still fires this.
-    fm['lc-status'] = 'accepted';
+    fm['lc-status'] = '已完成';
     // Language — overwrites (D-24).
     fm['lc-language'] = input.language;
 

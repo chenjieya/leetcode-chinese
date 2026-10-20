@@ -53,7 +53,7 @@ export async function probeOpenRouter(
   } catch (err) {
     return {
       ok: false,
-      errorMessage: (err instanceof Error ? err.message : 'Network error').slice(0, 200),
+      errorMessage: (err instanceof Error ? err.message : '网络错误').slice(0, 200),
     };
   }
 }
@@ -82,7 +82,7 @@ export async function probeCustom(
   // whitespace inputs are also rejected — symmetric with main.ts
   // testActiveAIConnection and probeOllama.
   if (!cfg.baseUrl?.trim()) {
-    return { ok: false, errorMessage: 'Base URL is required for Custom provider.' };
+    return { ok: false, errorMessage: '请填写自定义服务地址。' };
   }
   try {
     const baseUrl = cfg.baseUrl.replace(/\/$/, '');
@@ -103,7 +103,7 @@ export async function probeCustom(
   } catch (err) {
     return {
       ok: false,
-      errorMessage: (err instanceof Error ? err.message : 'Network error').slice(0, 200),
+      errorMessage: (err instanceof Error ? err.message : '网络错误').slice(0, 200),
     };
   }
 }

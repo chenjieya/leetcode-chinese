@@ -3,7 +3,7 @@
 // Phase 08 Plan 03 Task 2 — AIStreamModal buffered fallback path tests.
 //
 // Verifies (per 08-PLAN.md Wave 0 acceptance):
-//   - kind: 'buffered' shows Thinking… + counter; counter ticks every 1000ms.
+//   - kind: 'buffered' shows 正在思考… + counter; counter ticks every 1000ms.
 //   - Single MarkdownRenderer.render call on text Promise resolution.
 //   - Counter stops on text resolution.
 //   - Counter clamps at 99:59+ defensively (fast-forward 6000+ seconds).
@@ -24,7 +24,7 @@ describe('Phase 08 Plan 03 — AIStreamModal buffered fallback path', () => {
     vi.useRealTimers();
   });
 
-  it("kind: 'buffered' shows Thinking… + counter; counter ticks every 1000ms", async () => {
+  it("kind: 'buffered' shows 正在思考… + counter; counter ticks every 1000ms", async () => {
     const { AIStreamModal } = await import('../../src/ai/AIStreamModal');
     const { makeAIClient } = await import('./helpers/aiStreamModal-mocks');
 
@@ -52,19 +52,19 @@ describe('Phase 08 Plan 03 — AIStreamModal buffered fallback path', () => {
     // Counter at 00:00 initially.
     let thinkingEl = modal.contentEl.querySelector('.leetcode-ai-stream-thinking');
     expect(thinkingEl).not.toBeNull();
-    expect(thinkingEl!.textContent).toBe('Thinking…');
+    expect(thinkingEl!.textContent).toBe('正在思考…');
 
     await vi.advanceTimersByTimeAsync(1000);
     thinkingEl = modal.contentEl.querySelector('.leetcode-ai-stream-thinking');
-    expect(thinkingEl!.textContent).toMatch(/Thinking…\s*00:01/);
+    expect(thinkingEl!.textContent).toMatch(/正在思考…\s*00:01/);
 
     await vi.advanceTimersByTimeAsync(1000);
     thinkingEl = modal.contentEl.querySelector('.leetcode-ai-stream-thinking');
-    expect(thinkingEl!.textContent).toMatch(/Thinking…\s*00:02/);
+    expect(thinkingEl!.textContent).toMatch(/正在思考…\s*00:02/);
 
     await vi.advanceTimersByTimeAsync(1000);
     thinkingEl = modal.contentEl.querySelector('.leetcode-ai-stream-thinking');
-    expect(thinkingEl!.textContent).toMatch(/Thinking…\s*00:03/);
+    expect(thinkingEl!.textContent).toMatch(/正在思考…\s*00:03/);
 
     resolveText('Final response.');
     await vi.runAllTimersAsync();

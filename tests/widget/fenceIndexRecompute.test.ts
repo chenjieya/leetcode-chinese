@@ -118,7 +118,7 @@ describe('DebouncedWriter fenceIndex recompute (Pitfall 19-E)', () => {
     expect(app.vault.process).not.toHaveBeenCalled();
     // Notice surfaced.
     expect(noticeSpy).toHaveBeenCalledTimes(1);
-    expect(noticeSpy.mock.calls[0]![0]).toMatch(/Fence position changed/i);
+    expect(noticeSpy.mock.calls[0]![0]).toMatch(/代码块位置已变化/);
   });
 
   it('proceeds normally when fence count is unchanged at flush time', async () => {

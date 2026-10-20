@@ -4,7 +4,7 @@ import { makeMockLeetCodeClient } from './helpers/mock-leetcode-client';
 import { NoteWriter } from '../src/notes/NoteWriter';
 
 function makeMockSettings(prewarmedCache: { fetchedAt: number; id: number; title: string; difficulty: 'Easy' | 'Medium' | 'Hard'; url: string; contentHtml: string; topicSlugs: string[] }) {
-  const details = new Map<string, unknown>([['two-sum', prewarmedCache]]);
+  const details = new Map<string, unknown>([['two-sum', { ...prewarmedCache, translationCheckedAt: prewarmedCache.fetchedAt }]]);
   return {
     getProblemsFolder: () => 'LeetCode',
     setProblemsFolder: async () => undefined,

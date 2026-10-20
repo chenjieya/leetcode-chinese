@@ -110,14 +110,14 @@ export class SubmissionDetailModal extends Modal {
     const meta = appendEl(this.contentEl, 'div', 'leetcode-submissions-meta');
     const metaParts: string[] = [];
     if (this.deps.runtimeDisplay && this.deps.runtimeDisplay.length > 0) {
-      metaParts.push(`Runtime: ${this.deps.runtimeDisplay}`);
+      metaParts.push(`运行时间：${this.deps.runtimeDisplay}`);
     }
     if (this.deps.memoryDisplay && this.deps.memoryDisplay.length > 0) {
-      metaParts.push(`Memory: ${this.deps.memoryDisplay}`);
+      metaParts.push(`内存：${this.deps.memoryDisplay}`);
     }
-    metaParts.push(`Language: ${this.deps.lang}`);
+    metaParts.push(`编程语言：${this.deps.lang}`);
     if (this.deps.submittedAt && this.deps.submittedAt.length > 0) {
-      metaParts.push(`Submitted: ${this.deps.submittedAt}`);
+      metaParts.push(`提交时间：${this.deps.submittedAt}`);
     }
     setText(meta, metaParts.join(' · '));
 
@@ -146,7 +146,7 @@ export class SubmissionDetailModal extends Modal {
       'leetcode-submissions-footer leetcode-submissions-action-row');
 
     const copyBtn = appendEl(footer, 'button', 'mod-cta');
-    setText(copyBtn, 'Copy to ## Code');
+    setText(copyBtn, '复制到代码章节');
     copyBtn.addEventListener('click', () => {
       // G-COPY-MODAL-NOCLOSE: safeClose() is called inside performCopy() after
       // copyToCode resolves successfully — calling it again here would invoke
@@ -171,7 +171,7 @@ export class SubmissionDetailModal extends Modal {
     });
 
     const closeBtn = appendEl(footer, 'button');
-    setText(closeBtn, 'Close');
+    setText(closeBtn, '关闭');
     closeBtn.setAttribute('data-lc-role', 'close');
     closeBtn.addEventListener('click', () => {
       this.safeClose();

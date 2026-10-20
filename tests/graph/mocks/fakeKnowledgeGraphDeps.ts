@@ -8,7 +8,7 @@
 //   - getProblemDetail(slug) → cached entry or null
 //   - getAutoBacklinksEnabled() → opt-out flag (GRAPH-05, D-21)
 //   - getProblemsFolder() → derived from user setting (Phase 1 D-10)
-//   - getTechniquesFolder() → derived — {problemsFolder}/Techniques (D-15)
+//   - getTechniquesFolder() → derived — {problemsFolder}/techniques (D-15)
 //   - getDefaultLanguage() → user-configured LC langSlug (Phase 1)
 //
 // Vault composition delegates to makeMockVaultApp() (tests/helpers/mock-vault),
@@ -38,7 +38,7 @@ export interface FakeKnowledgeGraphDepsOverrides {
   autoBacklinksEnabled?: boolean;
   /** Problems folder root. Default 'LeetCode' (matches Phase 1 D-10 default). */
   problemsFolder?: string;
-  /** Techniques folder override. Default derived: `${problemsFolder}/Techniques`. */
+  /** Techniques folder override. Default derived: `${problemsFolder}/techniques`. */
   techniquesFolder?: string;
   /** Default LC langSlug for submissions. Default 'python3' (Phase 1 default). */
   defaultLanguage?: string;
@@ -63,7 +63,7 @@ export function makeFakeKnowledgeGraphDeps(
     Object.entries(overrides.problemDetails ?? {}),
   );
   const problemsFolder = overrides.problemsFolder ?? DEFAULT_FOLDER;
-  const techniquesFolder = overrides.techniquesFolder ?? `${problemsFolder}/Techniques`;
+  const techniquesFolder = overrides.techniquesFolder ?? `${problemsFolder}/techniques`;
   const autoBacklinksEnabled = overrides.autoBacklinksEnabled ?? true;
   const defaultLanguage = overrides.defaultLanguage ?? DEFAULT_LANGUAGE;
 

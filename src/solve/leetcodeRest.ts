@@ -30,8 +30,8 @@ import { isSessionExpired } from '../api/LeetCodeClient';
 import type { InterpretArgs, SubmitArgs, CheckArgs, CheckResponse } from './types';
 import type { AuthCookies } from '../settings/SettingsStore';
 
-const BASE_URL = 'https://leetcode.com';
-const USER_AGENT = 'Mozilla/5.0 (compatible; obsidian-leetcode-plugin)';
+const BASE_URL = 'https://leetcode.cn';
+const USER_AGENT = 'Mozilla/5.0 (compatible; leetcode-chinese-plugin)';
 
 /** LC-CLI-verbatim header set. Matches LeetCodeCLI.authHeaders() in
  *  node_modules/@leetnotion/leetcode-api/lib/index.js:1786 and skygragon/leetcode-cli

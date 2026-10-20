@@ -1,3 +1,4 @@
+import { normalizeHeadingLine, isSectionBoundary } from '../notes/noteHeadings';
 // src/graph/copyToCode.ts
 //
 // Phase 4 Plan 04 Task 2 — "Copy to ## Code" primitive (GRAPH-01 revised, D-01).
@@ -146,14 +147,14 @@ export async function copyToCode(
 // This is a pure string predicate — no vault, no app, no I/O. Usable directly
 // inside or outside a `vault.process` callback.
 
-const H2 = /^## /;
+
 const CODE_HEADING = '## Code';
 
 export function hasExistingCodeBlock(body: string): boolean {
   const lines = body.split('\n');
   let codeStart = -1;
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === CODE_HEADING) {
+    if (normalizeHeadingLine(lines[i]) === CODE_HEADING) {
       codeStart = i;
       break;
     }
@@ -163,7 +164,7 @@ export function hasExistingCodeBlock(body: string): boolean {
   // Determine where the ## Code section ends (next H2 or EOF).
   let sectionEnd = lines.length;
   for (let i = codeStart + 1; i < lines.length; i++) {
-    if (H2.test(lines[i] ?? '')) {
+    if (isSectionBoundary(lines[i] ?? '', lines[codeStart]!)) {
       sectionEnd = i;
       break;
     }

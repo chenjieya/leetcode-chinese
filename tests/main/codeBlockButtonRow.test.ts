@@ -83,7 +83,7 @@ describe('buildCodeBlockButtonRow without opts.prefix (Reading-Mode)', () => {
 
     const aiBtn = row.querySelector<HTMLButtonElement>('button.leetcode-code-action-ai-solution');
     expect(aiBtn).not.toBeNull();
-    expect(aiBtn!.textContent).toBe('AI solution');
+    expect(aiBtn!.textContent).toBe("AI 题解");
     aiBtn!.click();
 
     expect(aiSolutionFromActive).toHaveBeenCalledTimes(1);

@@ -23,7 +23,7 @@ describe('applyFrontmatter (NOTE-03 lc-* keys)', () => {
     expect(fm!['lc-title']).toBe('Two Sum');
     expect(fm!['lc-difficulty']).toBe('Easy');
     expect(fm!['lc-url']).toBe('https://leetcode.com/problems/two-sum/');
-    expect(fm!['lc-status']).toBe('untouched');
+    expect(fm!['lc-status']).toBe('未开始');
     expect(fm!['lc-language']).toBe('python3');
     expect(fm!.aliases).toEqual(expect.arrayContaining(['Two Sum', '1']));
     expect(fm!.tags).toEqual(expect.arrayContaining(['lc/easy']));
@@ -38,7 +38,7 @@ describe('applyFrontmatter (NOTE-03 lc-* keys)', () => {
       url: 'https://leetcode.com/problems/two-sum/', language: 'python3', pluginTags: ['lc/easy'],
     });
     const fm = m.getFrontmatter('LeetCode/1-two-sum.md');
-    expect(fm!['lc-status']).toBe('accepted');
+    expect(fm!['lc-status']).toBe('已完成');
   });
 });
 
@@ -61,7 +61,7 @@ describe('applyFrontmatter — lc-status initial mapping (GAP-2a, D-04)', () => 
       initialStatus: 'accepted',
     });
     const fm = m.getFrontmatter('LeetCode/1-two-sum.md');
-    expect(fm!['lc-status']).toBe('accepted');
+    expect(fm!['lc-status']).toBe('已完成');
   });
 
   it("writes lc-status: attempted on empty frontmatter when initialStatus='attempted'", async () => {
@@ -72,7 +72,7 @@ describe('applyFrontmatter — lc-status initial mapping (GAP-2a, D-04)', () => 
       initialStatus: 'attempted',
     });
     const fm = m.getFrontmatter('LeetCode/1-two-sum.md');
-    expect(fm!['lc-status']).toBe('attempted');
+    expect(fm!['lc-status']).toBe('已尝试');
   });
 
   it('writes lc-status: untouched on empty frontmatter when initialStatus is undefined (back-compat)', async () => {
@@ -80,7 +80,7 @@ describe('applyFrontmatter — lc-status initial mapping (GAP-2a, D-04)', () => 
     const file = await m.app.vault.create('LeetCode/1-two-sum.md', '');
     await applyFrontmatter(m.app as never, file as never, baseInput);
     const fm = m.getFrontmatter('LeetCode/1-two-sum.md');
-    expect(fm!['lc-status']).toBe('untouched');
+    expect(fm!['lc-status']).toBe('未开始');
   });
 
   it("D-04 preservation: initialStatus='untouched' MUST NOT downgrade existing 'accepted'", async () => {
@@ -92,7 +92,7 @@ describe('applyFrontmatter — lc-status initial mapping (GAP-2a, D-04)', () => 
       initialStatus: 'untouched',
     });
     const fm = m.getFrontmatter('LeetCode/1-two-sum.md');
-    expect(fm!['lc-status']).toBe('accepted');
+    expect(fm!['lc-status']).toBe('已完成');
   });
 
   it("D-04 idempotence: initialStatus='accepted' on existing 'accepted' leaves it as 'accepted'", async () => {
@@ -104,6 +104,6 @@ describe('applyFrontmatter — lc-status initial mapping (GAP-2a, D-04)', () => 
       initialStatus: 'accepted',
     });
     const fm = m.getFrontmatter('LeetCode/1-two-sum.md');
-    expect(fm!['lc-status']).toBe('accepted');
+    expect(fm!['lc-status']).toBe('已完成');
   });
 });

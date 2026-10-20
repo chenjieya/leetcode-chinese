@@ -57,7 +57,7 @@ describe('KnowledgeGraphWriter.onAccepted — opt-out (GRAPH-05)', () => {
 
     // Frontmatter writes still fire — lc-* keys AND lc/{topic-slug} tags.
     const fm = deps.vault.getFrontmatter('LeetCode/1-two-sum.md')!;
-    expect(fm['lc-status']).toBe('accepted');
+    expect(fm['lc-status']).toBe('已完成');
     const tags = Array.isArray(fm.tags) ? (fm.tags as string[]) : [];
     expect(tags).toEqual(expect.arrayContaining(['lc/hash-table', 'lc/array']));
 
@@ -65,7 +65,7 @@ describe('KnowledgeGraphWriter.onAccepted — opt-out (GRAPH-05)', () => {
     // change (processFrontMatter is allowed; that's the frontmatter path).
     expect(deps.vault.spies.process).not.toHaveBeenCalled();
     const body = deps.vault.getContent('LeetCode/1-two-sum.md') ?? '';
-    expect(body).not.toContain('## Techniques');
+    expect(body).not.toContain('## 解题技巧');
 
     // Stub creation SKIPPED — no vault.create calls for technique stubs.
     expect(deps.vault.spies.create).not.toHaveBeenCalled();

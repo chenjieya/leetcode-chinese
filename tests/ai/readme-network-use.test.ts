@@ -19,11 +19,11 @@ describe('README network-use enumeration (AIPROV-07)', () => {
   const README = readFileSync(path.resolve(__dirname, '../../README.md'), 'utf8');
 
   test('contains ## Network usage section', () => {
-    expect(README).toContain('## Network usage');
+    expect(README).toContain('## 4. 网络、账号与隐私');
   });
 
   test('mentions leetcode.com', () => {
-    expect(README).toContain('leetcode.com');
+    expect(README).toContain('leetcode.cn');
   });
 
   test('mentions api.anthropic.com', () => {
@@ -43,8 +43,8 @@ describe('README network-use enumeration (AIPROV-07)', () => {
   });
 
   test('mentions Custom OpenAI-compatible endpoint', () => {
-    expect(README).toContain('Custom');
-    expect(README).toMatch(/[Cc]ustom OpenAI-compatible/);
+    expect(README).toContain('自定义');
+    expect(README).toMatch(/自定义 OpenAI 兼容/);
   });
 
   // Phase 08.1 Plan 02 — Bedrock joins the README enumeration as the 5th AI
@@ -57,11 +57,11 @@ describe('README network-use enumeration (AIPROV-07)', () => {
   });
 
   test('contains ### Authentication subsection', () => {
-    expect(README).toContain('### Authentication');
+    expect(README).toContain('### 4.1. 认证信息');
   });
 
   test('AI keys disclosure mentions plain text in data.json', () => {
-    expect(README).toMatch(/plain text.*data\.json/);
+    expect(README).toMatch(/明文.*data\.json/);
   });
 
   test('AI keys disclosure mentions logger redaction', () => {
@@ -69,15 +69,15 @@ describe('README network-use enumeration (AIPROV-07)', () => {
   });
 
   test('contains ### Cost expectations subsection', () => {
-    expect(README).toContain('### Cost expectations');
+    expect(README).toContain('### 4.2. 费用说明');
   });
 
   test('Cost expectations mentions Phase 09 cost-cap UI', () => {
-    expect(README).toContain('Phase 09');
+    expect(README).toContain('每日预算');
   });
 
   test('Cost expectations mentions defaults may rot', () => {
-    expect(README).toContain('rot');
+    expect(README).toContain('默认单价可能过时');
   });
 
   test('preserves v1.0 LC cookie disclosure under Authentication', () => {
@@ -85,11 +85,11 @@ describe('README network-use enumeration (AIPROV-07)', () => {
     // We assert the substring is present, NOT that it's identical char-for-char,
     // because the v1.0 wording may shift slightly across releases.
     expect(README).toMatch(/cookie/i);
-    expect(README).toMatch(/never transmitted anywhere except.*leetcode\.com/i);
+    expect(README).toMatch(/Cookie 仅发送给 leetcode\.cn/);
   });
 
   test('explicitly disclaims telemetry', () => {
-    expect(README).toContain('No telemetry');
+    expect(README).toContain('不插入广告或客户端遥测');
   });
 
   test('does NOT mention deprecated/wrong base URLs', () => {

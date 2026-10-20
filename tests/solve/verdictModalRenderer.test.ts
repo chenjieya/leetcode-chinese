@@ -61,28 +61,30 @@ function renderFixture(fixture: unknown): { titleEl: HTMLElement; contentEl: HTM
 describe('verdictModalRenderer.renderVerdict (D-29, D-30) — 8 fixtures + 2 synthetic', () => {
   it('accepted.json: title contains "Accepted" and body mentions Accepted', () => {
     const { titleEl, contentEl } = renderFixture(accepted);
-    expect(titleEl.textContent).toMatch(/Accepted/i);
-    expect(contentEl.textContent).toMatch(/Accepted/i);
+    expect(titleEl.textContent).toMatch(/通过/i);
+    expect(contentEl.textContent).toMatch(/通过/i);
+    expect(contentEl.textContent).toContain('运行时间：48 ms · 内存：16.6 MB');
+    expect(contentEl.textContent).toContain('运行时间击败 86.4% · 内存击败 42.2%');
   });
 
   it('wrong-answer.json: body contains Input + Output + Expected sections', () => {
     const { contentEl } = renderFixture(wrongAnswer);
     const text = contentEl.textContent ?? '';
-    expect(text).toMatch(/Input/);
-    expect(text).toMatch(/Output/);
-    expect(text).toMatch(/Expected/);
+    expect(text).toMatch(/输入/);
+    expect(text).toMatch(/实际输出/);
+    expect(text).toMatch(/预期输出/);
   });
 
   it('tle.json: body contains Input section (last_testcase surfaced)', () => {
     const { titleEl, contentEl } = renderFixture(tle);
-    expect(titleEl.textContent).toMatch(/Time Limit/i);
-    expect(contentEl.textContent).toMatch(/Input/);
+    expect(titleEl.textContent).toMatch(/超出时间限制/);
+    expect(contentEl.textContent).toMatch(/输入/);
   });
 
   it('mle.json: body contains Input section; title contains Memory Limit', () => {
     const { titleEl, contentEl } = renderFixture(mle);
-    expect(titleEl.textContent).toMatch(/Memory Limit/i);
-    expect(contentEl.textContent).toMatch(/Input/);
+    expect(titleEl.textContent).toMatch(/超出内存限制/);
+    expect(contentEl.textContent).toMatch(/输入/);
   });
 
   it('compile-error.json: body contains compile_error text inside a <pre>', () => {
@@ -95,8 +97,8 @@ describe('verdictModalRenderer.renderVerdict (D-29, D-30) — 8 fixtures + 2 syn
   it('runtime-error.json: body contains Error + Input sections', () => {
     const { contentEl } = renderFixture(runtimeError);
     const text = contentEl.textContent ?? '';
-    expect(text).toMatch(/Error/);
-    expect(text).toMatch(/Input/);
+    expect(text).toMatch(/运行错误/);
+    expect(text).toMatch(/输入/);
   });
 
   it('run-sample.json: renders code_answer output array', () => {
@@ -112,21 +114,21 @@ describe('verdictModalRenderer.renderVerdict (D-29, D-30) — 8 fixtures + 2 syn
     expect(text).toContain('[0,1]');
   });
 
-  it('synthetic unknown verdict (status_code 99): title "Unrecognized verdict"; body has <details> + Copy payload button', () => {
+  it("synthetic unknown verdict (status_code 99): title \"未知判题结果\"; body has <details> + 复制响应数据 button", () => {
     const unknown = { status_code: 99, status_msg: 'Future Status', state: 'SUCCESS' };
     const { titleEl, contentEl } = renderFixture(unknown);
-    expect(titleEl.textContent).toMatch(/Unrecognized verdict/i);
+    expect(titleEl.textContent).toMatch(/未知判题结果/i);
     expect(contentEl.querySelector('details')).not.toBeNull();
     const buttons = Array.from(contentEl.querySelectorAll('button'));
-    const copyBtn = buttons.find((b) => /copy payload/i.test(b.textContent ?? ''));
+    const copyBtn = buttons.find((b) => /复制响应数据/.test(b.textContent ?? ''));
     expect(copyBtn).toBeDefined();
   });
 
-  it('timeout synthetic: title "Judge timeout"; body contains prescribed copy', () => {
+  it("timeout synthetic: title \"判题超时\"; body contains prescribed copy", () => {
     const payload = { _phase3_timeout: true };
     const { titleEl, contentEl } = renderFixture(payload);
-    expect(titleEl.textContent).toMatch(/Judge timeout/i);
-    expect(contentEl.textContent ?? '').toContain('LeetCode judge timed out. Try again or check leetcode.com.');
+    expect(titleEl.textContent).toMatch(/判题超时/i);
+    expect(contentEl.textContent ?? '').toContain("LeetCode 判题超时，请稍后重试或检查站点状态。");
   });
 });
 
@@ -274,8 +276,8 @@ describe('Phase 5.4 — Run-mode redesign (RED)', () => {
       joinedDataInput: '[2,7,11,15]\n9',
     });
     // Aggregate verdict must be Accepted, not Wrong Answer.
-    expect(titleEl.textContent ?? '').toContain('Accepted');
-    expect(titleEl.textContent ?? '').not.toContain('Wrong Answer');
+    expect(titleEl.textContent ?? '').toContain('通过');
+    expect(titleEl.textContent ?? '').not.toContain('答案错误');
     // Per-case chip must show PASS, not FAIL.
     const passChips = contentEl.querySelectorAll('.leetcode-verdict-case-chip--pass');
     const failChips = contentEl.querySelectorAll('.leetcode-verdict-case-chip--fail');
@@ -296,7 +298,7 @@ describe('Phase 5.4 — Run-mode redesign (RED)', () => {
       ...({ metaData: TWO_SUM_META_DATA, joinedDataInput: '[2,7,11,15]\n9\n[3,2,4]\n6' } as Record<string, unknown>),
     } as Parameters<typeof renderVerdict>[0]);
     const headerText = `${titleEl.textContent ?? ''} ${contentEl.textContent ?? ''}`;
-    expect(headerText).toMatch(/Runtime:/i);
+    expect(headerText).toMatch(/运行时间：/);
     expect(titleEl.textContent ?? '').not.toContain('Two Sum');
   });
 
@@ -324,13 +326,13 @@ describe('Phase 5.4 — Run-mode redesign (RED)', () => {
     expect(tabs.length).toBe(0);
   });
 
-  it('D-16 (Run side): Run path renders ZERO buttons whose textContent matches /Copy.*test.*case/i', () => {
+  it('D-16 (Run side): Run path renders ZERO buttons whose textContent matches /失败用例/', () => {
     const { contentEl } = renderFixtureRun(runMultiCase, {
       metaData: TWO_SUM_META_DATA,
       joinedDataInput: '[2,7,11,15]\n9\n[3,2,4]\n6',
     });
     const copyButtons = Array.from(contentEl.querySelectorAll('button')).filter((b) =>
-      /Copy.*test.*case/i.test(b.textContent ?? ''),
+      /失败用例/.test(b.textContent ?? ''),
     );
     expect(copyButtons.length).toBe(0);
   });
@@ -362,7 +364,7 @@ describe('Phase 5.4 — Run-mode redesign (RED)', () => {
     expect(text).not.toMatch(/nums\s*=/);
   });
 
-  it('D-16 (Submit side, D-14 regression guard): Submit-mode WA payload renders exactly one button matching /Copy.*test.*case/i', () => {
+  it('D-16 (Submit side, D-14 regression guard): Submit-mode WA payload renders exactly one button matching /失败用例/', () => {
     // Submit-side keeps the Copy-failing button — D-14 says renderSubmitVerdict
     // stays bytes-identical, so this assertion should be GREEN on arrival
     // and serves as the D-14 regression oracle.
@@ -375,7 +377,7 @@ describe('Phase 5.4 — Run-mode redesign (RED)', () => {
       onCopyFailingInput: () => undefined,
     });
     const copyButtons = Array.from(contentEl.querySelectorAll('button')).filter((b) =>
-      /Copy.*test.*case/i.test(b.textContent ?? ''),
+      /失败用例/.test(b.textContent ?? ''),
     );
     expect(copyButtons.length).toBe(1);
   });
@@ -391,7 +393,7 @@ describe('Phase 5.4 — Run-mode redesign (RED)', () => {
       onCopyFailingInput,
     });
     const copyBtn = Array.from(contentEl.querySelectorAll('button')).find((b) =>
-      /Copy.*test.*case/i.test(b.textContent ?? ''),
+      /失败用例/.test(b.textContent ?? ''),
     );
     expect(copyBtn).toBeDefined();
     (copyBtn as HTMLButtonElement).click();
@@ -419,7 +421,7 @@ describe('Phase 08 — AI Debug button on Run-mode failure paths', () => {
     failing.compare_result = '00';
     renderVerdict({ titleEl, contentEl, payload: failing, onOpenAIDebug });
     const aiBtn = Array.from(contentEl.querySelectorAll('button')).find(
-      (b) => (b.textContent ?? '').trim() === 'AI: Debug',
+      (b) => (b.textContent ?? '').trim() === "AI 调试",
     );
     expect(aiBtn).toBeDefined();
   });
@@ -436,7 +438,7 @@ describe('Phase 08 — AI Debug button on Run-mode failure paths', () => {
     failing.compare_result = '00';
     renderVerdict({ titleEl, contentEl, payload: failing, onOpenAIDebug });
     const aiBtn = Array.from(contentEl.querySelectorAll('button')).find(
-      (b) => (b.textContent ?? '').trim() === 'AI: Debug',
+      (b) => (b.textContent ?? '').trim() === "AI 调试",
     );
     expect(aiBtn).toBeDefined();
     (aiBtn as HTMLButtonElement).click();
@@ -449,7 +451,7 @@ describe('Phase 08 — AI Debug button on Run-mode failure paths', () => {
     const onOpenAIDebug = vi.fn();
     renderVerdict({ titleEl, contentEl, payload: runMultiCase, onOpenAIDebug });
     const aiBtn = Array.from(contentEl.querySelectorAll('button')).find(
-      (b) => (b.textContent ?? '').trim() === 'AI: Debug',
+      (b) => (b.textContent ?? '').trim() === "AI 调试",
     );
     expect(aiBtn).toBeUndefined();
   });
@@ -465,7 +467,7 @@ describe('Phase 08 — AI Debug button on Run-mode failure paths', () => {
     failing.compare_result = '00';
     renderVerdict({ titleEl, contentEl, payload: failing });
     const aiBtn = Array.from(contentEl.querySelectorAll('button')).find(
-      (b) => (b.textContent ?? '').trim() === 'AI: Debug',
+      (b) => (b.textContent ?? '').trim() === "AI 调试",
     );
     expect(aiBtn).toBeUndefined();
   });
@@ -482,7 +484,7 @@ describe('Phase 08 — AI Debug button on Run-mode failure paths', () => {
     };
     renderVerdict({ titleEl, contentEl, payload: runCompileError, onOpenAIDebug });
     const aiBtn = Array.from(contentEl.querySelectorAll('button')).find(
-      (b) => (b.textContent ?? '').trim() === 'AI: Debug',
+      (b) => (b.textContent ?? '').trim() === "AI 调试",
     );
     expect(aiBtn).toBeDefined();
     (aiBtn as HTMLButtonElement).click();
@@ -656,7 +658,7 @@ describe('per-case Stdout (wire shape verified 2026-06-11)', () => {
     const labels = Array.from(
       contentEl.querySelectorAll('.leetcode-verdict-case-body .leetcode-verdict-section-label'),
     ).map((el) => el.textContent ?? '');
-    expect(labels).not.toContain('Stdout');
+    expect(labels).not.toContain("标准输出");
   });
 });
 
@@ -733,11 +735,11 @@ describe('mid-run runtime error (wire shape verified 2026-06-11)', () => {
       cls: el.className,
     }));
     expect(chips).toHaveLength(3);
-    expect(chips[0]!.text).toBe('PASS');
+    expect(chips[0]!.text).toBe('通过');
     expect(chips[0]!.cls).toContain('leetcode-verdict-case-chip--pass');
-    expect(chips[1]!.text).toBe('ERROR');
+    expect(chips[1]!.text).toBe('异常');
     expect(chips[1]!.cls).toContain('leetcode-verdict-case-chip--threw');
-    expect(chips[2]!.text).toBe('SKIP');
+    expect(chips[2]!.text).toBe('跳过');
     expect(chips[2]!.cls).toContain('leetcode-verdict-case-chip--skipped');
   });
 
@@ -759,10 +761,10 @@ describe('mid-run runtime error (wire shape verified 2026-06-11)', () => {
     const labels = Array.from(
       contentEl.querySelectorAll('.leetcode-verdict-case-body .leetcode-verdict-section-label'),
     ).map((el) => el.textContent ?? '');
-    expect(labels).toContain('Input');
-    expect(labels).toContain('Error');
-    expect(labels).toContain('Expected');
-    expect(labels).not.toContain('Output');
+    expect(labels).toContain("输入");
+    expect(labels).toContain('运行错误');
+    expect(labels).toContain("预期输出");
+    expect(labels).not.toContain("实际输出");
   });
 
   it('PASS tab keeps its normal Output rendering', () => {
@@ -784,8 +786,8 @@ describe('mid-run runtime error (wire shape verified 2026-06-11)', () => {
     const labels = Array.from(
       contentEl.querySelectorAll('.leetcode-verdict-case-body .leetcode-verdict-section-label'),
     ).map((el) => el.textContent ?? '');
-    expect(labels).toContain('Output');
-    expect(labels).not.toContain('Error');
+    expect(labels).toContain("实际输出");
+    expect(labels).not.toContain('运行错误');
   });
 
   it('SKIP tab shows a "Not executed" placeholder, no stack trace', () => {
@@ -801,7 +803,7 @@ describe('mid-run runtime error (wire shape verified 2026-06-11)', () => {
       '.leetcode-verdict-case-body .leetcode-verdict-skipped-note',
     );
     expect(note).not.toBeNull();
-    expect(note?.textContent ?? '').toMatch(/not executed/i);
+    expect(note?.textContent ?? '').toMatch(/未执行/);
     // Stack trace not duplicated onto skipped tab.
     const errPres = contentEl.querySelectorAll(
       '.leetcode-verdict-case-body .leetcode-verdict-error-pre',
@@ -811,7 +813,7 @@ describe('mid-run runtime error (wire shape verified 2026-06-11)', () => {
     const labels = Array.from(
       contentEl.querySelectorAll('.leetcode-verdict-case-body .leetcode-verdict-section-label'),
     ).map((el) => el.textContent ?? '');
-    expect(labels).toContain('Expected');
+    expect(labels).toContain("预期输出");
   });
 
   it('title is "Runtime Error", AI Debug button is wired', () => {
@@ -821,9 +823,9 @@ describe('mid-run runtime error (wire shape verified 2026-06-11)', () => {
       joinedDataInput: '[2,7,11,15]\n9\n[3,2,4]\n6\n[3,3]\n6',
       ...({ onOpenAIDebug } as Record<string, unknown>),
     } as RenderRunOptions);
-    expect(titleEl.textContent).toMatch(/Runtime Error/);
+    expect(titleEl.textContent).toMatch(/运行错误/);
     const aiBtn = Array.from(contentEl.querySelectorAll('button')).find(
-      (b) => /AI: Debug/i.test(b.textContent ?? ''),
+      (b) => /AI 调试/i.test(b.textContent ?? ''),
     );
     expect(aiBtn).toBeDefined();
     aiBtn!.click();

@@ -105,7 +105,7 @@ export function extractFromJson(body: string): string {
 export function extractProviderError(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (typeof err === 'string') return err;
-  return 'Unknown error';
+  return '未知错误';
 }
 
 /**

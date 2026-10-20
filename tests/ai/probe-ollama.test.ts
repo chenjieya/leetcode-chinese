@@ -74,7 +74,7 @@ describe('probeOllama — Plan 07-04 Task 2', () => {
     );
     const result = await probeOllama(cfg(), fetcher);
     expect(result.ok).toBe(false);
-    expect(result.errorMessage).toContain('Ollama not reachable (HTTP 503)');
+    expect(result.errorMessage).toContain('无法连接 Ollama（HTTP 503）');
   });
 
   it('returns ok=false on network throw with this-host message', async () => {
@@ -83,6 +83,6 @@ describe('probeOllama — Plan 07-04 Task 2', () => {
     });
     const result = await probeOllama(cfg(), fetcher);
     expect(result.ok).toBe(false);
-    expect(result.errorMessage).toContain('Ollama not reachable on this host');
+    expect(result.errorMessage).toContain('无法连接此主机上的 Ollama 服务');
   });
 });

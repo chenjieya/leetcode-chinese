@@ -72,18 +72,18 @@ export function mountLegacyFenceBanner(
     });
     if (mode === 'auto-migrating') {
       mk(banner, 'p', {
-        text: 'Migrating note to v1.3 format...',
+        text: '正在迁移笔记到新版格式…',
         cls: 'leetcode-migration-banner__copy',
       });
       return;
     }
     // mode === 'manual-prompt'
     mk(banner, 'p', {
-      text: 'This note uses the v1.2 format.',
+      text: '这篇笔记仍使用旧版格式。',
       cls: 'leetcode-migration-banner__copy',
     });
     const button = mk(banner, 'button', {
-      text: 'Migrate now',
+      text: '立即迁移',
       cls: 'leetcode-migration-banner__cta',
     }) as HTMLButtonElement;
     button.addEventListener('click', () => {

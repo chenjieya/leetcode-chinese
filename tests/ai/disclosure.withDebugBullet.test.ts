@@ -16,7 +16,7 @@
 import { describe, it, expect } from 'vitest';
 
 const VERBATIM_BULLET =
-  'AI Debug also sends the last failing run/submit verdict for this problem (input, expected output, your output, error message)';
+  'AI 调试还会发送本题最近一次失败的运行或提交结果（输入、预期输出、你的输出和错误信息）';
 
 describe('Phase 08 Plan 03 — withDebugBullet factory', () => {
   it('returns a FRESH object; DISCLOSURE_BASE_COPY is unchanged', async () => {

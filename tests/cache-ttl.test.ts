@@ -6,7 +6,7 @@ import { NoteWriter, CACHE_TTL_MS } from '../src/notes/NoteWriter';
 function makeMockSettings(fetchedAt: number, body = '## Problem\nstatement.\n\n## Notes\n') {
   const details = new Map<string, unknown>([
     ['two-sum', {
-      fetchedAt, id: 1, title: 'Two Sum', difficulty: 'Easy',
+      fetchedAt, translationCheckedAt: fetchedAt, id: 1, title: 'Two Sum', difficulty: 'Easy',
       url: 'https://leetcode.com/problems/two-sum/',
       contentHtml: '<p>cached</p>', topicSlugs: [],
     }],

@@ -1,9 +1,8 @@
-name: Release
-
+name: 发布插件
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+*"
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: write
@@ -13,45 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-
-      - name: Determine if prerelease
-        id: meta
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          if [[ "$TAG" == *-* ]]; then
-            echo "prerelease=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Patch manifest.json version from tag
-        run: |
-          TAG="${{ steps.meta.outputs.tag }}"
-          jq --arg v "$TAG" '.version = $v' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
-
-      - name: Create GitHub Release
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm run check:bundle-size
+      - name: 校验版本与标签
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node -e "const m=require('./manifest.json'); if(m.version!==process.env.RELEASE_TAG || m.id!=='leetcode-chinese') process.exit(1)"
+      - name: 创建发布包
+        run: zip leetcode-chinese.zip main.js manifest.json styles.css LICENSE README.md
+      - name: 创建 GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          PRERELEASE_FLAG=""
-          if [[ "${{ steps.meta.outputs.prerelease }}" == "true" ]]; then
-            PRERELEASE_FLAG="--prerelease"
-          fi
-
-          ASSETS=(main.js manifest.json)
-          if [[ -f styles.css ]]; then
-            ASSETS+=(styles.css)
-          fi
-
-          gh release create "${{ steps.meta.outputs.tag }}" \
-            --title "${{ steps.meta.outputs.tag }}" \
-            --generate-notes \
-            $PRERELEASE_FLAG \
-            "${ASSETS[@]}"
+          gh release create "$RELEASE_TAG" --title "LeetCode Chinese $RELEASE_TAG" --notes-file docs/7-发版与回滚/1.0.0-发布说明.md main.js manifest.json styles.css leetcode-chinese.zip

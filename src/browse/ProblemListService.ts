@@ -30,6 +30,7 @@ interface LcQuestion {
   questionFrontendId: string;
   titleSlug: string;
   title: string;
+  originalTitle?: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   isPaidOnly: boolean;
   // User progress on this problem. 'ac' = solved, 'notac' = attempted, null = untouched.
@@ -126,9 +127,10 @@ export class ProblemListService {
               .filter((s): s is string => s !== null)
           : [];
         const row: IndexedProblem = {
-          id: Number(q.questionFrontendId),
+          id: /^\d+$/.test(q.questionFrontendId) ? Number(q.questionFrontendId) : q.questionFrontendId,
           slug: q.titleSlug,
           title: q.title,
+          ...(q.originalTitle ? { originalTitle: q.originalTitle } : {}),
           diff: q.difficulty,
           paid: q.isPaidOnly,
           status: mapStatus(q.status ?? null),
@@ -145,7 +147,7 @@ export class ProblemListService {
       if (isLast) break;
       offset += PAGE_SIZE;
     }
-    const index: ProblemIndex = { fetchedAt: Date.now(), problems: all };
+    const index: ProblemIndex = { fetchedAt: Date.now(), translationCheckedAt: Date.now(), problems: all };
     await this.settings.setProblemIndex(index);
     return all;
   }
@@ -158,7 +160,7 @@ export class ProblemListService {
     const q = term.trim().toLowerCase();
     if (!q) return idx;
     return idx.filter((p) =>
-      p.title.toLowerCase().includes(q) || String(p.id).startsWith(q),
+      p.title.toLowerCase().includes(q) || p.originalTitle?.toLowerCase().includes(q) || String(p.id).startsWith(q),
     );
   }
 
@@ -246,8 +248,9 @@ function evaluateRule(p: IndexedProblem, r: FilterRule): boolean | undefined {
     }
     case 'question-id': {
       if (r.min === null && r.max === null) return undefined;
-      if (r.min !== null && p.id < r.min) return false;
-      if (r.max !== null && p.id > r.max) return false;
+      if (!Number.isFinite(Number(p.id))) return false;
+      if (r.min !== null && Number(p.id) < r.min) return false;
+      if (r.max !== null && Number(p.id) > r.max) return false;
       return true;
     }
     case 'acceptance': {

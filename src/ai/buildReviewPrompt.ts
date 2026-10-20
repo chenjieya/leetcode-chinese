@@ -14,10 +14,10 @@
 //   - `## Problem` heading + problemMd.trim()
 //   - `## Accepted {language} solution` heading + fenced code block
 //   - `## Review instructions` heading + three sub-headings:
-//     - `### Approach`: evaluate algorithm choice; code fence ONLY for
+//     - `### 解题思路`: evaluate algorithm choice; code fence ONLY for
 //       fundamentally different approach (D-04)
-//     - `### Efficiency`: time/space complexity analysis
-//     - `### Code Style`: readability, naming, edge-case, idiomatic usage
+//     - `### 复杂度分析`: time/space complexity analysis
+//     - `### 代码建议`: readability, naming, edge-case, idiomatic usage
 //   - Final instruction: concise, no restatement, no congratulation.
 //
 // `## Notes` is NEVER sent (09-CONTEXT decision — locked v1.1 posture).
@@ -49,20 +49,21 @@ export function buildReviewPrompt(args: BuildReviewPromptArgs): string {
     '```',
     '',
     '## Review instructions',
+    '请使用简体中文撰写全部分析和代码注释，保留编程语言关键字及已有标识符。',
     '',
     'Write your review using EXACTLY these three markdown headings (triple-hash, not double):',
     '',
     '```',
-    '### Approach',
-    '### Efficiency',
-    '### Code Style',
+    '### 解题思路',
+    '### 复杂度分析',
+    '### 代码建议',
     '```',
     '',
-    'For ### Approach: Is this the best algorithm for this problem? If a fundamentally better approach exists (better time complexity class), explain the insight and show it in a code fence. If the approach is already optimal, say so briefly and explain WHY it works (the key insight).',
+    'For ### 解题思路: Is this the best algorithm for this problem? If a fundamentally better approach exists (better time complexity class), explain the insight and show it in a code fence. If the approach is already optimal, say so briefly and explain WHY it works (the key insight).',
     '',
-    'For ### Efficiency: State time and space complexity. Compare to the theoretical optimum. If the solution is optimal, just confirm it concisely. If sub-optimal, explain what complexity is achievable and how.',
+    'For ### 复杂度分析: State time and space complexity. Compare to the theoretical optimum. If the solution is optimal, just confirm it concisely. If sub-optimal, explain what complexity is achievable and how.',
     '',
-    'For ### Code Style: every suggestion must pass this bar — the new version is **measurably better**, not just **different**. "Measurably better" means at least one of:',
+    'For ### 代码建议: every suggestion must pass this bar — the new version is **measurably better**, not just **different**. "Measurably better" means at least one of:',
     '- Safer: eliminates a concrete bug, off-by-one, or overflow that would fail on a valid input.',
     '- Shorter: fewer lines or fewer expressions for the same logic (e.g. collapsing a destructure-then-assign into one statement; replacing a manual append loop with a comprehension).',
     '- More idiomatic: replaces hand-rolled logic with a standard-library helper any reader of this language would immediately recognize (e.g. `Collections.reverseOrder()` instead of an inline comparator lambda; built-in `min`/`max` instead of a manual reduction).',
@@ -76,6 +77,6 @@ export function buildReviewPrompt(args: BuildReviewPromptArgs): string {
     '- Suggest micro-optimizations that don\'t change the complexity class.',
     '- Qualify correct code with "Good." or "Fine as is." — just omit it entirely.',
     '',
-    'Be concise and direct. If a section has nothing meaningful to say, write just "Optimal." or "No issues." — do not fill space with non-issues. Do not restate the problem. Do not congratulate.',
+    'Be concise and direct. If a section has nothing meaningful to say, write just “已达到最优”或“未发现需要改进的问题” — do not fill space with non-issues. Do not restate the problem. Do not congratulate.',
   ].join('\n');
 }

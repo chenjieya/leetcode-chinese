@@ -20,7 +20,7 @@
 //   D-12 silent offline (log debug only; no Notice on refresh failure)
 //   D-13 new-note fetch failure: Notice + abort, no partial file
 //   D-14 DetailCacheEntry schema (id, title, difficulty, url, contentHtml, topicSlugs, …)
-//   D-16 unpadded `{id}-{slug}.md` filename via buildNotePath
+//   题目文件名 `{lc-id}. {lc-title}.md` 由 buildNotePath 统一生成
 //   D-18 lazy LeetCode.base ship on first problem open
 //   D-22 no mutating body writes — all body writes via vault.process;
 //        all frontmatter via processFrontMatter
@@ -42,8 +42,11 @@ import {
   buildFrontmatterInput,
   buildNoteBody,
   buildNotePath,
+  resolveProblemNotePath,
   mapStatusDisplay,
+  localizeNoteStatus,
 } from './NoteTemplate';
+import { hasNoteTitle, localizeNoteHeadings } from './noteHeadings';
 import { htmlToMarkdown } from './htmlToMarkdown';
 import { rewriteProblemSection } from './HeadingRegion';
 import { ensureLeetcodeBase } from './BaseFile';
@@ -76,6 +79,7 @@ export interface NoteWriterDetail {
   titleSlug: string;
   title: string;
   content: string | null;
+  translationCheckedAt?: number;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   isPaidOnly: boolean;
   topicTags?: Array<{ name: string; slug: string }>;
@@ -358,12 +362,13 @@ export class NoteWriter {
     const cached = this.settings.getProblemDetail(slug);
 
     // Re-open path (D-11): existing file + cached detail → reveal first, optionally background-refresh.
-    const existingPath = cached ? buildNotePath(folder, cached.id, slug) : null;
+    const existingPath = resolveProblemNotePath(this.app, folder, slug, cached);
     const existingFile = existingPath
       ? narrowToTFile(this.app.vault.getAbstractFileByPath(existingPath))
       : null;
 
     if (existingFile) {
+      await this.localizeStoredNote(existingFile);
       // Reveal immediately — no await on any network (D-11).
       // Phase 18: tab idempotency — reuse existing leaf if already open.
       if (!this.revealExistingLeaf(existingFile.path)) {
@@ -382,7 +387,8 @@ export class NoteWriter {
       // grafting a sibling fence here would corrupt notes (Plan 21-13 Gap B).
       // D-11/D-12: background-refresh if cache is stale; silent on failure.
       const now = Date.now();
-      const cacheStale = !cached || (now - cached.fetchedAt) > CACHE_TTL_MS;
+      const currentTitle: unknown = this.app.metadataCache.getFileCache(existingFile)?.frontmatter?.['lc-title'];
+      const cacheStale = !cached || !cached.translationCheckedAt || (typeof currentTitle === 'string' && currentTitle !== cached.title) || (now - cached.fetchedAt) > CACHE_TTL_MS;
       if (cacheStale) {
         // fire-and-forget — swallow any rejection at the boundary (D-12).
         void this.backgroundRefresh(existingFile, slug).catch((err) => {
@@ -407,14 +413,14 @@ export class NoteWriter {
         return;
       }
       // Generic network failure (D-13): Notice + abort, no partial file.
-      new Notice(`Couldn't fetch ${slug}. Check your connection.`, 4000);
+      new Notice(`无法获取 ${slug}，请检查网络连接。`, 4000);
       return;
     }
 
     if (!detail || !detail.content) {
       // LC returned null → treat as not-found (or session expired flattened to null).
        
-      new Notice(`LeetCode problem not found: ${slug}.`, 4000);
+      new Notice(`未找到力扣题目：${slug}。`, 4000);
       return;
     }
 
@@ -436,8 +442,9 @@ export class NoteWriter {
     // `vault.create` below throws ("already exists") and the user sees a
     // broken re-open. Using the fresh detail's id, we can now compute the
     // canonical path and retrofit silently.
-    const filePath = buildNotePath(folder, newEntry.id, slug);
-    const existingAtCanonical = narrowToTFile(this.app.vault.getAbstractFileByPath(filePath));
+    const filePath = buildNotePath(folder, newEntry.id, newEntry.title);
+    const resolvedPath = resolveProblemNotePath(this.app, folder, slug, newEntry) ?? filePath;
+    const existingAtCanonical = narrowToTFile(this.app.vault.getAbstractFileByPath(resolvedPath));
     if (existingAtCanonical) {
       // Treat as re-open: reveal + retrofit + refresh frontmatter.
       // Phase 18: tab idempotency — reuse existing leaf if already open.
@@ -562,6 +569,9 @@ export class NoteWriter {
    * behavior (Pitfall 4).
    */
   private async backgroundRefresh(file: TFile, slug: string): Promise<void> {
+    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const previousTitle = typeof fm?.['lc-title'] === 'string' ? fm['lc-title'] : this.settings.getProblemDetail(slug)?.title ?? '';
+    const language = typeof fm?.['lc-language'] === 'string' ? fm['lc-language'] : this.settings.getDefaultLanguage();
     const detail = await this.client.getProblemDetail(slug);
     if (!detail || !detail.content) return;   // silent; no Notice per D-12
     const entry = toDetailCacheEntry(detail);
@@ -569,7 +579,7 @@ export class NoteWriter {
 
     const freshMarkdown = htmlToMarkdown(entry.contentHtml);
     // Body rewrite — vault.process is atomic; rewriteProblemSection is pure.
-    await this.app.vault.process(file, (current) => rewriteProblemSection(current, freshMarkdown));
+    await this.app.vault.process(file, (current) => rewriteProblemSection(current, freshMarkdown, { previous: previousTitle, next: entry.title }));
     // Phase 22 — legacy retrofit path retired; the v1.3 widget owns the fence
     // body. Notes missing `## Code` are repaired through the migration
     // pipeline (`fenceMigrator.ts`) at file open, not via background refresh.
@@ -577,7 +587,7 @@ export class NoteWriter {
     await applyFrontmatter(
       this.app,
       file,
-      buildFrontmatterInput(entry, this.settings.getDefaultLanguage()),
+      buildFrontmatterInput(entry, language),
     );
   }
 
@@ -617,15 +627,18 @@ export class NoteWriter {
 
     // Locate the existing note by cached id + slug. If there's no cache, we
     // can't compute the filename — ask the user to open the problem first.
-    const existingPath = cached ? buildNotePath(folder, cached.id, slug) : null;
+    const existingPath = resolveProblemNotePath(this.app, folder, slug, cached);
     const existingFile = existingPath
       ? narrowToTFile(this.app.vault.getAbstractFileByPath(existingPath))
       : null;
 
     if (!existingFile) {
-      new Notice(`No note for problem ${slug}.`, 4000);
+      new Notice(`未找到题目 ${slug} 的笔记。`, 4000);
       return;
     }
+    const frontmatter = this.app.metadataCache.getFileCache(existingFile)?.frontmatter;
+    const previousTitle = typeof frontmatter?.['lc-title'] === 'string' ? frontmatter['lc-title'] : cached?.title ?? '';
+    const currentLanguage = typeof frontmatter?.['lc-language'] === 'string' ? frontmatter['lc-language'] : this.settings.getDefaultLanguage();
 
     // Fetch fresh detail. Any error surfaces to the user — they explicitly
     // asked for a refresh, so silent-failure (D-12) is the wrong posture.
@@ -642,12 +655,12 @@ export class NoteWriter {
         return;
       }
       const displayTitle = cached?.title ?? slug;
-      new Notice(`Couldn't refresh ${displayTitle}. Check your connection.`, 4000);
+      new Notice(`无法刷新 ${displayTitle}，请检查网络连接。`, 4000);
       return;
     }
 
     if (!detail || !detail.content) {
-      new Notice(`LeetCode problem not found: ${slug}.`, 4000);
+      new Notice(`未找到力扣题目：${slug}。`, 4000);
       return;
     }
 
@@ -664,9 +677,9 @@ export class NoteWriter {
     await this.app.vault.process(
       existingFile,
       (current) => {
-        let updated = rewriteProblemSection(current, freshMarkdown);
+        let updated = rewriteProblemSection(current, freshMarkdown, { previous: previousTitle, next: title });
         // Phase 12 (D-11): insert H1 title if missing on existing notes
-        if (title && !updated.match(/^# .+/m)) {
+        if (title && !hasNoteTitle(updated, title)) {
           const h1 = `# ${title}\n`;
           // Insert after frontmatter: find second --- delimiter (closing)
           const firstDelim = updated.indexOf('---');
@@ -679,7 +692,7 @@ export class NoteWriter {
             updated = h1 + updated;
           }
         }
-        return updated;
+        return localizeNoteHeadings(updated);
       },
     );
 
@@ -688,8 +701,33 @@ export class NoteWriter {
     await applyFrontmatter(
       this.app,
       existingFile,
-      buildFrontmatterInput(entry, this.settings.getDefaultLanguage()),
+      buildFrontmatterInput(entry, currentLanguage),
     );
+  }
+
+  /** 直接从知识库打开旧笔记时，按需更新中国站题面；离线失败不影响阅读。 */
+  async refreshChineseNote(file: TFile): Promise<void> {
+    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const slug: unknown = fm?.['lc-slug'];
+    if (typeof slug !== 'string' || !/^[a-z0-9-]+$/.test(slug)) return;
+    await this.localizeStoredNote(file);
+    const cached = this.settings.getProblemDetail(slug);
+    if (cached?.translationCheckedAt && cached.title === fm?.['lc-title'] && fm?.['lc-url'] === cached.url) return;
+    await this.backgroundRefresh(file, slug).catch(() => undefined);
+  }
+
+  /** 本地迁移不依赖网络；process 回调读取最新正文，保留格式化、代码和个人笔记。 */
+  private async localizeStoredNote(file: TFile): Promise<void> {
+    const current = await this.app.vault.read(file);
+    if (localizeNoteHeadings(current) !== current) {
+      await this.app.vault.process(file, localizeNoteHeadings);
+    }
+    const status: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.['lc-status'];
+    if (localizeNoteStatus(status) !== status) {
+      await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+        fm['lc-status'] = localizeNoteStatus(fm['lc-status']);
+      });
+    }
   }
 }
 
@@ -721,10 +759,11 @@ function pickStarterCode(entry: DetailCacheEntry, langSlug: string): string {
 export function toDetailCacheEntry(raw: NoteWriterDetail): DetailCacheEntry {
   return {
     fetchedAt: Date.now(),
-    id: Number(raw.questionFrontendId) || 0,
+    translationCheckedAt: raw.translationCheckedAt,
+    id: /^\d+$/.test(raw.questionFrontendId) ? Number(raw.questionFrontendId) : raw.questionFrontendId,
     title: raw.title,
     difficulty: raw.difficulty,
-    url: `https://leetcode.com/problems/${raw.titleSlug}/`,
+    url: `https://leetcode.cn/problems/${raw.titleSlug}/`,
     contentHtml: raw.content ?? '',
     topicSlugs: Array.isArray(raw.topicTags)
       ? raw.topicTags.map((t) => String(t?.slug ?? '')).filter((s) => s.length > 0)

@@ -26,10 +26,10 @@ describe('mergeTechniquesSectionAI (D-09 full replacement)', () => {
       '',
     ].join('\n');
     const result = mergeTechniquesSectionAI(body, 'Sliding Window');
-    expect(result).toContain('- [[Sliding Window]]');
+    expect(result).toContain('- [[Sliding Window|滑动窗口]]');
     expect(result).not.toContain('[[Hash Table]]');
     expect(result).not.toContain('[[Array]]');
-    expect(result).not.toContain('[[Two Pointers]]');
+    expect(result).not.toContain('[[Two Pointers|双指针]]');
   });
 
   it('preserves free items (user-added lines)', () => {
@@ -46,18 +46,18 @@ describe('mergeTechniquesSectionAI (D-09 full replacement)', () => {
       '',
     ].join('\n');
     const result = mergeTechniquesSectionAI(body, 'Two Pointers');
-    expect(result).toContain('- [[Two Pointers]]');
+    expect(result).toContain('- [[Two Pointers|双指针]]');
     expect(result).toContain('My custom observation about this problem');
     expect(result).not.toContain('[[Hash Table]]');
     expect(result).not.toContain('[[Array]]');
-    expect(result).not.toContain('[[Stack]]');
+    expect(result).not.toContain('[[Stack|栈]]');
   });
 
   it('inserts new Techniques section when absent', () => {
     const body = '## Problem\nfoo\n\n## Notes\nbar\n';
     const result = mergeTechniquesSectionAI(body, 'Binary Search');
-    expect(result).toContain('## Techniques');
-    expect(result).toContain('- [[Binary Search]]');
+    expect(result).toContain('## 解题技巧');
+    expect(result).toContain('- [[Binary Search|二分查找]]');
   });
 
   it('is idempotent', () => {
@@ -88,10 +88,10 @@ describe('mergeTechniquesSectionAI (D-09 full replacement)', () => {
       '',
     ].join('\n');
     const result = mergeTechniquesSectionAI(body, 'Greedy');
-    expect(result).toContain('- [[Greedy]]');
+    expect(result).toContain('- [[Greedy|贪心]]');
     expect(result).not.toContain('[[Hash Table]]');
     expect(result).not.toContain('[[Array]]');
-    expect(result).not.toContain('[[Stack]]');
+    expect(result).not.toContain('[[Stack|栈]]');
   });
 
   // ─── Quick-260622-gkp: sanitize-driven aliased wikilinks for slash patterns ──
@@ -108,13 +108,13 @@ describe('mergeTechniquesSectionAI (D-09 full replacement)', () => {
 
   it('renders a slash pattern as an aliased wikilink to the sanitized hub file', () => {
     const result = mergeTechniquesSectionAI(slashBody, 'Heap / Priority Queue');
-    expect(result).toContain('- [[Heap Priority Queue|Heap / Priority Queue]]');
+    expect(result).toContain('- [[Heap Priority Queue|堆与优先队列]]');
   });
 
-  it('renders a non-slash pattern as a plain wikilink (no alias)', () => {
+  it('uses a Chinese alias while retaining the existing pattern link target', () => {
     const result = mergeTechniquesSectionAI(slashBody, 'Two Pointers');
-    expect(result).toContain('- [[Two Pointers]]');
-    expect(result).not.toContain('Two Pointers|');
+    expect(result).toContain('- [[Two Pointers|双指针]]');
+    expect(result).toContain('Two Pointers|双指针');
   });
 
   it('is idempotent for a slash pattern (alias-pipe trap)', () => {
@@ -134,14 +134,14 @@ describe('mergeTechniquesSectionAI (D-09 full replacement)', () => {
       '',
     ].join('\n');
     const result = mergeTechniquesSectionAI(seeded, 'Heap / Priority Queue');
-    const matches = result.match(/- \[\[Heap Priority Queue\|Heap \/ Priority Queue\]\]/g) ?? [];
+    const matches = result.match(/- \[\[Heap Priority Queue\|堆与优先队列\]\]/g) ?? [];
     expect(matches.length).toBe(1);
   });
 
   it('array form renders plain + aliased and is idempotent', () => {
     const once = mergeTechniquesSectionAI(slashBody, ['Trees', 'Heap / Priority Queue']);
-    expect(once).toContain('- [[Trees]]');
-    expect(once).toContain('- [[Heap Priority Queue|Heap / Priority Queue]]');
+    expect(once).toContain('- [[Trees|树]]');
+    expect(once).toContain('- [[Heap Priority Queue|堆与优先队列]]');
     const twice = mergeTechniquesSectionAI(once, ['Trees', 'Heap / Priority Queue']);
     expect(twice).toBe(once);
   });
@@ -152,26 +152,26 @@ describe('mergeTechniquesSectionAI (D-09 full replacement)', () => {
 describe('ClusterHubWriter', () => {
   const problemsFolder = 'LeetCode';
 
-  it('ensureHub creates hub note at {problemsFolder}/Patterns/{pattern}.md', async () => {
+  it('ensureHub creates hub note at {problemsFolder}/patterns/{pattern}.md', async () => {
     const m = makeMockVaultApp({});
     const writer = new ClusterHubWriter({ app: m.app as never, problemsFolder });
     const entry: HubEntry = { title: 'Two Sum', fileBasename: '1-two-sum', difficulty: 'Easy', solvedDate: '2026-05-18' };
     await writer.ensureHub('Two Pointers', entry);
     expect(m.spies.create).toHaveBeenCalled();
     const createCall = m.spies.create.mock.calls[0]!;
-    expect(createCall[0]).toBe('LeetCode/Patterns/Two Pointers.md');
+    expect(createCall[0]).toBe('LeetCode/patterns/Two Pointers.md');
     const body = createCall[1]! as string;
     expect(body).toContain('lc-pattern-hub: true');
     expect(body).toContain('pattern: "Two Pointers"');
-    expect(body).toContain('### Easy');
-    expect(body).toContain('### Medium');
-    expect(body).toContain('### Hard');
+    expect(body).toContain('### 简单');
+    expect(body).toContain('### 中等');
+    expect(body).toContain('### 困难');
     expect(body).toContain('[[1-two-sum|Two Sum]]');
   });
 
   it('ensureHub no-ops when hub file already exists', async () => {
     const m = makeMockVaultApp({
-      'LeetCode/Patterns/Two Pointers.md': '---\nlc-pattern-hub: true\n---\n# Two Pointers\n',
+      'LeetCode/patterns/Two Pointers.md': '---\nlc-pattern-hub: true\n---\n# Two Pointers\n',
     });
     const writer = new ClusterHubWriter({ app: m.app as never, problemsFolder });
     const entry: HubEntry = { title: 'Two Sum', fileBasename: '1-two-sum', difficulty: 'Easy', solvedDate: '2026-05-18' };
@@ -199,12 +199,12 @@ describe('ClusterHubWriter', () => {
       '',
       '',
     ].join('\n');
-    const m = makeMockVaultApp({ 'LeetCode/Patterns/Two Pointers.md': hubBody });
+    const m = makeMockVaultApp({ 'LeetCode/patterns/Two Pointers.md': hubBody });
     const writer = new ClusterHubWriter({ app: m.app as never, problemsFolder });
     const entry: HubEntry = { title: '3Sum', fileBasename: '15-3sum', difficulty: 'Medium', solvedDate: '2026-05-18' };
     await writer.appendEntry('Two Pointers', entry);
     expect(m.spies.process).toHaveBeenCalled();
-    const content = m.getContent('LeetCode/Patterns/Two Pointers.md')!;
+    const content = m.getContent('LeetCode/patterns/Two Pointers.md')!;
     // The bullet should appear in the Medium section
     expect(content).toContain('- [[15-3sum|3Sum]]');
   });
@@ -229,11 +229,11 @@ describe('ClusterHubWriter', () => {
       '',
       '',
     ].join('\n');
-    const m = makeMockVaultApp({ 'LeetCode/Patterns/Two Pointers.md': hubBody });
+    const m = makeMockVaultApp({ 'LeetCode/patterns/Two Pointers.md': hubBody });
     const writer = new ClusterHubWriter({ app: m.app as never, problemsFolder });
     const entry: HubEntry = { title: 'Two Sum', fileBasename: '1-two-sum', difficulty: 'Easy', solvedDate: '2026-05-01' };
     await writer.appendEntry('Two Pointers', entry);
-    const content = m.getContent('LeetCode/Patterns/Two Pointers.md')!;
+    const content = m.getContent('LeetCode/patterns/Two Pointers.md')!;
     // Should still have exactly 1 occurrence of [[1-two-sum|Two Sum]]
     const matches = content.match(/\[\[1-two-sum\|Two Sum\]\]/g) ?? [];
     expect(matches.length).toBe(1);
@@ -280,11 +280,11 @@ describe('ClusterHubWriter', () => {
     // Should have created 2 hub notes (Two Pointers + Arrays & Hashing)
     expect(m.spies.create).toHaveBeenCalledTimes(2);
     const createPaths = m.spies.create.mock.calls.map((c: unknown[]) => c[0]);
-    expect(createPaths).toContain('LeetCode/Patterns/Two Pointers.md');
-    expect(createPaths).toContain('LeetCode/Patterns/Arrays & Hashing.md');
+    expect(createPaths).toContain('LeetCode/patterns/Two Pointers.md');
+    expect(createPaths).toContain('LeetCode/patterns/Arrays & Hashing.md');
 
     // Two Pointers hub should have entries from both files
-    const tpBody = m.getContent('LeetCode/Patterns/Two Pointers.md')!;
+    const tpBody = m.getContent('LeetCode/patterns/Two Pointers.md')!;
     expect(tpBody).toContain('[[1-two-sum|Two Sum]]');
     expect(tpBody).toContain('[[15-3sum|3Sum]]');
   });
@@ -295,7 +295,7 @@ describe('ClusterHubWriter', () => {
     const entry: HubEntry = { title: 'Two Sum', fileBasename: '1-two-sum', difficulty: 'Easy', solvedDate: '2026-05-18' };
     await writer.ensureHub('Two Pointers', entry);
     // Should attempt to create the Patterns folder
-    expect(m.spies.createFolder).toHaveBeenCalledWith('LeetCode/Patterns');
+    expect(m.spies.createFolder).toHaveBeenCalledWith('LeetCode/patterns');
   });
 
   // ─── Quick-260621-154 FIX 2: slash/reserved-char filename sanitization ──────
@@ -317,17 +317,17 @@ describe('ClusterHubWriter', () => {
     expect(m.spies.create).toHaveBeenCalled();
     const createCall = m.spies.create.mock.calls[0]!;
     // Filename segment is sanitized — no "/" splitting the pattern into a subfolder.
-    expect(createCall[0]).toBe('LeetCode/Patterns/Heap Priority Queue.md');
+    expect(createCall[0]).toBe('LeetCode/patterns/Heap Priority Queue.md');
     const body = createCall[1]! as string;
     // Content keeps the unsanitized display name.
-    expect(body).toContain('# Heap / Priority Queue');
+    expect(body).toContain('# 堆与优先队列');
     expect(body).toContain('pattern: "Heap / Priority Queue"');
   });
 
   it('ensureHub + appendEntry + reconcile resolve the SAME sanitized hub path (no orphan)', async () => {
     const m = makeMockVaultApp({});
     const writer = new ClusterHubWriter({ app: m.app as never, problemsFolder });
-    const sanitizedPath = 'LeetCode/Patterns/Heap Priority Queue.md';
+    const sanitizedPath = 'LeetCode/patterns/Heap Priority Queue.md';
 
     const first: HubEntry = { title: 'Kth Largest', fileBasename: '215-kth-largest', difficulty: 'Medium', solvedDate: '2026-06-21' };
     await writer.ensureHub('Heap / Priority Queue', first);
@@ -365,9 +365,9 @@ describe('ClusterHubWriter', () => {
 
     expect(m.spies.create).toHaveBeenCalledTimes(1);
     const createCall = m.spies.create.mock.calls[0]!;
-    expect(createCall[0]).toBe('LeetCode/Patterns/Heap Priority Queue.md');
+    expect(createCall[0]).toBe('LeetCode/patterns/Heap Priority Queue.md');
     const body = createCall[1]! as string;
-    expect(body).toContain('# Heap / Priority Queue');
+    expect(body).toContain('# 堆与优先队列');
     expect(body).toContain('pattern: "Heap / Priority Queue"');
   });
 
@@ -390,11 +390,11 @@ describe('ClusterHubWriter', () => {
     expect(body).toContain('lc-pattern-hub: true');
     expect(body).toContain('pattern: "Two Pointers"');
     // Check heading
-    expect(body).toContain('# Two Pointers');
+    expect(body).toContain('# 双指针');
     // Check difficulty sections with bullet lists
-    expect(body).toContain('### Easy');
-    expect(body).toContain('### Medium');
-    expect(body).toContain('### Hard');
+    expect(body).toContain('### 简单');
+    expect(body).toContain('### 中等');
+    expect(body).toContain('### 困难');
     // The entry should be in the Medium section
     expect(body).toContain('- [[11-container-with-most-water|Container With Most Water]]');
   });

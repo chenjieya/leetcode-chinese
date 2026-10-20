@@ -1,3 +1,4 @@
+import { isSectionBoundary, normalizeHeadingLine, sectionHeadingFor } from '../notes/noteHeadings';
 // src/ai/mergeAIReviewSection.ts
 //
 // Phase 09 Plan 01 Task 2 — Idempotent vault-write transform for ## AI Review.
@@ -30,16 +31,29 @@ export { AI_REVIEW_HEADING_LINE };
 export function mergeAIReviewSection(body: string, reviewContent: string): string {
   const lines = body.split('\n');
   const headingIdx = findExactHeading(lines);
+  const heading = sectionHeadingFor(body, AI_REVIEW_HEADING_LINE);
+  const shift = (/^#+/.exec(heading)?.[0].length ?? 2) - 2;
+  let fence = false;
+  const content = reviewContent.split('\n').map(line => {
+    if (/^\s*(`{3,}|~{3,})/.test(line)) {
+      fence = !fence;
+      return line;
+    }
+    return fence || !shift ? line : line.replace(/^(#{3,6})(\s+)/, (_all, hashes: string, space: string) =>
+      '#'.repeat(Math.min(6, hashes.length + shift)) + space);
+  }).join('\n');
 
   if (headingIdx >= 0) {
-    // Replacement path (D-20): discard from heading to EOF, insert new content.
+    // 只替换复盘章节，保留其后的个人章节，兼容 Alvis 调整后的标题层级。
+    const next = lines.findIndex((line, i) => i > headingIdx && isSectionBoundary(line, lines[headingIdx]!));
     const before = lines.slice(0, headingIdx).join('\n').replace(/\n+$/, '');
-    return before + '\n\n' + AI_REVIEW_HEADING_LINE + '\n\n' + reviewContent + '\n';
+    const after = next < 0 ? '' : '\n' + lines.slice(next).join('\n');
+    return before + '\n\n' + heading + '\n\n' + content + '\n' + after;
   }
 
   // First-write path (D-17/D-18): append after all existing content.
   const trimmedBody = body.replace(/\n+$/, '');
-  return trimmedBody + '\n\n' + AI_REVIEW_HEADING_LINE + '\n\n' + reviewContent + '\n';
+  return trimmedBody + '\n\n' + heading + '\n\n' + content + '\n';
 }
 
 /**
@@ -48,7 +62,7 @@ export function mergeAIReviewSection(body: string, reviewContent: string): strin
  */
 function findExactHeading(lines: string[]): number {
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === AI_REVIEW_HEADING_LINE) return i;
+    if (normalizeHeadingLine(lines[i]) === AI_REVIEW_HEADING_LINE) return i;
   }
   return -1;
 }

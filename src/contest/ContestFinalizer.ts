@@ -1,11 +1,12 @@
+import { isCodeHeading, persistedHeading, isSectionBoundary } from '../notes/noteHeadings';
 // src/contest/ContestFinalizer.ts
 // Phase 10 Plan 06 — Contest finalization: batch note creation, summary note,
 // and #revisit tagging for missed problems.
 //
 // Called on contest end (finish, abort, or timer expiry). Transforms ephemeral
 // contest state (PluginData) into permanent vault artifacts:
-//   1. Problem notes in {folder}/Contests/{slug}/ subfolder
-//   2. Summary note at {folder}/Contests/{date}-{slug}.md
+//   1. Problem notes in {folder}/contests/{slug}/ subfolder
+//   2. Summary note at {folder}/contests/{date}-{slug}.md
 //   3. #revisit tags on missed problems
 //
 // Decision references:
@@ -26,7 +27,7 @@
 //   - vault.create for new files
 
 import { TFile, type App } from 'obsidian';
-import { codeBlockFor, CODE_HEADING_LINE, buildNoteBody, buildFrontmatterInput, applyFrontmatter } from '../notes/NoteTemplate';
+import { buildNoteFilename, buildNotePath, resolveProblemNotePath, codeBlockFor, CODE_HEADING_LINE, buildNoteBody, buildFrontmatterInput, applyFrontmatter } from '../notes/NoteTemplate';
 import { htmlToMarkdown } from '../notes/htmlToMarkdown';
 import type { ContestSession } from './types';
 
@@ -42,7 +43,7 @@ export interface ContestFinalizerSettings {
 }
 
 export interface ContestFinalizerDetail {
-  id: number;
+  id: number | string;
   title: string;
   contentHtml: string;
   difficulty: string;
@@ -81,10 +82,10 @@ function validateContestSlug(slug: string): string {
 
 /** Map numeric difficulty (1/2/3) to display word. */
 function difficultyWord(d: number): string {
-  if (d === 1) return 'Easy';
-  if (d === 2) return 'Medium';
-  if (d === 3) return 'Hard';
-  return 'Unknown';
+  if (d === 1) return '简单';
+  if (d === 2) return '中等';
+  if (d === 3) return '困难';
+  return '未知';
 }
 
 /** Format milliseconds as "Xm Ys". */
@@ -92,7 +93,7 @@ function formatDuration(ms: number): string {
   const totalSeconds = Math.round(ms / 1000);
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
-  return `${m}m ${s}s`;
+  return `${m} 分 ${s} 秒`;
 }
 
 /** Format epoch ms relative to session start as "Xm Ys". */
@@ -130,13 +131,13 @@ function formatDate(epoch: number): string {
  */
 export function rewriteCodeSection(body: string, code: string, language: string): string {
   const lines = body.split('\n');
-  const codeHeadingIdx = lines.findIndex((l) => l === CODE_HEADING_LINE);
+  const codeHeadingIdx = lines.findIndex(isCodeHeading);
 
   const newBlock = codeBlockFor(code);
 
   if (codeHeadingIdx === -1) {
     // No ## Code heading — append at end
-    return body.trimEnd() + '\n\n' + CODE_HEADING_LINE + '\n' + newBlock + '\n';
+    return body.trimEnd() + '\n\n' + persistedHeading(CODE_HEADING_LINE) + '\n' + newBlock + '\n';
   }
 
   // Find the first fenced code block after ## Code
@@ -144,7 +145,7 @@ export function rewriteCodeSection(body: string, code: string, language: string)
   let fenceEnd = -1;
   for (let i = codeHeadingIdx + 1; i < lines.length; i++) {
     // Stop if we hit another H2
-    if (/^## /.test(lines[i]!) && i !== codeHeadingIdx) break;
+    if (fenceStart === -1 && isSectionBoundary(lines[i]!, lines[codeHeadingIdx]!)) break;
     if (fenceStart === -1 && /^```/.test(lines[i]!)) {
       fenceStart = i;
     } else if (fenceStart !== -1 && /^```\s*$/.test(lines[i]!)) {
@@ -175,7 +176,8 @@ export interface BuildSummaryBodyArgs {
   aborted: boolean;
   totalElapsedMs: number;
   /** Map of slug → numeric problem ID for wikilink construction. */
-  problemIds?: Map<string, number>;
+  problemIds?: Map<string, number | string>;
+  problemNotePaths?: Map<string, string>;
 }
 
 /**
@@ -198,7 +200,7 @@ export function buildSummaryBody(args: BuildSummaryBodyArgs): string {
     const remainingSS = remainingTotalSec % 60;
     const mmStr = String(remainingMM).padStart(2, '0');
     const ssStr = String(remainingSS).padStart(2, '0');
-    lines.push(`**(aborted at ${mmStr}:${ssStr} remaining)**`);
+    lines.push(`**（已放弃，剩余 ${mmStr}:${ssStr}）**`);
     lines.push('');
   }
 
@@ -209,25 +211,26 @@ export function buildSummaryBody(args: BuildSummaryBodyArgs): string {
   const total = session.problems.reduce((sum, p) => sum + p.credit, 0);
   const solvedCount = session.problems.filter((p) => p.verdict === 'accepted').length;
 
-  lines.push(`**Score:** ${scored}/${total} (${solvedCount}/${session.problems.length} solved)`);
+  lines.push(`**得分：** ${scored}/${total}（完成 ${solvedCount}/${session.problems.length} 题）`);
   lines.push('');
-  lines.push(`**Duration:** ${formatDuration(totalElapsedMs)}`);
+  lines.push(`**用时：** ${formatDuration(totalElapsedMs)}`);
   lines.push('');
 
   // ## Results table
-  lines.push('## Results');
+  lines.push('## 竞赛结果');
   lines.push('');
-  lines.push('| Problem | Difficulty | Verdict | Time | Points |');
+  lines.push('| 题目 | 难度 | 状态 | 用时 | 得分 |');
   lines.push('| ------- | ---------- | ------- | ---- | ------ |');
 
   const problemIds = args.problemIds;
   for (const p of session.problems) {
     const id = problemIds?.get(p.slug);
-    const link = id ? `[[${id}-${p.slug}\\|${p.title}]]` : `[[${p.slug}\\|${p.title}]]`;
+    const target = args.problemNotePaths?.get(p.slug) ?? (id ? buildNoteFilename(id, p.title).slice(0, -3) : p.slug);
+    const link = `[[${target}\\|${p.title}]]`;
     const diff = difficultyWord(p.difficulty);
-    const verdict = p.verdict === 'accepted' ? 'Accepted'
-      : p.verdict === 'attempted' ? 'Attempted'
-      : 'Unsolved';
+    const verdict = p.verdict === 'accepted' ? '已完成'
+      : p.verdict === 'attempted' ? '已尝试'
+      : '未完成';
     const time = p.solvedAt ? formatSolveTime(p.solvedAt, session.startedAt) : '—';
     const points = p.verdict === 'accepted' ? String(p.credit) : '0';
     lines.push(`| ${link} | ${diff} | ${verdict} | ${time} | ${points} |`);
@@ -236,7 +239,7 @@ export function buildSummaryBody(args: BuildSummaryBodyArgs): string {
   lines.push('');
 
   // ## Notes (empty — user fills)
-  lines.push('## Notes');
+  lines.push(persistedHeading('## Notes'));
   lines.push('');
 
   return lines.join('\n');
@@ -263,7 +266,7 @@ export async function finalizeContest(args: FinalizeContestArgs): Promise<string
 
   // 2. Determine paths
   const folder = settings.getProblemsFolder().replace(/[\\/]+$/, '');
-  const contestsFolder = `${folder}/Contests`;
+  const contestsFolder = `${folder}/contests`;
   await ensureFolder(app, contestsFolder);
 
   // 3. Process each problem with code
@@ -275,7 +278,8 @@ export async function finalizeContest(args: FinalizeContestArgs): Promise<string
     const detail = settings.getProblemDetail(problem.slug);
     if (!detail) continue; // defensive — should have been cached on start
 
-    const notePath = `${folder}/${detail.id}-${problem.slug}.md`;
+    const notePath = resolveProblemNotePath(app, folder, problem.slug, detail)
+      ?? buildNotePath(folder, detail.id, detail.title);
 
     // Check for existing file at normal problems folder path
     const abstractFile = app.vault.getAbstractFileByPath(notePath);
@@ -357,12 +361,17 @@ export async function finalizeContest(args: FinalizeContestArgs): Promise<string
   const summaryPath = `${contestsFolder}/${dateStr}-${safeSlug}.md`;
 
   // Build problem ID map for wikilinks
-  const problemIds = new Map<string, number>();
+  const problemIds = new Map<string, number | string>();
   for (const p of session.problems) {
     const d = settings.getProblemDetail(p.slug);
     if (d) problemIds.set(p.slug, d.id);
   }
-  const summaryBody = buildSummaryBody({ session, aborted, totalElapsedMs, problemIds });
+  const problemNotePaths = new Map(session.problems.flatMap(problem => {
+    const detail = settings.getProblemDetail(problem.slug);
+    const path = resolveProblemNotePath(app, folder, problem.slug, detail);
+    return path ? [[problem.slug, path.slice(0, -3)] as const] : [];
+  }));
+  const summaryBody = buildSummaryBody({ session, aborted, totalElapsedMs, problemIds, problemNotePaths });
   const existingSummaryAbstract = app.vault.getAbstractFileByPath(summaryPath);
   const existingSummary = existingSummaryAbstract instanceof TFile ? existingSummaryAbstract : null;
   const summaryFile = existingSummary

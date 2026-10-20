@@ -63,7 +63,7 @@ describe('KnowledgeGraphWriter.onAccepted — frontmatter (GRAPH-02)', () => {
 
     const fm = deps.vault.getFrontmatter('LeetCode/1-two-sum.md');
     expect(fm).toBeDefined();
-    expect(fm!['lc-status']).toBe('accepted');
+    expect(fm!['lc-status']).toBe('已完成');
     // Phase 5.3 D-01/D-02: solve-time runtime/memory frontmatter writes removed.
     // UAT 2026-05-13: lc-solved-date write removed alongside runtime/memory —
     // no production reader; staleness risk. Past Submissions modal renders

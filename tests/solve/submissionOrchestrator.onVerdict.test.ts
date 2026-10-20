@@ -107,7 +107,7 @@ describe('Phase 08 submissionOrchestrator — onVerdict callback (08-CONTEXT dec
     expect(slugs[0]).toBe('two-sum');
     const v = verdicts[0]!;
     expect(v.kind).toBe('submit-failure');
-    expect(v.verdictText).toBe('Wrong Answer');
+    expect(v.verdictText).toBe('答案错误');
     expect(v.failingInput).toBe('[2,7,11,15]\n9');
     expect(v.expectedOutput).toBe('[0,1]');
     expect(v.actualOutput).toBe('[1,0]');
@@ -128,7 +128,7 @@ describe('Phase 08 submissionOrchestrator — onVerdict callback (08-CONTEXT dec
     });
     expect(verdicts).toHaveLength(1);
     expect(verdicts[0]!.kind).toBe('submit-failure');
-    expect(verdicts[0]!.verdictText).toBe('Time Limit Exceeded');
+    expect(verdicts[0]!.verdictText).toBe('超出时间限制');
     expect(verdicts[0]!.runtimeMs).toBe('5000 ms');
     expect(verdicts[0]!.failingInput).toBe('large input');
   });
@@ -143,7 +143,7 @@ describe('Phase 08 submissionOrchestrator — onVerdict callback (08-CONTEXT dec
     });
     expect(verdicts).toHaveLength(1);
     expect(verdicts[0]!.kind).toBe('submit-failure');
-    expect(verdicts[0]!.verdictText).toBe('Memory Limit Exceeded');
+    expect(verdicts[0]!.verdictText).toBe('超出内存限制');
     expect(verdicts[0]!.memoryMb).toBe('256 MB');
     expect(verdicts[0]!.failingInput).toBe('big');
   });
@@ -159,7 +159,7 @@ describe('Phase 08 submissionOrchestrator — onVerdict callback (08-CONTEXT dec
     });
     expect(verdicts).toHaveLength(1);
     expect(verdicts[0]!.kind).toBe('submit-failure');
-    expect(verdicts[0]!.verdictText).toBe('Runtime Error');
+    expect(verdicts[0]!.verdictText).toBe('运行错误');
     // First non-empty of [full_compile_error, compile_error, full_runtime_error, runtime_error]
     // → full_runtime_error wins (full_compile_error and compile_error absent).
     expect(verdicts[0]!.errorMessage).toContain('IndexError');
@@ -176,7 +176,7 @@ describe('Phase 08 submissionOrchestrator — onVerdict callback (08-CONTEXT dec
     });
     expect(verdicts).toHaveLength(1);
     expect(verdicts[0]!.kind).toBe('submit-failure');
-    expect(verdicts[0]!.verdictText).toBe('Compile Error');
+    expect(verdicts[0]!.verdictText).toBe('编译错误');
     // full_compile_error wins (highest priority in firstNonEmpty list).
     expect(verdicts[0]!.errorMessage).toBe('Line 7: error: expected ; before }');
   });

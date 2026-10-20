@@ -123,7 +123,7 @@ export class ProblemBrowserView extends ItemView {
 
   getViewType(): string { return BROWSER_VIEW_TYPE; }
    
-  getDisplayText(): string { return 'LeetCode problems'; }
+  getDisplayText(): string { return 'LeetCode 题库'; }
   getIcon(): string { return 'code-2'; }
 
   async onOpen(): Promise<void> {
@@ -175,15 +175,15 @@ export class ProblemBrowserView extends ItemView {
 
     if (!this.plugin.auth.isLoggedIn()) {
       this.renderLoggedOutState(content, {
-        heading: 'Log in to browse problems',
-        body: 'Sign in to LeetCode to load the problem list.',
+        heading: '登录后浏览题库',
+        body: '登录 LeetCode 后加载题目列表。',
       });
       return;
     }
 
     this.renderEmptyState(content, {
-      heading: 'Loading problems…',
-      body: 'Fetching the problem list. This happens once.',
+      heading: '正在加载题目…',
+      body: '正在获取题目列表，首次加载需要一些时间。',
     });
     await this.refreshAndRender(content);
   }
@@ -202,7 +202,7 @@ export class ProblemBrowserView extends ItemView {
     this.renderEmptyState(root, {
       heading: opts.heading,
       body: opts.body,
-      buttonText: 'Log in',
+      buttonText: '登录',
       onAction: async () => {
         const ok = await this.plugin.auth.login();
         if (ok) void this.refreshAndRender(root);
@@ -291,7 +291,7 @@ export class ProblemBrowserView extends ItemView {
       // by UI-SPEC.md § Notice table / PATTERNS.md Shared Pattern 4.
       if (err instanceof RateLimitError) {
          
-        new Notice('LeetCode rate-limited — slowing down.', 6000); // RATE_LIMIT_NOTICE_MS — literal retained for acceptance grep
+        new Notice('LeetCode 请求限流，正在降低请求速度。', 6000); // RATE_LIMIT_NOTICE_MS — literal retained for acceptance grep
         return;
       }
 
@@ -310,16 +310,16 @@ export class ProblemBrowserView extends ItemView {
         // cookie persists), causing unbounded recursion → stack overflow.
         root.empty();
         this.renderLoggedOutState(root, {
-          heading: 'Log in to browse problems',
-          body: 'Your session expired. Sign in again to continue.',
+          heading: '登录后浏览题库',
+          body: '登录已过期，请重新登录。',
         });
         return;
       }
       root.empty();
       this.renderEmptyState(root, {
-        heading: "Couldn't reach LeetCode",
-        body: 'Check your internet connection and try again.',
-        buttonText: 'Retry',
+        heading: '无法连接 LeetCode',
+        body: '请检查网络连接后重试。',
+        buttonText: '重试',
         onAction: () => this.refreshAndRender(root),
       });
       return;
@@ -335,7 +335,7 @@ export class ProblemBrowserView extends ItemView {
   private createProgressBar(root: HTMLElement): HTMLElement {
     const bar = root.createDiv({ cls: 'lc-progress is-indeterminate' });
     bar.createDiv({ cls: 'lc-progress__track' }).createDiv({ cls: 'lc-progress__fill' });
-    bar.createDiv({ cls: 'lc-progress__label', text: 'Loading problems…' });
+    bar.createDiv({ cls: 'lc-progress__label', text: '正在加载题目…' });
     return bar;
   }
 
@@ -351,11 +351,11 @@ export class ProblemBrowserView extends ItemView {
       bar.removeClass('is-indeterminate');
       const pct = Math.min(100, Math.round((loaded / total) * 100));
       if (fill) fill.setCssStyles({ width: `${String(pct)}%` });
-      if (label) label.setText(`Loading problems… ${String(loaded)} / ${String(total)} (${String(pct)}%)`);
+      if (label) label.setText(`正在加载题目… ${String(loaded)} / ${String(total)} (${String(pct)}%)`);
     } else {
       // Total unknown (first page hasn't arrived yet, or LC didn't return one).
       // Keep shimmer running; update only the label.
-      if (label) label.setText(`Loading problems… ${String(loaded)} loaded`);
+      if (label) label.setText(`正在加载题目… ${String(loaded)} 道已加载`);
     }
   }
 
@@ -387,8 +387,8 @@ export class ProblemBrowserView extends ItemView {
     const input = searchWrap.createEl('input', {
       attr: {
         type: 'search',
-        placeholder: 'Search questions',
-        'aria-label': 'Search by title or number',
+        placeholder: '搜索题目',
+        'aria-label': '按标题或题号搜索',
       },
     });
     input.addEventListener('input', () => {
@@ -409,7 +409,7 @@ export class ProblemBrowserView extends ItemView {
     // 2. Filter button — opens FilterModal. Shows a count badge when rules are active.
     const filterBtn = topbar.createDiv({
       cls: 'lc-iconbtn lc-iconbtn--filter',
-      attr: { 'aria-label': 'Filter problems', role: 'button', tabindex: '0' },
+      attr: { 'aria-label': '筛选题目', role: 'button', tabindex: '0' },
     });
     const filterIcon = filterBtn.createSpan({ cls: 'lc-iconbtn__icon' });
     setIcon(filterIcon, 'filter');
@@ -424,7 +424,7 @@ export class ProblemBrowserView extends ItemView {
     // 4. Shuffle button — picks a random problem from the current filter result.
     const shuffleBtn = topbar.createDiv({
       cls: 'lc-iconbtn lc-iconbtn--shuffle',
-      attr: { 'aria-label': 'Pick a random problem', role: 'button', tabindex: '0' },
+      attr: { 'aria-label': '随机选题', role: 'button', tabindex: '0' },
     });
     const shuffleIcon = shuffleBtn.createSpan({ cls: 'lc-iconbtn__icon' });
     setIcon(shuffleIcon, 'shuffle');
@@ -484,7 +484,7 @@ export class ProblemBrowserView extends ItemView {
 
     this.solvedCounterEl.createSpan({
       cls: 'lc-counter__label',
-      text: `${String(solved)}/${String(total)} Solved`,
+      text: `${String(solved)}/${String(total)} 已通过`,
     });
   }
 
@@ -536,7 +536,7 @@ export class ProblemBrowserView extends ItemView {
   private pickRandom(): void {
     const visible = this.currentlyVisible();
     if (visible.length === 0) {
-      new Notice('No problems match the current filter.', 3000);
+      new Notice('没有符合当前筛选条件的题目。', 3000);
       return;
     }
     const pick = visible[Math.floor(Math.random() * visible.length)];
@@ -566,7 +566,7 @@ export class ProblemBrowserView extends ItemView {
         if (this.throttleFooterTimer === null && !this.throttleFooterEl) {
           this.throttleFooterTimer = setWindowTimeout(() => {
             this.throttleFooterEl = root.createDiv({ cls: 'lc-footer' });
-            this.throttleFooterEl.setText('⋯ fetching from LeetCode…');
+            this.throttleFooterEl.setText('⋯ 正在从 LeetCode 获取数据…');
             this.throttleFooterTimer = null;
           }, THROTTLE_FOOTER_DELAY_MS);
         }
@@ -594,9 +594,9 @@ export class ProblemBrowserView extends ItemView {
 
     if (filtered.length === 0) {
       this.renderEmptyState(this.rowsContainer, {
-        heading: 'No matching problems',
-        body: 'Try a different search term or clear filters.',
-        buttonText: 'Clear filters',
+        heading: '没有匹配的题目',
+        body: '请更换关键词或清除筛选条件。',
+        buttonText: '清除筛选',
         onAction: () => {
           this.searchTerm = '';
           void this.applyFilter(null);
@@ -638,7 +638,7 @@ export class ProblemBrowserView extends ItemView {
     if (p.paid) {
       iconSlot.addClass('lc-row__status--paid');
       setIcon(iconSlot, 'lock');
-      iconSlot.setAttribute('aria-label', 'Premium problem');
+      iconSlot.setAttribute('aria-label', '会员题目');
     } else if (status === 'solved') {
       setIcon(iconSlot, 'check');
     } else if (status === 'attempted') {
@@ -659,7 +659,7 @@ export class ProblemBrowserView extends ItemView {
         text: `${p.acRate.toFixed(1)}%`,
       });
     }
-    const diffLabel = p.diff === 'Medium' ? 'Med.' : p.diff;
+    const diffLabel = ({ Easy: '简单', Medium: '中等', Hard: '困难' })[p.diff];
     meta.createSpan({
       cls: `lc-row__diff lc-diff--${p.diff.toLowerCase()}`,
       text: diffLabel,
@@ -689,7 +689,7 @@ export class ProblemBrowserView extends ItemView {
       const menu = new Menu();
       menu.addItem((item) =>
         item
-          .setTitle('Preview problem')
+          .setTitle('预览题目')
           .setIcon('eye')
           .onClick(() => {
             void this.plugin.routeProblemClick(p.slug, p.status, 'preview', { force: true });
@@ -697,7 +697,7 @@ export class ProblemBrowserView extends ItemView {
       );
       menu.addItem((item) =>
         item
-          .setTitle('Open problem')
+          .setTitle('打开题目')
           .setIcon('file-text')
           .onClick(() => {
             void this.plugin.routeProblemClick(p.slug, p.status, 'open', { force: true });
@@ -717,13 +717,13 @@ export class ProblemBrowserView extends ItemView {
     const toggle = root.createDiv({ cls: 'lc-mode-toggle', attr: { role: 'tablist' } });
 
     const problemsBtn = toggle.createEl('button', {
-      text: 'Problems',
+      text: '题库',
       cls: `lc-mode-toggle__btn${this.mode === 'problems' ? ' is-active' : ''}`,
       attr: { role: 'tab', 'aria-selected': String(this.mode === 'problems') },
     });
 
     const contestsBtn = toggle.createEl('button', {
-      text: 'Contests',
+      text: '竞赛',
       cls: `lc-mode-toggle__btn${this.mode === 'contests' ? ' is-active' : ''}`,
       attr: { role: 'tab', 'aria-selected': String(this.mode === 'contests') },
     });
@@ -749,8 +749,8 @@ export class ProblemBrowserView extends ItemView {
     // Auth gate (same pattern as existing auth check in onOpen)
     if (!this.plugin.auth.isLoggedIn()) {
       this.renderLoggedOutState(root, {
-        heading: 'Log in to browse contests',
-        body: 'Sign in to LeetCode to load the contest list.',
+        heading: '登录后浏览竞赛',
+        body: '登录 LeetCode 后加载竞赛列表。',
       });
       return;
     }
@@ -772,8 +772,8 @@ export class ProblemBrowserView extends ItemView {
     const input = searchWrap.createEl('input', {
       attr: {
         type: 'search',
-        placeholder: 'Search contests…',
-        'aria-label': 'Search contests by title',
+        placeholder: '搜索竞赛…',
+        'aria-label': '按标题搜索竞赛',
       },
     });
     input.value = this.contestSearchTerm;
@@ -795,7 +795,7 @@ export class ProblemBrowserView extends ItemView {
     // Shuffle (Surprise me) button — D-03
     const shuffleBtn = topbar.createDiv({
       cls: 'lc-iconbtn lc-iconbtn--shuffle',
-      attr: { 'aria-label': 'Random contest', role: 'button', tabindex: '0' },
+      attr: { 'aria-label': '随机竞赛', role: 'button', tabindex: '0' },
     });
     const shuffleIcon = shuffleBtn.createSpan({ cls: 'lc-iconbtn__icon' });
     setIcon(shuffleIcon, 'shuffle');
@@ -806,8 +806,8 @@ export class ProblemBrowserView extends ItemView {
 
     // Loading state
     this.renderEmptyState(this.contestRowsContainer, {
-      heading: 'Loading contests…',
-      body: 'Fetching the contest list from LeetCode.',
+      heading: '正在加载竞赛…',
+      body: '正在从 LeetCode 获取竞赛列表。',
     });
 
     // Fetch contest list
@@ -819,9 +819,9 @@ export class ProblemBrowserView extends ItemView {
       if (this.contestRowsContainer) {
         this.contestRowsContainer.empty();
         this.renderEmptyState(this.contestRowsContainer, {
-          heading: 'No contests found',
-          body: 'Try a different search term or check your connection.',
-          buttonText: 'Retry',
+          heading: '未找到竞赛',
+          body: '请更换关键词或检查网络连接。',
+          buttonText: '重试',
           onAction: () => { void this.renderContestsMode(root); },
         });
       }
@@ -850,8 +850,8 @@ export class ProblemBrowserView extends ItemView {
     const filtered = this.contestListService.search(this.contestCache, this.contestSearchTerm);
     if (filtered.length === 0) {
       this.renderEmptyState(this.contestRowsContainer, {
-        heading: 'No contests found',
-        body: 'Try a different search term or check your connection.',
+        heading: '未找到竞赛',
+        body: '请更换关键词或检查网络连接。',
       });
       return;
     }
@@ -892,12 +892,12 @@ export class ProblemBrowserView extends ItemView {
       text: contest.title,
     });
 
-    // Date format: locale-aware short date + ' · 4 problems'
+    // Date format: locale-aware short date + ' · 4 道题'
     const date = new Date(contest.startTime * 1000);
     const dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     row.createDiv({
       cls: 'lc-contest-row__meta',
-      text: `${dateStr} · 4 problems`,
+      text: `${dateStr} · 4 道题`,
     });
 
     row.addEventListener('click', () => {
@@ -911,7 +911,7 @@ export class ProblemBrowserView extends ItemView {
   private async handleSurpriseMe(): Promise<void> {
     const contest = await this.contestListService.surpriseMe();
     if (!contest) {
-      new Notice("Couldn't find a contest with valid problems. Try picking one manually.", 6000);
+      new Notice("未找到包含有效题目的竞赛，请手动选择。", 6000);
       return;
     }
     this.openContestPreview(contest);
@@ -946,7 +946,7 @@ export class ProblemBrowserView extends ItemView {
     // Check if any fetch failed
     const failed = results.some((r) => r.status === 'rejected' || (r.status === 'fulfilled' && r.value === null));
     if (failed) {
-      new Notice("Couldn't fetch contest problems. Check your connection.", 4000);
+      new Notice("无法获取竞赛题目，请检查网络连接。", 4000);
       return;
     }
 
@@ -982,7 +982,7 @@ export class ProblemBrowserView extends ItemView {
     });
 
     const minutes = Math.round(contest.duration / 60);
-    new Notice(`Contest started: ${contest.title}. ${String(minutes)} min on the clock.`, 4000);
+    new Notice(`竞赛已开始：${contest.title}，共 ${String(minutes)} 分钟。`, 4000);
 
     // Re-render in contests mode to show active contest state
     this.mode = 'contests';
@@ -1027,7 +1027,7 @@ export class ProblemBrowserView extends ItemView {
       const problem = session.problems[i]!;
       const badge = badgesContainer.createDiv({
         cls: 'leetcode-contest__badge',
-        attr: { 'aria-label': `${problem.title}: ${problem.verdict}` },
+        attr: { 'aria-label': `${problem.title}: ${this.verdictLabel(problem.verdict)}` },
       });
       this.renderBadgeIcon(badge, problem.verdict);
       // Click badge → open problem in ContestSolveView
@@ -1040,10 +1040,10 @@ export class ProblemBrowserView extends ItemView {
     // Timer label
     this.timerPausedEl = timerHeader.createDiv({ cls: 'leetcode-contest__timer-label' });
     if (session.isPaused) {
-      this.timerPausedEl.setText('Paused');
+      this.timerPausedEl.setText('已暂停');
       this.timerPausedEl.addClass('leetcode-contest__timer-paused');
     } else {
-      this.timerPausedEl.setText('Remaining');
+      this.timerPausedEl.setText('剩余时间');
     }
 
     // Progress bar
@@ -1055,7 +1055,7 @@ export class ProblemBrowserView extends ItemView {
     const actions = timerHeader.createDiv({ cls: 'leetcode-contest__actions' });
 
     const pauseResumeBtn = actions.createEl('button', {
-      text: session.isPaused ? 'Resume' : 'Pause',
+      text: session.isPaused ? '继续' : '暂停',
       cls: 'leetcode-contest__btn',
     });
     pauseResumeBtn.addEventListener('click', () => {
@@ -1069,7 +1069,7 @@ export class ProblemBrowserView extends ItemView {
     });
 
     const finishBtn = actions.createEl('button', {
-      text: 'Finish',
+      text: '完成',
       cls: 'leetcode-contest__btn',
     });
     finishBtn.addEventListener('click', () => {
@@ -1077,7 +1077,7 @@ export class ProblemBrowserView extends ItemView {
     });
 
     const abortBtn = actions.createEl('button', {
-      text: 'Abort',
+      text: '中止',
       cls: 'leetcode-contest__btn leetcode-contest__btn-abort',
     });
     abortBtn.addEventListener('click', () => {
@@ -1113,7 +1113,7 @@ export class ProblemBrowserView extends ItemView {
       attr: { role: 'option' },
     });
     row.setAttribute('aria-label',
-      `${String(idx + 1)}. ${problem.title}, ${this.diffLabel(problem.difficulty)}, ${problem.verdict}`);
+      `${String(idx + 1)}. ${problem.title}, ${this.diffLabel(problem.difficulty)}, ${this.verdictLabel(problem.verdict)}`);
 
     // Title block
     const titleBlock = row.createDiv({ cls: 'lc-row__titleblock' });
@@ -1122,13 +1122,13 @@ export class ProblemBrowserView extends ItemView {
 
     // Meta: difficulty + verdict chip
     const meta = row.createDiv({ cls: 'lc-row__meta' });
-    const diffClass = this.diffLabel(problem.difficulty).toLowerCase();
+    const diffClass = problem.difficulty === 1 ? 'easy' : problem.difficulty === 2 ? 'medium' : 'hard';
     meta.createSpan({
       cls: `lc-row__diff lc-diff--${diffClass}`,
       text: this.diffLabel(problem.difficulty),
     });
     meta.createSpan({
-      cls: `leetcode-contest__verdict-chip leetcode-contest__verdict-chip--${problem.verdict}`,
+      cls: `leetcode-contest__verdict-chip leetcode-contest__verdict-chip--${this.verdictLabel(problem.verdict)}`,
       text: this.verdictLabel(problem.verdict),
     });
 
@@ -1139,16 +1139,16 @@ export class ProblemBrowserView extends ItemView {
 
   /** Map numeric difficulty (1-3) to display label. */
   private diffLabel(difficulty: number): string {
-    if (difficulty === 1) return 'Easy';
-    if (difficulty === 2) return 'Medium';
-    return 'Hard';
+    if (difficulty === 1) return '简单';
+    if (difficulty === 2) return '中等';
+    return '困难';
   }
 
   /** Map verdict enum to user-facing chip label. */
   private verdictLabel(verdict: ContestProblemState['verdict']): string {
-    if (verdict === 'accepted') return 'Accepted';
-    if (verdict === 'attempted') return 'Attempted';
-    return 'Unsolved';
+    if (verdict === 'accepted') return '已完成';
+    if (verdict === 'attempted') return '已尝试';
+    return '未完成';
   }
 
   /**

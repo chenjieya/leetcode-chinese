@@ -45,7 +45,7 @@ export async function probeOpenAI(
   } catch (err) {
     return {
       ok: false,
-      errorMessage: (err instanceof Error ? err.message : 'Network error').slice(0, 200),
+      errorMessage: (err instanceof Error ? err.message : '网络错误').slice(0, 200),
     };
   }
 }

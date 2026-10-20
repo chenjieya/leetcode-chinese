@@ -47,6 +47,7 @@ export function buildContestAnalysisPrompt(args: BuildContestAnalysisPromptArgs)
   // System instruction
   sections.push(
     'You are analyzing a virtual LeetCode contest performance. Provide:',
+    '请使用简体中文撰写回答、章节标题和解释，代码中的语言关键字和标识符保持原样。',
     '1) A holistic debrief: time allocation patterns, technique gaps, what to practice next.',
     '2) Brief per-problem commentary (1-2 sentences each, NOT a full code review).',
     '',

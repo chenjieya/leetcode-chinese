@@ -46,7 +46,7 @@ describe('submissionOrchestrator (D-24, D-04, D-27, SOLVE-09)', () => {
     await orch.submit();
     // Exact Notice copy for D-24 single-flight:
     const matched = noticeSpy.mock.calls.find(([msg]) =>
-      String(msg).includes('A submission is already in progress. Cancel it first or wait for the verdict.')
+      String(msg).includes('正在提交，请先取消或等待判题结果。')
     );
     expect(matched).toBeDefined();
     // Fetcher called exactly ONCE for submit (second submit blocked).
@@ -56,7 +56,7 @@ describe('submissionOrchestrator (D-24, D-04, D-27, SOLVE-09)', () => {
     expect(submitCalls.length).toBe(1);
   });
 
-  it('D-04: no fenced code block → exact Notice "No code block found. Add a fenced block with your solution." and no fetcher call', async () => {
+  it('D-04: no fenced code block → exact Notice "未找到解答代码块，请先在代码章节填写解答。" and no fetcher call', async () => {
     noticeSpy.mockClear();
     const ff = makeFakeFetcher();
     const settings = makeFakeSettingsStore({
@@ -71,13 +71,13 @@ describe('submissionOrchestrator (D-24, D-04, D-27, SOLVE-09)', () => {
     });
     await orch.submit();
     const matched = noticeSpy.mock.calls.find(([msg]) =>
-      String(msg).includes('No code block found. Add a fenced block with your solution.')
+      String(msg).includes('未找到解答代码块，请先在代码章节填写解答。')
     );
     expect(matched).toBeDefined();
     expect(ff.spy).not.toHaveBeenCalled();
   });
 
-  it('no active problem note → exact Notice "Open a LeetCode problem note first."', async () => {
+  it('no active problem note → exact Notice "请先打开一篇力扣题目笔记。"', async () => {
     noticeSpy.mockClear();
     const ff = makeFakeFetcher();
     const settings = makeFakeSettingsStore();
@@ -89,7 +89,7 @@ describe('submissionOrchestrator (D-24, D-04, D-27, SOLVE-09)', () => {
     });
     await orch.submit();
     const matched = noticeSpy.mock.calls.find(([msg]) =>
-      String(msg).includes('Open a LeetCode problem note first.')
+      String(msg).includes('请先打开一篇力扣题目笔记。')
     );
     expect(matched).toBeDefined();
     expect(ff.spy).not.toHaveBeenCalled();
@@ -145,12 +145,12 @@ describe('submissionOrchestrator (D-24, D-04, D-27, SOLVE-09)', () => {
     await orch.submit();
     const matched = noticeSpy.mock.calls.find(([msg]) => {
       if (typeof msg === 'string') {
-        return msg.includes('LeetCode session expired. Log in again.');
+        return msg.includes('力扣登录已过期，请重新登录。');
       }
       if (msg instanceof DocumentFragment) {
         const host = document.createElement('div');
         host.appendChild(msg.cloneNode(true));
-        return host.textContent?.includes('LeetCode session expired. Log in again.') === true;
+        return host.textContent?.includes('力扣登录已过期，请重新登录。') === true;
       }
       return false;
     });

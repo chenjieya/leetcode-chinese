@@ -18,7 +18,7 @@ describe('ProblemListService status filter (BROWSE-04 status dimension)', () => 
 
   it('filter by status solved returns only solved entries', () => {
     const r = svc.filter(FIXTURE, { status: ['solved'] });
-    expect(r.map((p) => p.id).sort((a, b) => a - b)).toEqual([1, 4]);
+    expect(r.map((p) => p.id).sort((a, b) => Number(a) - Number(b))).toEqual([1, 4]);
   });
 
   it('filter by status attempted returns only attempted entries', () => {
@@ -29,12 +29,12 @@ describe('ProblemListService status filter (BROWSE-04 status dimension)', () => 
   it('filter by status untouched includes rows with status === undefined', () => {
     const r = svc.filter(FIXTURE, { status: ['untouched'] });
     // id=3 has status 'untouched'; id=5 has status undefined — both should appear.
-    expect(r.map((p) => p.id).sort((a, b) => a - b)).toEqual([3, 5]);
+    expect(r.map((p) => p.id).sort((a, b) => Number(a) - Number(b))).toEqual([3, 5]);
   });
 
   it('multi-select within status (solved + attempted)', () => {
     const r = svc.filter(FIXTURE, { status: ['solved', 'attempted'] });
-    expect(r.map((p) => p.id).sort((a, b) => a - b)).toEqual([1, 2, 4]);
+    expect(r.map((p) => p.id).sort((a, b) => Number(a) - Number(b))).toEqual([1, 2, 4]);
   });
 
   it('empty status array applies no status constraint', () => {

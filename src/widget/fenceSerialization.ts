@@ -1,3 +1,4 @@
+import { isCodeHeading, isSectionBoundary } from '../notes/noteHeadings';
 // Phase 19 Plan 01 + Plan 04 — Pure string-only fence body extract / rewrite.
 //
 // Used inside the `vault.process(file, fn)` callback path where the input is
@@ -235,20 +236,20 @@ export function rewriteFenceOpenerTag(
 ): string {
   const { lines, eols } = splitPreservingEols(noteText);
   // Locator: walk forward; track `inCodeSection`; find first opener under `## Code`.
-  const H2_CODE_RE = /^\s*##\s+Code\s*$/;
-  const H2_ANY_RE = /^\s*##\s+\S/;
   const FENCE_OPENER_RE = /^\s*```([A-Za-z0-9_+#-]*)\s*$/;
   const FENCE_CLOSER_RE = /^\s*```\s*$/;
   let inCodeSection = false;
+  let codeHeading = '## Code';
   let openerLineIdx = -1;
   let openerTag: string | null = null;
   for (let i = 0; i < lines.length; i++) {
     const text = lines[i] ?? '';
-    if (H2_CODE_RE.test(text)) {
+    if (isCodeHeading(text)) {
+      codeHeading = text;
       inCodeSection = true;
       continue;
     }
-    if (H2_ANY_RE.test(text)) {
+    if (isSectionBoundary(text, codeHeading)) {
       inCodeSection = false;
       continue;
     }
@@ -269,7 +270,7 @@ export function rewriteFenceOpenerTag(
   let hasCloser = false;
   for (let j = openerLineIdx + 1; j < lines.length; j++) {
     const t = lines[j] ?? '';
-    if (H2_ANY_RE.test(t)) break;
+    if (isSectionBoundary(t, codeHeading)) break;
     if (FENCE_CLOSER_RE.test(t)) {
       hasCloser = true;
       break;

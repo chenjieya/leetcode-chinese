@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 
 const VERBATIM_BULLET =
-  'AI Review sends the problem statement and your accepted solution code';
+  'AI 复盘会发送题目内容和你已通过的解答代码';
 
 describe('Phase 09 Plan 01 — withReviewBullet factory', () => {
   it('returns a FRESH object; DISCLOSURE_BASE_COPY is unchanged', async () => {

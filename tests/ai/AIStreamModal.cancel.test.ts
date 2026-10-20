@@ -13,7 +13,7 @@
 //   - Modal onClose clears renderTimer + counterTimer (no setWindowTimeout leak).
 //   - After natural completion, onClose does NOT abort again (idempotent).
 //   - Disclosure-cancelled path: AIClient.invokeStream throws
-//     'AI call cancelled' → modal renders 'AI call cancelled.' body + Close.
+//     'AI call cancelled' → modal renders '已取消 AI 请求。' body + Close.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { setupModalMocks, clearRenderCalls } from './helpers/aiStreamModal-mocks';
@@ -80,7 +80,7 @@ describe('Phase 08 Plan 03 — AIStreamModal cancel + anti-zombie', () => {
       '.leetcode-ai-stream-footer button',
     ) as HTMLButtonElement;
     expect(cancelBtn).not.toBeNull();
-    expect(cancelBtn.textContent).toBe('Cancel');
+    expect(cancelBtn.textContent).toBe('取消');
 
     cancelBtn.click();
     await Promise.resolve();
@@ -208,17 +208,17 @@ describe('Phase 08 Plan 03 — AIStreamModal cancel + anti-zombie', () => {
     await vi.runAllTimersAsync();
     await onOpenP;
 
-    // Footer swap: now contains [Copy response] [Close].
+    // Footer swap: now contains [复制回答] [Close].
     const footerButtons = Array.from(
       modal.contentEl.querySelectorAll('.leetcode-ai-stream-footer button'),
     ).map((b) => b.textContent);
-    expect(footerButtons).toContain('Copy response');
-    expect(footerButtons).toContain('Close');
+    expect(footerButtons).toContain('复制回答');
+    expect(footerButtons).toContain('关闭');
 
     // Cancelled indicator line.
     const cancelled = modal.contentEl.querySelector('.leetcode-ai-stream-cancelled');
     expect(cancelled).not.toBeNull();
-    expect(cancelled!.textContent).toBe('Cancelled — partial response below.');
+    expect(cancelled!.textContent).toBe('已取消，以下为已生成的部分回答。');
   });
 
   it('modal onClose during in-flight stream calls abortController.abort() (anti-zombie)', async () => {
@@ -352,7 +352,7 @@ describe('Phase 08 Plan 03 — AIStreamModal cancel + anti-zombie', () => {
     expect(abortSpy).not.toHaveBeenCalled();
   });
 
-  it('disclosure-cancel renders "AI call cancelled." body + Close-only footer', async () => {
+  it('disclosure-cancel renders "已取消 AI 请求。" body + Close-only footer', async () => {
     const { AIStreamModal } = await import('../../src/ai/AIStreamModal');
     const { makeAIClient } = await import('./helpers/aiStreamModal-mocks');
 
@@ -373,12 +373,12 @@ describe('Phase 08 Plan 03 — AIStreamModal cancel + anti-zombie', () => {
     await modal.onOpen();
 
     // Body renders the locked verbatim copy.
-    expect(modal.contentEl.textContent).toContain('AI call cancelled.');
+    expect(modal.contentEl.textContent).toContain('已取消 AI 请求。');
 
     // Footer has only Close.
     const footerButtons = Array.from(
       modal.contentEl.querySelectorAll('.leetcode-ai-stream-footer button'),
     ).map((b) => b.textContent);
-    expect(footerButtons).toEqual(['Close']);
+    expect(footerButtons).toEqual(['关闭']);
   });
 });

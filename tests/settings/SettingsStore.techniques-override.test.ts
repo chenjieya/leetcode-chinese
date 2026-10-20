@@ -60,7 +60,7 @@ describe('SettingsStore — techniquesFolderOverride (Phase 5 D-15)', () => {
   });
 
   it('getTechniquesFolder returns override verbatim when non-empty, derived default when empty', async () => {
-    // D-15 verbatim: `return override && override.length > 0 ? override : \`${problemsFolder}/Techniques\``
+    // D-15 verbatim: `return override && override.length > 0 ? override : \`${problemsFolder}/techniques\``
     const { SettingsStore } = await import('../../src/settings/SettingsStore');
 
     // Empty override → derived default.
@@ -70,7 +70,7 @@ describe('SettingsStore — techniquesFolderOverride (Phase 5 D-15)', () => {
       techniquesFolderOverride: '',
     });
     const s1 = (await SettingsStore.load(p1 as never)) as unknown as OverrideCapableStore;
-    expect(s1.getTechniquesFolder()).toBe('LeetCode/Techniques');
+    expect(s1.getTechniquesFolder()).toBe('LeetCode/techniques');
 
     // Non-empty override → verbatim.
     const p2 = makeMockPlugin({

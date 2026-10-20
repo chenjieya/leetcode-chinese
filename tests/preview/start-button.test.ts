@@ -71,7 +71,7 @@ function makePluginStub(opts: {
   return { plugin, openProblem };
 }
 
-describe('Preview action button click — Start Problem branch (Phase 06 Plan 03)', () => {
+describe("Preview action button click — 开始解题 branch (Phase 06 Plan 03)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -79,16 +79,16 @@ describe('Preview action button click — Start Problem branch (Phase 06 Plan 03
     vi.useRealTimers();
   });
 
-  it('renderHeader produces a button labelled "Start Problem" when noteExists=false', () => {
+  it("renderHeader produces a button labelled \"开始解题\" when noteExists=false", () => {
     // Sanity check: the contract the click test depends on.
     const container = document.createElement('div');
     const btn = renderHeader(container, makeDetail(), false);
-    expect(btn.textContent).toBe('Start Problem');
+    expect(btn.textContent).toBe("开始解题");
     expect(btn.className).toContain('is-primary');
     expect(btn.disabled).toBe(false);
   });
 
-  it('clicking Start Problem flips the label to "Starting…", disables the button, and calls plugin.openProblem', async () => {
+  it("clicking 开始解题 flips the label to \"Starting…\", disables the button, and calls plugin.openProblem", async () => {
     // Build a fake leaf + view that exposes renderForSlug indirectly via
     // setState. The view's onOpen reads containerEl.children[1] which we
     // wire via a fake containerEl below.
@@ -121,7 +121,7 @@ describe('Preview action button click — Start Problem branch (Phase 06 Plan 03
     // Locate the action button.
     const btn = root.querySelector<HTMLButtonElement>('button.leetcode-preview__action');
     expect(btn).not.toBeNull();
-    expect(btn?.textContent).toBe('Start Problem');
+    expect(btn?.textContent).toBe("开始解题");
 
     // Click the button.
     btn!.click();
@@ -129,7 +129,7 @@ describe('Preview action button click — Start Problem branch (Phase 06 Plan 03
     // run.
     await Promise.resolve();
     // Label should have flipped immediately (synchronous before await).
-    expect(btn!.textContent).toBe('Starting…');
+    expect(btn!.textContent).toBe("正在创建…");
     expect(btn!.disabled).toBe(true);
 
     // Allow the openProblem await to resolve and the post-action timer

@@ -55,14 +55,14 @@ export function showSessionExpiredNotice(
   // throws "Only one element on document allowed". Call the helpers on the
   // fragment so they append to the fragment instead (Plan 20-10 hotfix).
   const copy = frag.createSpan();
-  copy.textContent = 'LeetCode session expired. Log in again.';
+  copy.textContent = '力扣登录已过期，请重新登录。';
 
   const spacer = frag.createSpan();
   spacer.textContent = ' ';
 
   const btn = frag.createEl('button');
   btn.className = 'leetcode-notice-action mod-cta';
-  btn.textContent = 'Log in';
+  btn.textContent = '登录';
 
   // timeout: 0 → sticky (Pitfall 7). User MUST click Log in or close manually.
   const notice = new Notice(frag, 0);

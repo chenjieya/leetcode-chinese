@@ -43,7 +43,7 @@ function makeContestQuestions() {
 function makeMockClient(opts?: { getProblemDetailFails?: boolean; failOnSlug?: string }) {
   return {
     getProblemDetail: vi.fn(async (slug: string) => {
-      if (opts?.getProblemDetailFails) throw new Error('Network error');
+      if (opts?.getProblemDetailFails) throw new Error('网络错误');
       if (opts?.failOnSlug === slug) return null;
       return {
         questionFrontendId: '1',

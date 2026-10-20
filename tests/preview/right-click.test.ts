@@ -53,8 +53,8 @@ describe('ProblemBrowserView right-click context menu (PREVIEW-01)', () => {
     expect(SRC).toMatch(/contextmenu['"][\s\S]{0,800}new\s+Menu\(\)/);
   });
 
-  it("calls menu.addItem with title 'Preview problem' and icon 'eye'", () => {
-    expect(SRC).toMatch(/setTitle\(\s*['"]Preview problem['"]/);
+  it("calls menu.addItem with title '预览题目' and icon 'eye'", () => {
+    expect(SRC).toMatch(/setTitle\(\s*['"]预览题目['"]/);
     expect(SRC).toMatch(/setIcon\(\s*['"]eye['"]/);
   });
 

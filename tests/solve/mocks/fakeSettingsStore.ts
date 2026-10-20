@@ -142,7 +142,7 @@ export function makeFakeSettingsStore(overrides: FakeSettingsOverrides = {}): Fa
       const override = techniquesFolderOverride;
       return override && override.length > 0
         ? override
-        : `${getProblemsFolder()}/Techniques`;
+        : `${getProblemsFolder()}/techniques`;
     },
     // Phase 5 D-16 — autoBacklinksEnabled round-trip.
     getAutoBacklinksEnabled() {

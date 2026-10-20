@@ -55,7 +55,7 @@ describe('Phase 08 Plan 03 — AIStreamModal fallback-path Cancel', () => {
     const cancelBtn = modal.contentEl.querySelector(
       '.leetcode-ai-stream-footer button',
     ) as HTMLButtonElement;
-    expect(cancelBtn.textContent).toBe('Cancel');
+    expect(cancelBtn.textContent).toBe('取消');
 
     // Click Cancel + close the modal. Both routes converge through
     // onClose() which aborts the controller.

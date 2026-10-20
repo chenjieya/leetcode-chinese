@@ -51,6 +51,7 @@
 // the canonical `migrateLegacyFenceIfNeeded` migrator — same write path as
 // Plan 21-01.
 
+import { isCodeHeading, normalizeHeadingLine } from '../notes/noteHeadings';
 import type {
   App,
   MarkdownPostProcessorContext,
@@ -64,7 +65,6 @@ import { LC_LANG_SLUGS, resolveLangSlug } from '../solve/languages';
 import { logger } from '../shared/logger';
 
 const SLUG_SENTINEL = '__sentinel__';
-const H2_CODE_RE = /^\s*##\s+Code\s*$/;
 const H2_ANY_RE = /^\s*##\s+\S/;
 const LANGUAGE_CLASS_RE = /^language-([A-Za-z0-9_+#-]+)$/;
 
@@ -218,8 +218,8 @@ function isUnderCodeHeading(sectionText: string, lineStart: number): boolean {
   const start = Math.min(lineStart, lines.length - 1);
   for (let i = start; i >= 0; i--) {
     const line = lines[i] ?? '';
-    if (H2_CODE_RE.test(line)) return true;
-    if (H2_ANY_RE.test(line)) return false;
+    if (isCodeHeading(line)) return true;
+    if (H2_ANY_RE.test(normalizeHeadingLine(line))) return false;
   }
   return false;
 }

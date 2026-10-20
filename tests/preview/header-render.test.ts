@@ -55,7 +55,7 @@ describe('renderHeader (Phase 06 Plan 03 sticky header DOM contract)', () => {
     expect(easy.length).toBe(0);
     expect(medium.length).toBe(1);
     expect(hard.length).toBe(0);
-    expect(medium[0]?.textContent).toBe('Medium');
+    expect(medium[0]?.textContent).toBe('中等');
   });
 
   it('emits ZERO .lc-preview__topic chips regardless of topicSlugs (gap-closure 06-05)', () => {
@@ -95,28 +95,28 @@ describe('renderHeader (Phase 06 Plan 03 sticky header DOM contract)', () => {
     expect(container.querySelector('.lc-preview__chips')).toBeNull();
   });
 
-  it('emits a Start Problem button with .is-primary when noteExists === false (accent CTA)', () => {
+  it("emits a 开始解题 button with .is-primary when noteExists === false (accent CTA)", () => {
     const container = document.createElement('div');
     const btn = renderHeader(container, makeDetail(), false);
     expect(btn.tagName).toBe('BUTTON');
     expect(btn.className).toContain('leetcode-preview__action');
     expect(btn.className).toContain('is-primary');
-    expect(btn.textContent).toBe('Start Problem');
+    expect(btn.textContent).toBe("开始解题");
   });
 
-  it('emits an Open Problem button WITHOUT .is-primary when noteExists === true (neutral)', () => {
+  it("emits an 打开笔记 button WITHOUT .is-primary when noteExists === true (neutral)", () => {
     const container = document.createElement('div');
     const btn = renderHeader(container, makeDetail(), true);
     expect(btn.tagName).toBe('BUTTON');
     expect(btn.className).toContain('leetcode-preview__action');
     expect(btn.className).not.toContain('is-primary');
-    expect(btn.textContent).toBe('Open Problem');
+    expect(btn.textContent).toBe("打开笔记");
   });
 
   it('action button carries an aria-label including verb + id + title', () => {
     const container = document.createElement('div');
     const btn = renderHeader(container, makeDetail({ id: 5, title: 'Add Two Numbers' }), false);
-    expect(btn.getAttribute('aria-label')).toBe('Start problem 5: Add Two Numbers');
+    expect(btn.getAttribute('aria-label')).toBe('开始题目 5: Add Two Numbers');
   });
 
   it('idempotent: calling renderHeader twice on the same container leaves a single header', () => {
@@ -129,6 +129,6 @@ describe('renderHeader (Phase 06 Plan 03 sticky header DOM contract)', () => {
     const buttons = container.querySelectorAll('button.leetcode-preview__action');
     expect(buttons.length).toBe(1);
     // The second call's "Open" state is the live one.
-    expect(buttons[0]?.textContent).toBe('Open Problem');
+    expect(buttons[0]?.textContent).toBe("打开笔记");
   });
 });

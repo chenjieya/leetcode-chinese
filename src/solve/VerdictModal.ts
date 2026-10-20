@@ -21,6 +21,8 @@ import { Component, Modal, Notice, setIcon, type App, type TFile } from 'obsidia
 import type { RunCheckResponse, SubmitCheckResponse } from './types';
 import { renderVerdict } from './verdictModalRenderer';
 import { logger } from '../shared/logger';
+import { normalizePatternName, patternDisplayName } from '../graph/patternTaxonomy';
+import { sanitizeHubFilename } from '../graph/hubFilename';
 
 type TerminalResponse = RunCheckResponse | SubmitCheckResponse;
 
@@ -129,7 +131,7 @@ export class VerdictModal extends Modal {
     clear(titleEl);
     addClass(contentEl, 'leetcode-verdict');
     addClass(contentEl, 'leetcode-verdict-pending');
-    titleEl.textContent = 'Running…';
+    titleEl.textContent = '正在判题…';
 
     const body = appendEl(contentEl, 'div', 'leetcode-verdict-body leetcode-verdict-body--pending');
     body.setAttribute('aria-live', 'polite');
@@ -140,11 +142,11 @@ export class VerdictModal extends Modal {
     setIcon(spinnerWrap, 'loader');
 
     const primary = appendEl(body, 'p');
-    primary.textContent = 'Running tests…';
+    primary.textContent = '正在等待判题结果…';
 
     const footer = appendEl(contentEl, 'div', 'leetcode-verdict-footer leetcode-verdict-action-row');
     const cancelBtn = appendEl(footer, 'button');
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = '取消';
     cancelBtn.addEventListener('click', () => {
       this.args.onCancel();
       this.close();
@@ -282,15 +284,15 @@ export class VerdictModal extends Modal {
     for (const pattern of patterns) {
       if (!pattern) continue;
       const chip = appendEl(container, 'span', 'leetcode-verdict-pattern-chip');
-      chip.textContent = pattern;
+      chip.textContent = patternDisplayName(pattern);
       chip.setAttribute('data-lc-role', 'pattern-chip');
       chip.setAttribute('tabindex', '0');
       chip.setAttribute('role', 'link');
-      chip.setAttribute('aria-label', 'Open ' + pattern + ' hub note');
+      chip.setAttribute('aria-label', '打开' + patternDisplayName(pattern) + '模式索引');
 
       const hubPath = this.args.getPatternHubPath
         ? this.args.getPatternHubPath(pattern)
-        : 'LeetCode/Patterns/' + pattern + '.md';
+        : 'leetcode/patterns/' + sanitizeHubFilename(normalizePatternName(pattern)) + '.md';
       const navigate = (): void => {
         this.close();
         void this.app.workspace.openLinkText(hubPath, '', false);
@@ -340,7 +342,7 @@ export class VerdictModal extends Modal {
     const buttons = Array.from(
       this.contentEl.querySelectorAll('button'),
     );
-    const copyBtn = buttons.find((b) => /copy payload/i.test(b.textContent ?? ''));
+    const copyBtn = buttons.find((b) => b.classList.contains('leetcode-copy-payload'));
     if (!copyBtn) return;
     // Replace the button to drop the renderer's best-effort listener, then
     // wire our redacted clipboard path.
@@ -359,7 +361,7 @@ export class VerdictModal extends Modal {
           void clip.writeText(text);
         }
          
-        new Notice('Payload copied.', 2000);
+        new Notice('响应数据已复制。', 2000);
       } catch (err) {
         logger.debug('solve.verdict.copyPayload: clipboard unavailable', err);
       }

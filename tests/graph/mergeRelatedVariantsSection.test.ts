@@ -40,12 +40,12 @@ describe('Phase 11 Plan 01 — mergeRelatedVariantsSection pure transform', () =
     ].join('\n');
 
     const out = mergeRelatedVariantsSection(body, variants);
-    expect(out).toContain('## Related Variants');
+    expect(out).toContain('## 相关变式');
     expect(out).toContain('- [[three-sum]]');
     expect(out).toContain('- [[container-with-most-water]]');
     // Order: Techniques -> Related Variants -> AI Review
     const techIdx = out.indexOf('## Techniques');
-    const relIdx = out.indexOf('## Related Variants');
+    const relIdx = out.indexOf('## 相关变式');
     const aiIdx = out.indexOf('## AI Review');
     expect(techIdx).toBeLessThan(relIdx);
     expect(relIdx).toBeLessThan(aiIdx);
@@ -108,8 +108,8 @@ describe('Phase 11 Plan 01 — mergeRelatedVariantsSection pure transform', () =
     ].join('\n');
 
     const out = mergeRelatedVariantsSection(body, variants);
-    expect(out).toContain('## Related Variants');
-    const relIdx = out.indexOf('## Related Variants');
+    expect(out).toContain('## 相关变式');
+    const relIdx = out.indexOf('## 相关变式');
     const aiIdx = out.indexOf('## AI Review');
     expect(relIdx).toBeLessThan(aiIdx);
     expect(out).toContain('Review here.');
@@ -131,10 +131,10 @@ describe('Phase 11 Plan 01 — mergeRelatedVariantsSection pure transform', () =
     ].join('\n');
 
     const out = mergeRelatedVariantsSection(body, variants);
-    expect(out).toContain('## Related Variants');
+    expect(out).toContain('## 相关变式');
     expect(out).toContain('- [[three-sum]]');
     // Appended at end — Related Variants is last section
-    const relIdx = out.indexOf('## Related Variants');
+    const relIdx = out.indexOf('## 相关变式');
     expect(relIdx).toBeGreaterThan(out.indexOf('## Notes'));
   });
 
@@ -161,9 +161,9 @@ describe('Phase 11 Plan 01 — mergeRelatedVariantsSection pure transform', () =
   it('empty variants array produces heading with no bullets in Related Variants section', () => {
     const body = '## Techniques\n\n- [[Trees]]\n\n## AI Review\n\nContent.\n';
     const out = mergeRelatedVariantsSection(body, []);
-    expect(out).toContain('## Related Variants');
+    expect(out).toContain('## 相关变式');
     // Only check within the Related Variants section itself (not Techniques)
-    const relIdx = out.indexOf('## Related Variants');
+    const relIdx = out.indexOf('## 相关变式');
     const afterRel = out.slice(relIdx + '## Related Variants'.length);
     const nextH2 = afterRel.indexOf('## ');
     const relContent = afterRel.slice(0, nextH2 > -1 ? nextH2 : undefined);

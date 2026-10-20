@@ -58,21 +58,21 @@ export const PREVIEW_VIEW_TYPE = 'leetcode-preview';
  *  the regression-grep test (Task 3) can grep for them and so future copy
  *  edits land in exactly one place. */
 const COPY = {
-  loadingHeading: 'Loading problem…',
+  loadingHeading: '正在加载题目…',
   loadingBodyTpl: (display: string): string =>
-    `Fetching ${display} from LeetCode.`,
-  fetchFailHeading: "Couldn't load problem",
-  fetchFailBody: 'Check your internet connection and try again.',
-  retryButton: 'Retry',
-  startProblem: 'Start Problem',
-  openProblem: 'Open Problem',
-  starting: 'Starting…',
-  opening: 'Opening…',
+    `正在从力扣中国站获取 ${display}。`,
+  fetchFailHeading: '题目加载失败',
+  fetchFailBody: '请检查网络连接后重试。',
+  retryButton: '重试',
+  startProblem: '开始解题',
+  openProblem: '打开笔记',
+  starting: '正在创建…',
+  opening: '正在打开…',
   fetchFailNoticeTpl: (display: string): string =>
-    `Couldn't fetch ${display}. Check your connection.`,
+    `无法获取 ${display}，请检查网络连接。`,
   // 06-UI-SPEC § Notice messages — note-creation failure surface.
   createFailNoticeTpl: (reason: string): string =>
-    `Couldn't create note. ${reason}.`,
+    `无法创建笔记：${reason}。`,
 } as const;
 
 const NOTICE_DURATIONS = {
@@ -142,7 +142,7 @@ export function renderHeader(
   const difficultyClass = `lc-diff lc-diff--${difficulty.toLowerCase()}`;
   container.createSpan({
     cls: difficultyClass,
-    text: difficulty,
+    text: ({ Easy: '简单', Medium: '中等', Hard: '困难' } as Record<string, string>)[difficulty] ?? difficulty,
   });
 
   // Action button — Start Problem (accent) when no note exists, Open Problem
@@ -157,10 +157,10 @@ export function renderHeader(
     text: actionLabel,
   });
   // Aria-label for screen readers — 06-UI-SPEC §Accessibility.
-  const verb = noteExists ? 'Open' : 'Start';
+  const verb = noteExists ? '打开' : '开始';
   button.setAttribute(
     'aria-label',
-    `${verb} problem ${String(detail.id)}: ${detail.title}`,
+    `${verb}题目 ${String(detail.id)}: ${detail.title}`,
   );
   return button;
 }
@@ -211,12 +211,12 @@ export class ProblemPreviewView extends ItemView {
   }
 
   getDisplayText(): string {
-    if (this.slug == null) return 'Preview';
+    if (this.slug == null) return '预览';
     const cached = this.plugin.lcSettings.getProblemDetail(this.slug);
     if (cached) {
-      return `Preview: ${String(cached.id)}. ${cached.title}`;
+      return `预览：${String(cached.id)}. ${cached.title}`;
     }
-    return `Preview: ${this.slug}`;
+    return `预览：${this.slug}`;
   }
 
   async onOpen(): Promise<void> {
@@ -260,7 +260,7 @@ export class ProblemPreviewView extends ItemView {
       // No state yet — defer first render to setState. Show a minimal
       // placeholder so the tab isn't blank if Obsidian opens us without
       // setState (e.g., split-from-context-menu).
-      this.renderEmpty(root, 'Preview');
+      this.renderEmpty(root, '预览');
     }
   }
 
@@ -338,25 +338,25 @@ export class ProblemPreviewView extends ItemView {
     const cached = this.plugin.lcSettings.getProblemDetail(slug);
     if (cached) {
       this.renderRendered(root, slug, cached);
-      return;
+      if (cached.translationCheckedAt) return;
     }
 
     // Cache miss → loading state + parallel fetch.
-    this.renderLoading(root, slug);
+    if (!cached) this.renderLoading(root, slug);
     let fetched: NoteWriterDetail | null = null;
     try {
       fetched = await this.plugin.client.getProblemDetail(slug);
     } catch (err) {
       logger.debug('preview.renderForSlug: getProblemDetail rejected', err);
       if (myToken !== this.renderToken) return;
-      this.renderError(root, slug);
+      if (!cached) this.renderError(root, slug);
       return;
     }
     if (myToken !== this.renderToken) return;
     if (!fetched || !fetched.content) {
       // Treat null / empty content as a fetch failure for UX purposes —
       // user sees the locked "Couldn't load problem" copy + Retry button.
-      this.renderError(root, slug);
+      if (!cached) this.renderError(root, slug);
       return;
     }
     // RESEARCH §A2 — persist through SettingsStore so the next preview hits
@@ -512,7 +512,7 @@ export class ProblemPreviewView extends ItemView {
       } catch (err) {
         button.disabled = false;
         button.textContent = originalLabel;
-        const reason = err instanceof Error ? err.message : 'Unknown error';
+        const reason = err instanceof Error ? err.message : '未知错误';
         new Notice(
           COPY.createFailNoticeTpl(reason),
           NOTICE_DURATIONS.createFail,

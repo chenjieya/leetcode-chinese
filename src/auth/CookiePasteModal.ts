@@ -26,11 +26,11 @@ export class CookiePasteModal extends Modal {
     contentEl.empty();
     contentEl.addClass('leetcode-settings');
 
-    contentEl.createEl('h2', { text: 'Manual cookie (fallback)' });
+    contentEl.createEl('h2', { text: '手动填写 Cookie' });
     contentEl.createEl('p', {
       // UI-SPEC.md § Settings tab — LOCKED copy; "LeetCode" is a proper-noun brand name.
        
-      text: "Paste your LeetCode session cookies if the embedded login doesn't work on your system.",
+      text: "如果内置登录窗口无法使用，请填写力扣中国站的登录 Cookie。",
       cls: 'setting-item-description',
     });
 
@@ -54,7 +54,7 @@ export class CookiePasteModal extends Modal {
 
     new Setting(contentEl).addButton((b) =>
       b
-        .setButtonText('Save cookies')
+        .setButtonText('保存 Cookie')
         // INTENTIONALLY no call-to-action modifier applied — accent color is reserved
         // for the primary Log-in button (UI-SPEC.md § Color; W1). Save-cookies is
         // a neutral action. Do NOT add .set-Cta here.
@@ -68,7 +68,7 @@ export class CookiePasteModal extends Modal {
           const session = this.sessionValue.trim();
           const csrf = this.csrfValue.trim();
           if (!session || !csrf) {
-            new Notice('Both fields are required.', 3000);
+            new Notice('两个字段均为必填项。', 3000);
             return;
           }
           await this.onSave({

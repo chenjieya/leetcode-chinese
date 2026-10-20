@@ -1,35 +1,28 @@
 ---
-name: Bug Report
-about: Report something that isn't working as expected
-title: ""
+name: 问题反馈
+about: 报告使用过程中遇到的问题
 labels: bug
-assignees: ""
 ---
 
-## Description
+## 问题描述
 
-A clear description of the bug.
+请描述遇到的现象。
 
-## Steps to Reproduce
+## 复现步骤
 
 1. 
 2. 
 3. 
 
-## Expected Behavior
+## 预期与实际结果
 
+## 环境
 
+- Obsidian 版本：
+- 插件版本：
+- 操作系统：
+- 是否启用了原 LeetCode 插件：
 
-## Actual Behavior
+## 补充信息
 
-
-
-## Environment
-
-- Obsidian version:
-- Plugin version:
-- OS:
-
-## Additional Context
-
-Screenshots, error messages, or console logs if relevant.
+可以附截图或错误日志，请先移除 Cookie、API 密钥和个人数据。

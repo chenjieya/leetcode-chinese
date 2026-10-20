@@ -171,11 +171,11 @@ describe('ContestFinalizer', () => {
 
       // problem-a and problem-b have code, so they get notes
       expect(mockApp.vault.create).toHaveBeenCalledWith(
-        'LeetCode/101-problem-a.md',
+        'LeetCode/101. Problem A.md',
         expect.any(String),
       );
       expect(mockApp.vault.create).toHaveBeenCalledWith(
-        'LeetCode/102-problem-b.md',
+        'LeetCode/102. Problem B.md',
         expect.any(String),
       );
     });
@@ -191,8 +191,8 @@ describe('ContestFinalizer', () => {
 
       // problem-c and problem-d have empty code — no notes created for them
       const createCalls = mockApp.vault.create.mock.calls.map((c) => c[0]);
-      expect(createCalls).not.toContain('LeetCode/103-problem-c.md');
-      expect(createCalls).not.toContain('LeetCode/104-problem-d.md');
+      expect(createCalls).not.toContain('LeetCode/103. Problem C.md');
+      expect(createCalls).not.toContain('LeetCode/104. Problem D.md');
     });
 
     it('D-13 merge: AC on existing file overwrites ## Code via vault.process', async () => {
@@ -245,7 +245,7 @@ describe('ContestFinalizer', () => {
       });
 
       // Check frontmatter was applied
-      const fm = mockApp._frontmatters.get('LeetCode/101-problem-a.md');
+      const fm = mockApp._frontmatters.get('LeetCode/101. Problem A.md');
       expect(fm).toBeDefined();
       expect(fm!['lc-contest-id']).toBe('weekly-contest-400');
     });
@@ -260,7 +260,7 @@ describe('ContestFinalizer', () => {
       });
 
       // Date from startedAt (1700000000000) = 2023-11-14
-      const expectedPath = 'LeetCode/Contests/2023-11-14-weekly-contest-400.md';
+      const expectedPath = `LeetCode/contests/${new Date(session.startedAt).getFullYear()}-${String(new Date(session.startedAt).getMonth() + 1).padStart(2, '0')}-${String(new Date(session.startedAt).getDate()).padStart(2, '0')}-weekly-contest-400.md`;
       const createCalls = mockApp.vault.create.mock.calls.map((c) => c[0]);
       expect(createCalls).toContain(expectedPath);
     });
@@ -276,7 +276,7 @@ describe('ContestFinalizer', () => {
 
       // Find the summary note content
       const summaryContent = mockApp._files.get(result)!;
-      expect(summaryContent).toMatch(/\*\*\(aborted at \d{2}:\d{2} remaining\)\*\*/);
+      expect(summaryContent).toMatch(/\*\*（已放弃，剩余 \d{2}:\d{2}）\*\*/);
     });
 
     it('validates contest slug (T-10-10)', async () => {
@@ -300,7 +300,7 @@ describe('ContestFinalizer', () => {
         settings: mockSettings,
       });
 
-      expect(result).toBe('LeetCode/Contests/2023-11-14-weekly-contest-400.md');
+      expect(result).toBe(`LeetCode/contests/${new Date(session.startedAt).getFullYear()}-${String(new Date(session.startedAt).getMonth() + 1).padStart(2, '0')}-${String(new Date(session.startedAt).getDate()).padStart(2, '0')}-weekly-contest-400.md`);
     });
   });
 
@@ -315,7 +315,7 @@ describe('ContestFinalizer', () => {
     it('appends ## Code when missing', () => {
       const body = '## Problem\nHello\n\n## Notes\n';
       const result = rewriteCodeSection(body, 'new code', 'python');
-      expect(result).toContain('## Code');
+      expect(result).toContain('## 代码');
       expect(result).toContain('```leetcode-solve\nnew code\n```');
     });
   });

@@ -50,15 +50,15 @@ describe('tryCaptureCookies (issue #16, AUTH-02, AUTH-06)', () => {
 
   it('calls cookies.get with { url } not { domain } — issue #16 regression', async () => {
     const handle = fakeCookies(async () => [
-      { name: 'LEETCODE_SESSION', value: 'S', domain: '.leetcode.com' },
-      { name: 'csrftoken', value: 'C', domain: '.leetcode.com' },
+      { name: 'LEETCODE_SESSION', value: 'S', domain: '.leetcode.cn' },
+      { name: 'csrftoken', value: 'C', domain: '.leetcode.cn' },
     ]);
 
     const result = await tryCaptureCookies(handle.api);
 
     expect(handle.calls).toHaveLength(1);
     const filter = handle.calls[0];
-    expect(filter).toEqual({ url: 'https://leetcode.com/' });
+    expect(filter).toEqual({ url: 'https://leetcode.cn/' });
     // Explicit guard against regression — if someone re-adds a domain field
     // next to url in a future "helpful" PR, this assertion catches it.
     expect(filter?.domain).toBeUndefined();
@@ -67,11 +67,11 @@ describe('tryCaptureCookies (issue #16, AUTH-02, AUTH-06)', () => {
 
   it('captures host-only csrftoken (no Domain attribute) — the actual issue #16 scenario', async () => {
     // LC sometimes returns csrftoken as a host-only cookie (no domain field /
-    // no leading dot). With { domain: '.leetcode.com' }, Electron omitted it.
-    // With { url: 'https://leetcode.com/' }, Electron returns it because it
+    // no leading dot). With { domain: '.leetcode.cn' }, Electron omitted it.
+    // With { url: 'https://leetcode.cn/' }, Electron returns it because it
     // would be sent on a request to that origin.
     const handle = fakeCookies(async () => [
-      { name: 'LEETCODE_SESSION', value: 'SessionVal', domain: '.leetcode.com' },
+      { name: 'LEETCODE_SESSION', value: 'SessionVal', domain: '.leetcode.cn' },
       // Host-only — no domain field.
       { name: 'csrftoken', value: 'CsrfHostOnly' },
     ]);
@@ -86,7 +86,7 @@ describe('tryCaptureCookies (issue #16, AUTH-02, AUTH-06)', () => {
 
   it('returns null when csrftoken missing', async () => {
     const handle = fakeCookies(async () => [
-      { name: 'LEETCODE_SESSION', value: 'S', domain: '.leetcode.com' },
+      { name: 'LEETCODE_SESSION', value: 'S', domain: '.leetcode.cn' },
     ]);
 
     const result = await tryCaptureCookies(handle.api);

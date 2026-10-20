@@ -225,7 +225,7 @@ describe('Phase 08.1 AIDisclosureModal — non-Bedrock providers unchanged (no r
     expect(firstP?.textContent).toContain('https://api.openai.com/v1');
   });
 
-  it("Custom with empty baseUrl falls back to '(no base URL configured yet)'", async () => {
+  it("Custom with empty baseUrl falls back to '（尚未配置服务地址）'", async () => {
     const { AIDisclosureModal } = await import('../../src/ai/disclosure');
     const modal = new AIDisclosureModal(
       {} as never,
@@ -237,7 +237,7 @@ describe('Phase 08.1 AIDisclosureModal — non-Bedrock providers unchanged (no r
     modal.onOpen();
     const firstP = modal.contentEl.querySelector('p');
     expect(firstP?.textContent).toBe(
-      'Active provider: Custom (OpenAI-compatible) — (no base URL configured yet)',
+      '当前服务提供商：自定义（OpenAI 兼容） — （尚未配置服务地址）',
     );
   });
 });

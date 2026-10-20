@@ -18,13 +18,13 @@ import { resolve } from 'node:path';
 const SRC_PATH = resolve(__dirname, '../../src/main.ts');
 const SRC = readFileSync(SRC_PATH, 'utf8');
 
-describe('Open in preview palette command ID hygiene (FOUND-03)', () => {
+describe("预览当前题目 palette command ID hygiene (FOUND-03)", () => {
   it("registers a command with id: 'open-in-preview'", () => {
     expect(SRC).toMatch(/id:\s*['"]open-in-preview['"]/);
   });
 
-  it("registers a command with name: 'Open in preview'", () => {
-    expect(SRC).toMatch(/name:\s*['"]Open in preview['"]/);
+  it("registers a command with name: '预览当前题目'", () => {
+    expect(SRC).toMatch(/name:\s*['"]预览当前题目['"]/);
   });
 
   it("does NOT prefix the command id with 'obsidian-leetcode:'", () => {
@@ -50,7 +50,7 @@ describe('Open in preview palette command ID hygiene (FOUND-03)', () => {
     }
   });
 
-  it("'Open in preview' command's editorCheckCallback gates on isValidSlug(fm['lc-slug'])", () => {
+  it("'预览当前题目' command's editorCheckCallback gates on isValidSlug(fm['lc-slug'])", () => {
     // Window the source around the open-in-preview block and assert the
     // gate uses the existing isValidSlug helper. The window must include
     // `fm` access + isValidSlug.
@@ -62,7 +62,7 @@ describe('Open in preview palette command ID hygiene (FOUND-03)', () => {
     expect(windowMatch?.[0]).toMatch(/lc-slug/);
   });
 
-  it("'Open in preview' command action calls routeProblemClick with intent='preview' and force:true", () => {
+  it("'预览当前题目' command action calls routeProblemClick with intent='preview' and force:true", () => {
     const windowMatch = SRC.match(
       /id:\s*['"]open-in-preview['"][\s\S]{0,1500}/,
     );

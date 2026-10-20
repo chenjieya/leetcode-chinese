@@ -1,3 +1,4 @@
+import { isSectionBoundary, normalizeHeadingLine, sectionHeadingFor } from '../notes/noteHeadings';
 // src/graph/mergeTechniquesSection.ts
 //
 // Phase 4 Plan 02 — pure union-merge transform for the ## Techniques region
@@ -38,12 +39,12 @@ import {
 } from '../notes/NoteTemplate';
 // Pure, zero-dependency import — keeps this module's purity contract (no
 // obsidian leak). Do NOT import from ClusterHubWriter (it depends on obsidian).
+import { normalizePatternName, patternDisplayName } from './patternTaxonomy';
 import { sanitizeHubFilename } from './hubFilename';
 
 // Re-export heading constant for downstream consumers (ClusterHubWriter, etc.)
 export { TECHNIQUES_HEADING_LINE } from '../notes/NoteTemplate';
 
-const H2 = /^## /;
 /** Tolerates `-`, `*`, `+` bullets (D-13 format tolerance, RESEARCH §Pattern 3). */
 const LINK_RE = /^([-*+])\s+\[\[([^\]]+)\]\]\s*$/;
 
@@ -97,7 +98,7 @@ export function mergeTechniquesSection(
     }
   }
 
-  const rendered = renderSection(merged);
+  const rendered = renderSection(merged, sectionHeadingFor(body, TECHNIQUES_HEADING_LINE));
   return spliceRegion(lines, start, end, rendered);
 }
 
@@ -105,14 +106,14 @@ export function mergeTechniquesSection(
 
 function findSectionStart(lines: string[]): number {
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === TECHNIQUES_HEADING_LINE) return i;
+    if (normalizeHeadingLine(lines[i]) === TECHNIQUES_HEADING_LINE) return i;
   }
   return -1;
 }
 
 function findSectionEnd(lines: string[], start: number): number {
   for (let i = start + 1; i < lines.length; i++) {
-    if (H2.test(lines[i] ?? '')) return i;
+    if (isSectionBoundary(lines[i] ?? '', lines[start]!)) return i;
   }
   return lines.length;
 }
@@ -148,7 +149,7 @@ function parseItems(lines: string[], from: number, to: number): Item[] {
       const inner = m[2] ?? '';
       const pipe = inner.indexOf('|');
       const display = pipe >= 0 ? inner.slice(pipe + 1) : inner;
-      items.push({ type: 'link', target: display, bullet: m[1] ?? '-' });
+      items.push({ type: 'link', target: patternDisplayName(normalizePatternName(display)) === display ? normalizePatternName(display) : display, bullet: m[1] ?? '-' });
     } else {
       buf.push(line);
     }
@@ -164,8 +165,8 @@ function parseItems(lines: string[], from: number, to: number): Item[] {
  *   <blank>
  *   <items joined by '\n'; free items get blank-line separators around them>
  */
-function renderSection(items: Item[]): string {
-  const parts: string[] = [TECHNIQUES_HEADING_LINE, ''];
+function renderSection(items: Item[], heading: string): string {
+  const parts: string[] = [heading, ''];
   let lastKind: 'link' | 'free' | null = null;
   for (const item of items) {
     // Separator: between link-run and free-block insert a blank line; between
@@ -182,7 +183,8 @@ function renderSection(items: Item[]): string {
       // non-slash assertion. parseItems strips the alias back to the display
       // name, so this is a parse→render fixed point.
       const fn = sanitizeHubFilename(item.target);
-      const link = fn === item.target ? `[[${item.target}]]` : `[[${fn}|${item.target}]]`;
+      const label = patternDisplayName(item.target);
+      const link = fn === label ? `[[${fn}]]` : `[[${fn}|${label}]]`;
       parts.push(`${item.bullet} ${link}`);
     } else {
       parts.push(item.content);
@@ -223,6 +225,7 @@ function appendNewTechniquesSection(
 
   const rendered = renderSection(
     topicTags.map((t) => ({ type: 'link', target: t.name, bullet: '-' })),
+    sectionHeadingFor(body, TECHNIQUES_HEADING_LINE),
   );
 
   // D-14: insertion point
@@ -230,11 +233,11 @@ function appendNewTechniquesSection(
 
   // Prefer: end of Notes region.
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === NOTES_HEADING_LINE) {
+    if (normalizeHeadingLine(lines[i]) === NOTES_HEADING_LINE) {
       // Walk forward for the next H2 → that's our insertion point.
       let next = lines.length;
       for (let j = i + 1; j < lines.length; j++) {
-        if (H2.test(lines[j] ?? '')) {
+        if (isSectionBoundary(lines[j] ?? '', lines[i]!)) {
           next = j;
           break;
         }
@@ -247,7 +250,7 @@ function appendNewTechniquesSection(
   // Fallback 1: before ## Custom Tests.
   if (insertionIndex < 0) {
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i] === CUSTOM_TESTS_HEADING_LINE) {
+      if (normalizeHeadingLine(lines[i]) === CUSTOM_TESTS_HEADING_LINE) {
         insertionIndex = i;
         break;
       }
@@ -306,6 +309,6 @@ export function mergeTechniquesSectionAI(body: string, patternName: string | str
     ...freeItems,
   ];
 
-  const rendered = renderSection(merged);
+  const rendered = renderSection(merged, sectionHeadingFor(body, TECHNIQUES_HEADING_LINE));
   return spliceRegion(lines, start, end, rendered);
 }

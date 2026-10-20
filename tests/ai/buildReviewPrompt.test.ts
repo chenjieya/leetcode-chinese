@@ -21,9 +21,9 @@ describe('Phase 09 Plan 01 — buildReviewPrompt pure helper', () => {
       code: 'def twoSum(nums, target):\n    return []',
       language: 'python3',
     });
-    expect(out).toContain('### Approach');
-    expect(out).toContain('### Efficiency');
-    expect(out).toContain('### Code Style');
+    expect(out).toContain('### 解题思路');
+    expect(out).toContain('### 复杂度分析');
+    expect(out).toContain('### 代码建议');
     // Exactly 3 H3 headings
     const h3Matches = out.match(/^### /gm);
     expect(h3Matches).toHaveLength(3);
@@ -96,6 +96,6 @@ describe('Phase 09 Plan 01 — buildReviewPrompt pure helper', () => {
       language: 'python3',
     });
     expect(out).toContain('```python3');
-    expect(out).toContain('### Approach');
+    expect(out).toContain('### 解题思路');
   });
 });

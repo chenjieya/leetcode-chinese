@@ -121,7 +121,7 @@ describe('LeetCodePlugin.clearActiveAIKey — Phase 07 Plan 06 Task 1', () => {
     await callClearActiveAIKey(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'No active AI provider — nothing to clear.',
+      text: '未启用 AI 服务，无需清除。',
       duration: 3000,
     });
     expect(fake.__setSpy).not.toHaveBeenCalled();
@@ -157,7 +157,7 @@ describe('LeetCodePlugin.clearActiveAIKey — Phase 07 Plan 06 Task 1', () => {
     await callClearActiveAIKey(fake);
     expect(noticeCalls).toHaveLength(1);
     expect(noticeCalls[0]).toEqual({
-      text: 'Cleared AI key for Anthropic',
+      text: '已清除 Anthropic 的 AI 密钥。',
       duration: 3000,
     });
   });
@@ -168,16 +168,16 @@ describe('LeetCodePlugin.clearActiveAIKey — Phase 07 Plan 06 Task 1', () => {
       cfgs: { openai: makeCfg({ apiKey: 'sk-test' }) },
     });
     await callClearActiveAIKey(fake);
-    expect(noticeCalls[0]?.text).toBe('Cleared AI key for OpenAI');
+    expect(noticeCalls[0]?.text).toBe('已清除 OpenAI 的 AI 密钥。');
   });
 
-  it('success Notice for Custom uses prettyName "Custom (OpenAI-compatible)"', async () => {
+  it("success Notice for Custom uses prettyName \"Custom (OpenAI-compatible)\"", async () => {
     const fake = makeFake({
       active: 'custom',
       cfgs: { custom: makeCfg({ apiKey: 'sk-custom' }) },
     });
     await callClearActiveAIKey(fake);
-    expect(noticeCalls[0]?.text).toBe('Cleared AI key for Custom (OpenAI-compatible)');
+    expect(noticeCalls[0]?.text).toBe("已清除 自定义（OpenAI 兼容） 的 AI 密钥。");
   });
 
   it('does NOT clear other providers when active is anthropic', async () => {
@@ -232,7 +232,7 @@ describe('LeetCodePlugin.clearActiveAIKey — Phase 07 Plan 06 Task 1', () => {
     const mainSrc = readFileSync(path.resolve(__dirname, '../../src/main.ts'), 'utf8');
     // Cluster: id, name, callback delegation must all be present.
     expect(mainSrc).toContain("id: 'clear-ai-key'");
-    expect(mainSrc).toContain("name: 'Clear AI key'");
+    expect(mainSrc).toContain("name: '清除 AI 密钥'");
     // Callback must call clearActiveAIKey() on `this`.
     expect(mainSrc).toMatch(/callback:\s*\(\)\s*=>\s*\{\s*void\s+this\.clearActiveAIKey\(\);?\s*\}/);
   });

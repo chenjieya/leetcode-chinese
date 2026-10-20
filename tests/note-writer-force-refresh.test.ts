@@ -103,7 +103,7 @@ describe('NoteWriter.forceRefresh (GAP-11)', () => {
 
     // No error Notice fired.
     const errorNotices = noticeSpy.mock.calls.filter(([msg]) =>
-      /couldn.?t|no note|not found|expired/i.test(String(msg)),
+      /无法|未找到|已过期/.test(String(msg)),
     );
     expect(errorNotices).toHaveLength(0);
   });
@@ -123,7 +123,7 @@ describe('NoteWriter.forceRefresh (GAP-11)', () => {
     // No network call attempted.
     expect(client.getProblemDetail).not.toHaveBeenCalled();
     // User-facing Notice fired.
-    const matched = noticeSpy.mock.calls.find(([msg]) => /no note for problem/i.test(String(msg)));
+    const matched = noticeSpy.mock.calls.find(([msg]) => /未找到题目.*的笔记/.test(String(msg)));
     expect(matched).toBeDefined();
     // No vault writes.
     expect(m.spies.process).not.toHaveBeenCalled();
@@ -142,7 +142,7 @@ describe('NoteWriter.forceRefresh (GAP-11)', () => {
     await writer.forceRefresh('two-sum');
 
     expect(client.getProblemDetail).not.toHaveBeenCalled();
-    const matched = noticeSpy.mock.calls.find(([msg]) => /no note for problem/i.test(String(msg)));
+    const matched = noticeSpy.mock.calls.find(([msg]) => /未找到题目.*的笔记/.test(String(msg)));
     expect(matched).toBeDefined();
   });
 
@@ -159,7 +159,7 @@ describe('NoteWriter.forceRefresh (GAP-11)', () => {
     // Network attempt was made and failed.
     expect(client.getProblemDetail).toHaveBeenCalledWith('two-sum');
     // Notice copy matches the D-13-style "Couldn't refresh {title}" pattern.
-    const matched = noticeSpy.mock.calls.find(([msg]) => /couldn.?t refresh/i.test(String(msg)));
+    const matched = noticeSpy.mock.calls.find(([msg]) => /无法刷新/.test(String(msg)));
     expect(matched).toBeDefined();
     // The title (not the slug) should appear in the Notice since cache has it.
     expect(String(matched?.[0])).toContain('Two Sum');
@@ -182,11 +182,11 @@ describe('NoteWriter.forceRefresh (GAP-11)', () => {
     await writer.forceRefresh('two-sum');
 
     const matched = noticeSpy.mock.calls.find(([msg]) => {
-      if (typeof msg === 'string') return /session expired/i.test(msg);
+      if (typeof msg === 'string') return /登录已过期/.test(msg);
       if (msg instanceof DocumentFragment) {
         const host = document.createElement('div');
         host.appendChild(msg.cloneNode(true));
-        return /session expired/i.test(host.textContent ?? '');
+        return /登录已过期/.test(host.textContent ?? '');
       }
       return false;
     });
@@ -203,7 +203,7 @@ describe('NoteWriter.forceRefresh (GAP-11)', () => {
     const writer = new NoteWriter(m.app as never, client as never, settings as never);
     await writer.forceRefresh('two-sum');
 
-    const matched = noticeSpy.mock.calls.find(([msg]) => /not found/i.test(String(msg)));
+    const matched = noticeSpy.mock.calls.find(([msg]) => /未找到力扣题目/.test(String(msg)));
     expect(matched).toBeDefined();
     expect(m.spies.process).not.toHaveBeenCalled();
   });

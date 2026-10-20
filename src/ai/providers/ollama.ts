@@ -41,20 +41,20 @@ export async function probeOllama(
   // whitespace inputs are also rejected — symmetric with main.ts
   // testActiveAIConnection and probeCustom.
   if (!cfg.baseUrl?.trim()) {
-    return { ok: false, errorMessage: 'Base URL is required for Ollama provider.' };
+    return { ok: false, errorMessage: '请填写 Ollama 服务地址。' };
   }
   try {
     const baseHost = cfg.baseUrl.replace(/\/v1\/?$/, '');
     const url = `${baseHost}/api/tags`;
     const res = await fetcher(url, { method: 'GET' });
     if (!res.ok) {
-      return { ok: false, errorMessage: `Ollama not reachable (HTTP ${res.status})` };
+      return { ok: false, errorMessage: `无法连接 Ollama（HTTP ${res.status}）` };
     }
     const json = (await res.json()) as { models?: unknown };
     const modelCount = Array.isArray(json.models) ? json.models.length : 0;
     return { ok: true, modelCount };
   } catch {
-    return { ok: false, errorMessage: 'Ollama not reachable on this host' };
+    return { ok: false, errorMessage: '无法连接此主机上的 Ollama 服务' };
   }
 }
 

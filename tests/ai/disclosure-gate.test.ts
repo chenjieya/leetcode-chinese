@@ -304,7 +304,7 @@ describe('Phase 07 Plan 05 — AIClient.invoke disclosure gate', () => {
     const settings = makeMockSettings({ active: null });
     const requireDisclosure = vi.fn(async () => true);
     const client = new AIClient(settings as never, requireDisclosure);
-    await expect(client.invoke({} as never)).rejects.toThrow(/No AI provider configured/);
+    await expect(client.invoke({} as never)).rejects.toThrow(/尚未配置 AI 服务/);
     expect(requireDisclosure).not.toHaveBeenCalled();
     expect(invokeMock).not.toHaveBeenCalled();
   });

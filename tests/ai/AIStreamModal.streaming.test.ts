@@ -3,7 +3,7 @@
 // Phase 08 Plan 03 Task 2 — AIStreamModal stream-path tests.
 //
 // Verifies (per 08-PLAN.md Wave 0 acceptance):
-//   - First chunk replaces the Thinking… placeholder; counter stops.
+//   - First chunk replaces the 正在思考… placeholder; counter stops.
 //   - MarkdownRenderer.render is called via flushRender after the debounce window.
 //   - Stream-end fires the cost-ledger update with a non-zero value when
 //     usage is exposed.
@@ -24,7 +24,7 @@ describe('Phase 08 Plan 03 — AIStreamModal stream path', () => {
     vi.useRealTimers();
   });
 
-  it('first chunk replaces Thinking… placeholder; counter stops', async () => {
+  it('first chunk replaces 正在思考… placeholder; counter stops', async () => {
     const { AIStreamModal } = await import('../../src/ai/AIStreamModal');
     const { makeStreamHandle, makeAIClient } = await import('./helpers/aiStreamModal-mocks');
 
@@ -46,7 +46,7 @@ describe('Phase 08 Plan 03 — AIStreamModal stream path', () => {
     });
     const onOpenP = modal.onOpen();
 
-    // Pre-first-chunk: body shows Thinking… placeholder.
+    // Pre-first-chunk: body shows 正在思考… placeholder.
     expect(modal.contentEl.querySelector('.leetcode-ai-stream-thinking')).not.toBeNull();
 
     // Push the first chunk and let the iterator deliver it.
@@ -55,7 +55,7 @@ describe('Phase 08 Plan 03 — AIStreamModal stream path', () => {
     await Promise.resolve(); // allow microtask queue to drain
     await Promise.resolve();
 
-    // First-chunk handler: Thinking… placeholder is removed.
+    // First-chunk handler: 正在思考… placeholder is removed.
     expect(modal.contentEl.querySelector('.leetcode-ai-stream-thinking')).toBeNull();
 
     // End the stream.

@@ -75,13 +75,13 @@ describe('ProblemBrowserView contest mode', () => {
 
     // First button: Problems (active)
     expect(mockToggle.createEl).toHaveBeenCalledWith('button', expect.objectContaining({
-      text: 'Problems',
+      text: "题库",
       attr: expect.objectContaining({ role: 'tab', 'aria-selected': 'true' }),
     }));
 
     // Second button: Contests (inactive)
     expect(mockToggle.createEl).toHaveBeenCalledWith('button', expect.objectContaining({
-      text: 'Contests',
+      text: "竞赛",
       attr: expect.objectContaining({ role: 'tab', 'aria-selected': 'false' }),
     }));
   });

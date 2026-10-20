@@ -25,11 +25,11 @@ describe('Phase 09 Plan 01 — mergeAIReviewSection vault-write transform', () =
       '',
     ].join('\n');
     const result = mergeAIReviewSection(body, 'Great approach using hash map.');
-    expect(result).toContain('## AI Review');
+    expect(result).toContain('## AI 复盘');
     expect(result).toContain('Great approach using hash map.');
     // ## AI Review should come after ## Notes content
     const notesIdx = result.indexOf('## Notes');
-    const reviewIdx = result.indexOf('## AI Review');
+    const reviewIdx = result.indexOf('## AI 复盘');
     expect(reviewIdx).toBeGreaterThan(notesIdx);
   });
 
@@ -44,10 +44,10 @@ describe('Phase 09 Plan 01 — mergeAIReviewSection vault-write transform', () =
       '```',
     ].join('\n');
     const result = mergeAIReviewSection(body, 'Nice solution.');
-    expect(result).toContain('## AI Review');
+    expect(result).toContain('## AI 复盘');
     expect(result).toContain('Nice solution.');
     // Review section should be at the end
-    const reviewIdx = result.indexOf('## AI Review');
+    const reviewIdx = result.indexOf('## AI 复盘');
     expect(reviewIdx).toBeGreaterThan(result.indexOf('## Code'));
   });
 
@@ -122,7 +122,7 @@ describe('Phase 09 Plan 01 — mergeAIReviewSection vault-write transform', () =
     ].join('\n');
     expect(() => mergeAIReviewSection(body, '')).not.toThrow();
     const result = mergeAIReviewSection(body, '');
-    expect(result).toContain('## AI Review');
+    expect(result).toContain('## AI 复盘');
   });
 
   it('AI_REVIEW_HEADING_LINE constant is exported and equals "## AI Review"', () => {

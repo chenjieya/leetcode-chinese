@@ -70,6 +70,7 @@ export function buildKgPrompt(args: BuildKgPromptArgs): string {
     '}',
     '',
     'Constraints:',
+    '- 请用简体中文填写 variants 和 lookAhead 中的 reason，说明具体的结构关联或进阶价值。JSON 字段名、题目 slug 和预置 pattern 名称保持规定格式。',
     '- "pattern": the single most important technique. Always required.',
     '- "patterns": array with 1 or 2 entries. Use 2 ONLY when two distinct techniques are genuinely essential. Most solutions should have just 1. Omit this field entirely if only 1 pattern.',
     '- "variants": 0-2 problems that use a DIFFERENT primary pattern but share structural similarity (cross-cluster links). Omit if none.',

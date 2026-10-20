@@ -146,7 +146,7 @@ export function prettyName(p: AIProvider): string {
     case 'openai': return 'OpenAI';
     case 'openrouter': return 'OpenRouter';
     case 'ollama': return 'Ollama';
-    case 'custom': return 'Custom (OpenAI-compatible)';
+    case 'custom': return '自定义（OpenAI 兼容）';
     case 'bedrock': return 'AWS Bedrock';  // Phase 08.1 Plan 02
   }
 }

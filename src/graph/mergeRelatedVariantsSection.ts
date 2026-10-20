@@ -1,3 +1,4 @@
+import { isSectionBoundary, normalizeHeadingLine, sectionHeadingFor } from '../notes/noteHeadings';
 // src/graph/mergeRelatedVariantsSection.ts
 //
 // Phase 11 Plan 01 Task 2 — Idempotent vault-write transform for ## Related Variants.
@@ -39,6 +40,7 @@ export function mergeRelatedVariantsSection(
   variants: Array<{ slug: string; reason: string; linkTarget?: string; title?: string }>,
 ): string {
   const lines = body.split('\n');
+  const heading = sectionHeadingFor(body, RELATED_VARIANTS_HEADING);
   const headingIdx = findExactHeading(lines, RELATED_VARIANTS_HEADING);
   const content = variants
     .map((v) => {
@@ -47,7 +49,7 @@ export function mergeRelatedVariantsSection(
         : `[[${v.slug}]]`;
       return `- ${link} — ${v.reason}`;
     })
-    .join('\n');
+    .join('\n') || '暂无通过题库校验的关联题目。';
 
   if (headingIdx >= 0) {
     // Replacement path: discard from heading to next H2 (bounded, not EOF).
@@ -55,9 +57,9 @@ export function mergeRelatedVariantsSection(
     const before = lines.slice(0, headingIdx).join('\n').replace(/\n+$/, '');
     const after = lines.slice(end).join('\n').replace(/^\n+/, '');
     if (after.length > 0) {
-      return before + '\n\n' + RELATED_VARIANTS_HEADING + '\n\n' + content + '\n\n' + after;
+      return before + '\n\n' + heading + '\n\n' + content + '\n\n' + after;
     }
-    return before + '\n\n' + RELATED_VARIANTS_HEADING + '\n\n' + content + '\n';
+    return before + '\n\n' + heading + '\n\n' + content + '\n';
   }
 
   // First write: insert after ## Techniques (canonical anchor per D-15).
@@ -67,9 +69,9 @@ export function mergeRelatedVariantsSection(
     const before = lines.slice(0, techEnd).join('\n').replace(/\n+$/, '');
     const after = lines.slice(techEnd).join('\n').replace(/^\n+/, '');
     if (after.length > 0) {
-      return before + '\n\n' + RELATED_VARIANTS_HEADING + '\n\n' + content + '\n\n' + after;
+      return before + '\n\n' + heading + '\n\n' + content + '\n\n' + after;
     }
-    return before + '\n\n' + RELATED_VARIANTS_HEADING + '\n\n' + content + '\n';
+    return before + '\n\n' + heading + '\n\n' + content + '\n';
   }
 
   // Fallback: insert before ## AI Review if present.
@@ -77,12 +79,12 @@ export function mergeRelatedVariantsSection(
   if (aiIdx >= 0) {
     const before = lines.slice(0, aiIdx).join('\n').replace(/\n+$/, '');
     const after = lines.slice(aiIdx).join('\n').replace(/^\n+/, '');
-    return before + '\n\n' + RELATED_VARIANTS_HEADING + '\n\n' + content + '\n\n' + after;
+    return before + '\n\n' + heading + '\n\n' + content + '\n\n' + after;
   }
 
   // Final fallback: append at EOF.
   const trimmedBody = body.replace(/\n+$/, '');
-  return trimmedBody + '\n\n' + RELATED_VARIANTS_HEADING + '\n\n' + content + '\n';
+  return trimmedBody + '\n\n' + heading + '\n\n' + content + '\n';
 }
 
 /**
@@ -91,7 +93,7 @@ export function mergeRelatedVariantsSection(
  */
 function findExactHeading(lines: string[], heading: string): number {
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === heading) return i;
+    if (normalizeHeadingLine(lines[i]) === heading) return i;
   }
   return -1;
 }
@@ -103,7 +105,7 @@ function findExactHeading(lines: string[], heading: string): number {
  */
 function findNextH2(lines: string[], start: number): number {
   for (let i = start; i < lines.length; i++) {
-    if (lines[i]!.startsWith('## ')) return i;
+    if (isSectionBoundary(lines[i]!, lines[start - 1]!)) return i;
   }
   return lines.length;
 }

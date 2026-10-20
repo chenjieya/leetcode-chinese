@@ -74,7 +74,7 @@ export class ContestSolveView extends ItemView {
     if (!session) return 'Contest';
     const problem = session.problems[this.problemIdx];
     if (!problem) return 'Contest';
-    return `Contest: ${String(this.problemIdx + 1)}. ${problem.title}`;
+    return `竞赛：${String(this.problemIdx + 1)}. ${problem.title}`;
   }
 
   async onOpen(): Promise<void> {
@@ -133,13 +133,13 @@ export class ContestSolveView extends ItemView {
 
     const session = this.plugin.contestSessionManager.getSession();
     if (!session) {
-      root.createEl('p', { text: 'No active contest session.' });
+      root.createEl('p', { text: '当前没有正在进行的竞赛。' });
       return;
     }
 
     const problem = session.problems[this.problemIdx];
     if (!problem) {
-      root.createEl('p', { text: 'Problem not found in session.' });
+      root.createEl('p', { text: '当前竞赛中未找到这道题。' });
       return;
     }
 
@@ -153,14 +153,14 @@ export class ContestSolveView extends ItemView {
       text: `${String(this.problemIdx + 1)}. ${problem.title}`,
     });
 
-    const diffText = problem.difficulty === 1 ? 'Easy'
-      : problem.difficulty === 2 ? 'Medium' : 'Hard';
-    const diffClass = `lc-diff lc-diff--${diffText.toLowerCase()}`;
+    const diffText = problem.difficulty === 1 ? '简单'
+      : problem.difficulty === 2 ? '中等' : '困难';
+    const diffClass = `lc-diff lc-diff--${problem.difficulty === 1 ? 'easy' : problem.difficulty === 2 ? 'medium' : 'hard'}`;
     titleRow.createSpan({ cls: diffClass, text: diffText });
 
     header.createSpan({
       cls: 'leetcode-contest-solve__position',
-      text: `Problem ${String(this.problemIdx + 1)}/${String(session.problems.length)}`,
+      text: `题目 ${String(this.problemIdx + 1)}/${String(session.problems.length)}`,
     });
 
     // ── Problem description ──
@@ -171,7 +171,7 @@ export class ContestSolveView extends ItemView {
     } else {
       root.createEl('p', {
         cls: 'leetcode-contest-solve__no-detail',
-        text: 'Problem content not cached. Try restarting the contest.',
+        text: '题面尚未缓存，请重新打开竞赛。',
       });
     }
 
@@ -193,7 +193,7 @@ export class ContestSolveView extends ItemView {
     codeArea.value = currentCode;
     codeArea.setAttribute('spellcheck', 'false');
     codeArea.setAttribute('autocomplete', 'off');
-    codeArea.setAttribute('aria-label', 'Solution code editor');
+    codeArea.setAttribute('aria-label', '解答代码编辑器');
     codeArea.setAttribute('wrap', 'off');
 
     // Click highlight → show textarea, hide highlight
@@ -223,7 +223,7 @@ export class ContestSolveView extends ItemView {
     const langSelect = actionsRow.createEl('select', {
       cls: 'leetcode-contest-solve__lang-select',
     });
-    langSelect.setAttribute('aria-label', 'Language selector');
+    langSelect.setAttribute('aria-label', '编程语言选择');
     for (const slug of LC_CHEVRON_LANG_ORDER) {
       const label = LC_LANG_DISPLAY_LABELS[slug] ?? slug;
       const opt = langSelect.createEl('option', { text: label });
@@ -238,7 +238,7 @@ export class ContestSolveView extends ItemView {
     // Run button
     const runBtn = actionsRow.createEl('button', {
       cls: 'leetcode-contest-solve__run-btn',
-      text: 'Run',
+      text: '运行',
     });
     runBtn.addEventListener('click', () => {
       void this.handleRun();
@@ -247,7 +247,7 @@ export class ContestSolveView extends ItemView {
     // Submit button
     const submitBtn = actionsRow.createEl('button', {
       cls: 'leetcode-contest-solve__submit-btn mod-cta',
-      text: 'Submit',
+      text: '提交',
     });
     submitBtn.addEventListener('click', () => {
       void this.handleSubmit();
@@ -302,7 +302,7 @@ export class ContestSolveView extends ItemView {
     if (!problem) return;
     const detail = this.plugin.lcSettings.getProblemDetail(problem.slug);
     if (!detail) {
-      new Notice('Problem detail not cached. Cannot run.', 4000);
+      new Notice('题面尚未缓存，暂时无法运行。', 4000);
       return;
     }
 
@@ -362,7 +362,7 @@ export class ContestSolveView extends ItemView {
       }
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
-      new Notice(`Run failed: ${(err as Error).message?.slice(0, 100) ?? 'Unknown error'}`, 6000);
+      new Notice(`运行失败：${(err as Error).message?.slice(0, 100) ?? '未知错误'}`, 6000);
     }
   }
 
@@ -379,7 +379,7 @@ export class ContestSolveView extends ItemView {
     if (!problem) return;
     const detail = this.plugin.lcSettings.getProblemDetail(problem.slug);
     if (!detail) {
-      new Notice('Problem detail not cached. Cannot submit.', 4000);
+      new Notice('题面尚未缓存，暂时无法提交。', 4000);
       return;
     }
 
@@ -404,7 +404,7 @@ export class ContestSolveView extends ItemView {
     try {
       // POST /problems/{slug}/submit/
       const submitRes = await throttledRequestUrl({
-        url: `https://leetcode.com/problems/${problem.slug}/submit/`,
+        url: `https://leetcode.cn/problems/${problem.slug}/submit/`,
         method: 'POST',
         headers: authHeaders(problem.slug, cookies),
         body: JSON.stringify({
@@ -422,14 +422,14 @@ export class ContestSolveView extends ItemView {
         return;
       }
       if (submitRes.status >= 400) {
-        new Notice(`Submit failed: HTTP ${String(submitRes.status)}`, 6000);
+        new Notice(`提交失败：HTTP ${String(submitRes.status)}`, 6000);
         modal.close();
         return;
       }
 
       const data = submitRes.json as { submission_id?: string | number };
       if (data.submission_id == null) {
-        new Notice('Submit failed: no submission ID returned.', 6000);
+        new Notice('提交失败：服务端未返回提交编号。', 6000);
         modal.close();
         return;
       }
@@ -464,7 +464,7 @@ export class ContestSolveView extends ItemView {
       }
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
-      new Notice(`Submit failed: ${(err as Error).message?.slice(0, 100) ?? 'Unknown error'}`, 6000);
+      new Notice(`提交失败：${(err as Error).message?.slice(0, 100) ?? '未知错误'}`, 6000);
     }
   }
 }

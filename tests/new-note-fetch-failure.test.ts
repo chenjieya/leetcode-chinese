@@ -35,7 +35,7 @@ describe('NoteWriter new-note fetch failure (D-13)', () => {
     const writer = new NoteWriter(m.app as never, client as never, makeEmptySettings() as never);
     await writer.openProblem('two-sum');
     // D-13: a Notice containing "Couldn't fetch" (curly or straight apostrophe — either is fine)
-    const matched = noticeSpy.mock.calls.find(([msg]) => /couldn.?t fetch/i.test(String(msg)));
+    const matched = noticeSpy.mock.calls.find(([msg]) => /无法获取/.test(String(msg)));
     expect(matched).toBeDefined();
     // No partial file created.
     expect(m.spies.create).not.toHaveBeenCalled();
@@ -47,7 +47,7 @@ describe('NoteWriter new-note fetch failure (D-13)', () => {
     const client = makeMockLeetCodeClient({ detail: null });
     const writer = new NoteWriter(m.app as never, client as never, makeEmptySettings() as never);
     await writer.openProblem('unknown-slug');
-    const matched = noticeSpy.mock.calls.find(([msg]) => /not found|couldn.?t fetch/i.test(String(msg)));
+    const matched = noticeSpy.mock.calls.find(([msg]) => /未找到力扣题目|无法获取/.test(String(msg)));
     expect(matched).toBeDefined();
     expect(m.spies.create).not.toHaveBeenCalled();
   });

@@ -64,7 +64,7 @@ describe('extractProviderError — Plan 07-04 Task 2', () => {
   });
 
   it('handles non-Error non-string inputs (object, null) -> "Unknown error"', () => {
-    expect(extractProviderError({ unknown: 'shape' })).toBe('Unknown error');
-    expect(extractProviderError(null)).toBe('Unknown error');
+    expect(extractProviderError({ unknown: 'shape' })).toBe('未知错误');
+    expect(extractProviderError(null)).toBe('未知错误');
   });
 });

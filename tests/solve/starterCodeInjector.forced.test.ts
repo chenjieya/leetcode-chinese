@@ -25,7 +25,7 @@ describe('forceInjectCodeSection — forced path (Blocker 2 fix, D-07 on-demand)
   it('falls back to injectCodeSection behavior when ## Code does not exist', () => {
     const body = '## Problem\nX\n\n## Notes\n';
     const out = forceInjectCodeSection(body, OPTS);
-    expect(out).toContain('## Code');
+    expect(out).toContain('## 代码');
     expect(out).toContain('# new');
   });
 

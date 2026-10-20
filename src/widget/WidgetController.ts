@@ -1158,10 +1158,10 @@ export class WidgetController {
 
         const cta = doc.createElement('button');
         cta.className = 'lc-takeover-cta';
-        cta.textContent = 'Click to take over';
+        cta.textContent = '点击接管编辑';
         cta.setAttribute(
           'title',
-          'This file is being edited in another pane. Click to take over and edit here.',
+          '这篇笔记正在另一个窗格中编辑。点击接管后可在此处编辑。',
         );
         overlay.appendChild(cta);
 
@@ -1307,7 +1307,7 @@ function resolveLanguageSlug(plugin: WidgetMountHost, file: TFile): string {
     }
     // Plan 19-04 — unknown lc-language → Python + Notice.
     new Notice(
-      `LeetCode widget: lc-language '${raw}' not supported; falling back to Python.`,
+      `不支持编程语言“${raw}”，已回退为 Python。`,
       5000,
     );
     return 'python';
@@ -1315,7 +1315,7 @@ function resolveLanguageSlug(plugin: WidgetMountHost, file: TFile): string {
 
   // Plan 19-04 — missing lc-language → Python + Notice.
   new Notice(
-    'LeetCode widget: lc-language frontmatter missing; falling back to python.',
+    '题目缺少 lc-language 属性，已使用 Python 作为默认语言。',
     5000,
   );
   return 'python';

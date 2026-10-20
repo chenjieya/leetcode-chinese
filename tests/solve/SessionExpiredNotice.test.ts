@@ -74,11 +74,11 @@ describe('Phase 5 SessionExpiredNotice (D-21 + CF-04)', () => {
 
     const root = notice.messageEl;
     // CF-04 copy — appears verbatim somewhere in the fragment.
-    expect(root.textContent).toContain('LeetCode session expired. Log in again.');
+    expect(root.textContent).toContain('力扣登录已过期，请重新登录。');
 
     const button = root.querySelector('button.leetcode-notice-action.mod-cta');
     expect(button).not.toBeNull();
-    expect(button?.textContent).toBe('Log in');
+    expect(button?.textContent).toBe('登录');
   });
 
   it('clicking the Log in button invokes the provided login callback', async () => {

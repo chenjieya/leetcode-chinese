@@ -39,6 +39,7 @@ export default tseslint.config(
           enforceCamelCaseLower: true,
           brands: [
             'LeetCode', 'LEETCODE_SESSION', 'csrftoken',
+            'Cookie', 'Java', 'Python', 'C++', 'JS', 'TS', 'Go',
             // Phase 11 Plan 02 AIKG-01 — 'OTHER' is the literal frontmatter
             // value persisted to lc-pattern when AI classification fails to
             // match a known taxonomy entry. The OtherPatternModal copy quotes
@@ -164,6 +165,6 @@ export default tseslint.config(
     // (`tests/manifest-version.test.ts`) and `prerelease-check.sh`
     // gate 6 for the manifest contract, so ignoring JSON for lint is safe.
     "package.json", "manifest.json", "package-lock.json", "tsconfig.json",
-    ".claude/**",
+    ".claude/**", ".tmp-*", ".tmp-*/**",
   ]),
 );

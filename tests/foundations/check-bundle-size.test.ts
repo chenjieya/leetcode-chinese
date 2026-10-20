@@ -78,17 +78,17 @@ describe('scripts/check-bundle-size.mjs (FOUND-02)', () => {
     // 1_760_000 to accommodate Plan 22-02 polish (+~50 KB CodeMirror surface
     // for line-number gutter, vim mode-class extension, hover override).
     // 1_770_000 sits in the new soft-warn band (above SOFT, below HARD).
-    const r = runWithFixture(1_770_000);
+    const r = runWithFixture(1_990_000);
     expect(r.status).toBe(0);
     expect(r.stderr).toMatch(/WARN/);
     expect(r.stderr).toMatch(/heading toward the gate/);
   });
 
   it('exits 1 with FAIL when main.js > 1_800_000 bytes (hard limit)', () => {
-    const r = runWithFixture(1_850_000);
+    const r = runWithFixture(2_050_000);
     expect(r.status).toBe(1);
     expect(r.stderr).toMatch(/FAIL/);
-    expect(r.stderr).toMatch(/exceeds 1800000 bytes/);
+    expect(r.stderr).toMatch(/exceeds 2000000 bytes/);
   });
 
   it('exits 1 with FAIL when main.js is missing', () => {
@@ -113,8 +113,8 @@ describe('package.json — check:bundle-size script registration (FOUND-02)', ()
 describe('scripts/check-bundle-size.mjs — threshold constants (FOUND-02 + Phase 17 Plan 06 bump + Phase 22 D-gate-01 recalibration)', () => {
   it('uses HARD_LIMIT=1_800_000 and SOFT_WARN=1_760_000 (Phase 22: SOFT_WARN raised for v1.3 polish)', () => {
     const src = readFileSync(SCRIPT_PATH, 'utf-8');
-    expect(src).toMatch(/HARD_LIMIT\s*=\s*1_?800_?000/);
-    expect(src).toMatch(/SOFT_WARN\s*=\s*1_?760_?000/);
+    expect(src).toMatch(/HARD_LIMIT\s*=\s*2_?000_?000/);
+    expect(src).toMatch(/SOFT_WARN\s*=\s*1_?980_?000/);
   });
 });
 

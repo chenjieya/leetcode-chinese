@@ -1,3 +1,4 @@
+import { isSectionBoundary, normalizeHeadingLine, sectionHeadingFor } from '../notes/noteHeadings';
 // src/contest/mergeAIContestAnalysisSection.ts
 // Phase 10 Plan 02 Task 2 — Idempotent vault-write transform for ## AI Analysis.
 //
@@ -39,16 +40,17 @@ const NOTES_HEADING_LINE = '## Notes';
  */
 export function mergeAIContestAnalysisSection(body: string, analysisContent: string): string {
   const lines = body.split('\n');
+  const heading = sectionHeadingFor(body, AI_ANALYSIS_HEADING_LINE);
   const headingIdx = findExactHeading(lines, AI_ANALYSIS_HEADING_LINE);
 
   if (headingIdx >= 0) {
     // Replacement path (D-21): discard from heading to next H2 or EOF, insert new content.
-    const nextH2 = lines.findIndex((l, i) => i > headingIdx && /^## /.test(l));
+    const nextH2 = lines.findIndex((l, i) => i > headingIdx && isSectionBoundary(l, lines[headingIdx]!));
     const before = lines.slice(0, headingIdx).join('\n').replace(/\n+$/, '');
     const after = nextH2 >= 0
       ? '\n\n' + lines.slice(nextH2).join('\n').replace(/\n+$/, '')
       : '';
-    return before + '\n\n' + AI_ANALYSIS_HEADING_LINE + '\n\n' + analysisContent + after + '\n';
+    return before + '\n\n' + heading + '\n\n' + analysisContent + after + '\n';
   }
 
   // First write: insert before ## Notes (per D-17: Results -> AI Analysis -> Notes)
@@ -56,11 +58,11 @@ export function mergeAIContestAnalysisSection(body: string, analysisContent: str
   if (notesIdx >= 0) {
     const before = lines.slice(0, notesIdx).join('\n').replace(/\n+$/, '');
     const after = '\n\n' + lines.slice(notesIdx).join('\n').replace(/\n+$/, '');
-    return before + '\n\n' + AI_ANALYSIS_HEADING_LINE + '\n\n' + analysisContent + after + '\n';
+    return before + '\n\n' + heading + '\n\n' + analysisContent + after + '\n';
   }
 
   // Fallback: append at EOF
-  return body.replace(/\n+$/, '') + '\n\n' + AI_ANALYSIS_HEADING_LINE + '\n\n' + analysisContent + '\n';
+  return body.replace(/\n+$/, '') + '\n\n' + heading + '\n\n' + analysisContent + '\n';
 }
 
 /**
@@ -69,7 +71,7 @@ export function mergeAIContestAnalysisSection(body: string, analysisContent: str
  */
 function findExactHeading(lines: string[], heading: string): number {
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === heading) return i;
+    if (normalizeHeadingLine(lines[i]) === heading) return i;
   }
   return -1;
 }

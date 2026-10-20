@@ -1,3 +1,4 @@
+import { normalizeHeadingLine, persistedHeading, isSectionBoundary } from './noteHeadings';
 // src/notes/HeadingRegion.ts
 // Pure string transform for rewriting the `## Problem` region of a problem note.
 //
@@ -16,8 +17,7 @@
 //   - Safe to pass as the callback to Obsidian's `vault.process`, which may
 //     silently retry the callback on a write conflict.
 //
-// This module imports NOTHING — it is a string-in/string-out helper. The caller
-// owns the Obsidian integration.
+// 仅依赖纯字符串章节工具，不依赖 Obsidian；调用方负责文件写入。
 
 /** Exact string the rewriter searches for. MUST match buildNoteBody() output. */
 export const PROBLEM_HEADING_LINE = '## Problem' as const;
@@ -33,19 +33,32 @@ export const PROBLEM_HEADING_LINE = '## Problem' as const;
  *                      emits `## Problem\n${newMarkdown}` itself).
  * @returns rewritten content.
  */
-export function rewriteProblemSection(current: string, newMarkdown: string): string {
+export function rewriteProblemSection(current: string, newMarkdown: string, titleUpdate?: { previous: string; next: string }): string {
+  if (titleUpdate?.previous && titleUpdate.next && titleUpdate.previous !== titleUpdate.next) {
+    // 只更新插件原来的题目标题，保留用户自定义标题、代码和笔记正文。
+    const titleLines = current.split('\n');
+    for (let i = 0; i < titleLines.length; i++) {
+      if (normalizeHeadingLine(titleLines[i]) === PROBLEM_HEADING_LINE) break;
+      const match = /^(#{1,6}[ \t]+(?:\d+(?:\.\d+)*\.?[ \t]+)?)([^\r\n]+?)(\r?)$/.exec(titleLines[i]!);
+      if (match?.[2] === titleUpdate.previous) {
+        titleLines[i] = `${match[1]}${titleUpdate.next}${match[3]}`;
+        break;
+      }
+    }
+    current = titleLines.join('\n');
+  }
   const lines = current.split('\n');
 
   // Step 1: locate the `## Problem` heading, if present.
   let problemStart = -1;
   let problemEnd = lines.length;  // exclusive upper bound (EOF sentinel)
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === PROBLEM_HEADING_LINE) {
+    if (normalizeHeadingLine(lines[i]) === PROBLEM_HEADING_LINE) {
       problemStart = i;
       // Find next H2 heading to close the region (H3/H4/H5 do NOT close it).
       problemEnd = lines.length;
       for (let j = i + 1; j < lines.length; j++) {
-        if (/^## /.test(lines[j] ?? '')) {
+        if (isSectionBoundary(lines[j] ?? '', lines[i]!)) {
           problemEnd = j;
           break;
         }
@@ -54,8 +67,22 @@ export function rewriteProblemSection(current: string, newMarkdown: string): str
     }
   }
 
-  const trimmedNew = newMarkdown.trim();
-  const newBlock = `${PROBLEM_HEADING_LINE}\n${trimmedNew}\n\n`;
+  // Alvis 可将章节整体降级；刷新时让题面内部标题维持相对层级。
+  const heading = problemStart >= 0 ? lines[problemStart]! : PROBLEM_HEADING_LINE;
+  const shift = (/^\s*(#+)/.exec(heading)?.[1]?.length ?? 2) - 2;
+  let fence: { marker: string; length: number } | null = null;
+  const trimmedNew = newMarkdown.trim().split('\n').map(line => {
+    const delimiter = /^[ \t]{0,3}(`{3,}|~{3,})(.*)\r?$/.exec(line);
+    if (delimiter) {
+      const marker = delimiter[1]!;
+      if (!fence) fence = { marker: marker[0]!, length: marker.length };
+      else if (marker[0] === fence.marker && marker.length >= fence.length && !delimiter[2]?.trim()) fence = null;
+      return line;
+    }
+    return fence || shift === 0 ? line : line.replace(/^(#{1,6})([ \t]+)/, (_all, hashes: string, space: string) =>
+      '#'.repeat(Math.min(6, hashes.length + shift)) + space);
+  }).join('\n');
+  const newBlock = `${problemStart >= 0 ? lines[problemStart] : persistedHeading(PROBLEM_HEADING_LINE)}\n${trimmedNew}\n\n`;
 
   if (problemStart >= 0) {
     // Heading found — splice out the old region, insert the new block in place.

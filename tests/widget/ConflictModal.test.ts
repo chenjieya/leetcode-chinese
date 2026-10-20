@@ -3,13 +3,13 @@
 // Covers SYNC-05 + CONTEXT D-conflict-01..04 + UI-SPEC §"Visual Layout
 // Contracts §2" + Modal Test 8 (lifecycle BLOCKER fix) + Modal Test 9
 // (WARNING #6 activeConflictModal cleanup):
-//   - Modal Test 1: opens with heading + paragraph + 3 buttons (Keep mine
-//     setCta, Keep external, View diff)
-//   - Modal Test 2: Keep mine click → widget.writer.forceFlush + close +
-//     Notice('Local edits saved.', 3000)
-//   - Modal Test 3: Keep external click → widget.reloadFromDisk('keep-external')
-//     + close + Notice('Reloaded from disk.', 3000)
-//   - Modal Test 4: View diff click → modal stays open; appends 3-column
+//   - Modal Test 1: opens with heading + paragraph + 3 buttons (保留我的编辑
+//     setCta, 使用磁盘版本, 查看差异)
+//   - Modal Test 2: 保留我的编辑 click → widget.writer.forceFlush + close +
+//     Notice('已保存你的编辑。', 3000)
+//   - Modal Test 3: 使用磁盘版本 click → widget.reloadFromDisk('keep-external')
+//     + close + Notice('已从磁盘重新加载。', 3000)
+//   - Modal Test 4: 查看差异 click → modal stays open; appends 3-column
 //     diff container with classes lc-conflict-mine/external/merged
 //   - Modal Test 5: updateExternalContent mutates the external pane and
 //     re-runs lineDiff for the merged column
@@ -210,7 +210,7 @@ describe('ConflictModal — Modal Test 1: open populates DOM with heading + para
     (await getNoticeCalls()).length = 0;
   });
 
-  it('contentEl contains <h2> "External edit detected" + <p> body + 3 setting buttons', () => {
+  it('contentEl contains <h2> "检测到外部修改" + <p> body + 3 setting buttons', () => {
     const widget = makeFakeWidget();
     const modal = new ConflictModal(
       {} as never,
@@ -221,26 +221,26 @@ describe('ConflictModal — Modal Test 1: open populates DOM with heading + para
     modal.open();
 
     const h2 = modal.contentEl.querySelector('h2');
-    expect(h2?.textContent).toBe('External edit detected');
+    expect(h2?.textContent).toBe('检测到外部修改');
     const p = modal.contentEl.querySelector('p');
-    expect(p?.textContent).toContain('changed on disk');
-    // 3 buttons (Keep mine setCta, Keep external, View diff)
+    expect(p?.textContent).toContain('磁盘中的文件也发生了变化');
+    // 3 buttons (保留我的编辑 setCta, 使用磁盘版本, 查看差异)
     const buttons = modal.contentEl.querySelectorAll('button');
     expect(buttons.length).toBe(3);
-    expect(buttons[0]!.textContent).toBe('Keep mine');
+    expect(buttons[0]!.textContent).toBe('保留我的编辑');
     expect(buttons[0]!.classList.contains('mod-cta')).toBe(true);
-    expect(buttons[1]!.textContent).toBe('Keep external');
+    expect(buttons[1]!.textContent).toBe('使用磁盘版本');
     expect(buttons[1]!.classList.contains('mod-cta')).toBe(false);
-    expect(buttons[2]!.textContent).toBe('View diff');
+    expect(buttons[2]!.textContent).toBe('查看差异');
   });
 });
 
-describe('ConflictModal — Modal Test 2: Keep mine click → forceFlush + close + Notice', () => {
+describe('ConflictModal — Modal Test 2: 保留我的编辑 click → forceFlush + close + Notice', () => {
   beforeEach(async () => {
     (await getNoticeCalls()).length = 0;
   });
 
-  it('clicking Keep mine invokes widget.writer.forceFlush, closes modal, fires Notice("Local edits saved.", 3000)', async () => {
+  it('clicking 保留我的编辑 invokes widget.writer.forceFlush, closes modal, fires Notice("已保存你的编辑。", 3000)', async () => {
     const widget = makeFakeWidget();
     const modal = new ConflictModal({} as never, widget as never, 'a', 'b');
     modal.open();
@@ -253,17 +253,17 @@ describe('ConflictModal — Modal Test 2: Keep mine click → forceFlush + close
 
     expect(widget.writer!.forceFlush).toHaveBeenCalledTimes(1);
     const notices = await getNoticeCalls();
-    expect(notices).toContainEqual({ message: 'Local edits saved.', timeout: 3000 });
+    expect(notices).toContainEqual({ message: '已保存你的编辑。', timeout: 3000 });
     expect(modal.isOpen).toBe(false);
   });
 });
 
-describe('ConflictModal — Modal Test 3: Keep external click → reloadFromDisk + close + Notice', () => {
+describe('ConflictModal — Modal Test 3: 使用磁盘版本 click → reloadFromDisk + close + Notice', () => {
   beforeEach(async () => {
     (await getNoticeCalls()).length = 0;
   });
 
-  it('clicking Keep external invokes widget.reloadFromDisk("keep-external"), closes modal, fires Notice("Reloaded from disk.", 3000)', async () => {
+  it('clicking 使用磁盘版本 invokes widget.reloadFromDisk("keep-external"), closes modal, fires Notice("已从磁盘重新加载。", 3000)', async () => {
     const widget = makeFakeWidget();
     const modal = new ConflictModal({} as never, widget as never, 'a', 'b');
     modal.open();
@@ -275,13 +275,13 @@ describe('ConflictModal — Modal Test 3: Keep external click → reloadFromDisk
 
     expect(widget.reloadFromDisk).toHaveBeenCalledWith('keep-external');
     const notices = await getNoticeCalls();
-    expect(notices).toContainEqual({ message: 'Reloaded from disk.', timeout: 3000 });
+    expect(notices).toContainEqual({ message: '已从磁盘重新加载。', timeout: 3000 });
     expect(modal.isOpen).toBe(false);
   });
 });
 
-describe('ConflictModal — Modal Test 4: View diff click expands inline (does NOT close modal)', () => {
-  it('View diff appends 3-column container; buttons remain at top; modal stays open', () => {
+describe('ConflictModal — Modal Test 4: 查看差异 click expands inline (does NOT close modal)', () => {
+  it('查看差异 appends 3-column container; buttons remain at top; modal stays open', () => {
     const widget = makeFakeWidget();
     const modal = new ConflictModal(
       {} as never,
@@ -354,7 +354,7 @@ describe('ConflictModal — Modal Test 5: updateExternalContent mutates External
     );
     modal.open();
 
-    // Don't click View diff. updateExternalContent should still work but not crash.
+    // Don't click 查看差异. updateExternalContent should still work but not crash.
     expect(() => modal.updateExternalContent('NEW')).not.toThrow();
   });
 });

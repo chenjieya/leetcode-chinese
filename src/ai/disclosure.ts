@@ -58,16 +58,16 @@ import { getDisplayBaseUrl } from './displayBaseUrl';
  */
 export const DISCLOSURE_BASE_COPY: { willSend: readonly string[]; neverSends: readonly string[] } = {
   willSend: Object.freeze([
-    'Problem text (statement, examples, constraints)',
-    'Your `## Code` content',
-    'The last run/submit verdict and failing test (if any)',
-    'Optionally your `## Notes` (only if you opt in per feature)',
+    '题目内容（题面、示例和约束条件）',
+    '你的“代码”章节内容',
+    '最近一次运行或提交结果，以及失败用例（如有）',
+    '你的“笔记”章节内容（仅在你为相应功能明确启用时发送）',
   ]),
   neverSends: Object.freeze([
-    'Vault file paths outside the active note',
-    'Frontmatter that does not begin with `lc-`',
-    'Any other vault content',
-    'Telemetry of any kind',
+    '当前笔记之外的知识库文件路径',
+    '名称不以 lc- 开头的笔记属性',
+    '知识库中的其他内容',
+    '任何遥测数据',
   ]),
 };
 // Order matters: inner arrays already frozen via Object.freeze inline above;
@@ -106,7 +106,7 @@ export function withDebugBullet(
   return {
     willSend: [
       ...base.willSend,
-      'AI Debug also sends the last failing run/submit verdict for this problem (input, expected output, your output, error message)',
+      'AI 调试还会发送本题最近一次失败的运行或提交结果（输入、预期输出、你的输出和错误信息）',
     ],
     neverSends: base.neverSends,
   };
@@ -133,7 +133,7 @@ export function withReviewBullet(
   return {
     willSend: [
       ...base.willSend,
-      'AI Review sends the problem statement and your accepted solution code',
+      'AI 复盘会发送题目内容和你已通过的解答代码',
     ],
     neverSends: base.neverSends,
   };
@@ -158,7 +158,7 @@ export function withContestAnalysisBullet(
   return {
     willSend: [
       ...base.willSend,
-      'Contest analysis sends contest metadata, per-problem summary (slug, difficulty, verdict, time, your code)',
+      '竞赛分析会发送竞赛信息和各题摘要（题目标识、难度、判题结果、耗时和你的代码）',
     ],
     neverSends: base.neverSends,
   };
@@ -187,7 +187,7 @@ export function withKgBullet(
   return {
     willSend: [
       ...base.willSend,
-      'AI Knowledge Graph sends the problem statement and your accepted code for pattern classification',
+      'AI 知识图谱会发送题目内容和你已通过的代码，用于解题模式分类',
     ],
     neverSends: base.neverSends,
   };
@@ -239,28 +239,28 @@ export class AIDisclosureModal extends Modal {
     contentEl.addClass('leetcode-ai-disclosure');
     // Locked verbatim — 07-UI-SPEC §"Disclosure modal — verbatim copy".
 
-    titleEl.setText(`Heads up: this will send data to ${prettyName(this.provider)}`);
+    titleEl.setText(`数据发送确认：即将发送至 ${prettyName(this.provider)}`);
 
     // Phase 08.1 Plan 02 — route through getDisplayBaseUrl so Bedrock renders
     // the region-substituted regional endpoint (`https://bedrock-runtime.{region}.amazonaws.com`)
     // instead of cfg.baseUrl (which is unused / empty for Bedrock). Other
     // providers return cfg.baseUrl verbatim — no visible behavior change.
     const baseUrlText =
-      getDisplayBaseUrl(this.provider, this.cfg) || '(no base URL configured yet)';
+      getDisplayBaseUrl(this.provider, this.cfg) || '（尚未配置服务地址）';
     contentEl.createEl('p', {
 
-      text: `Active provider: ${prettyName(this.provider)} — ${baseUrlText}`,
+      text: `当前服务提供商：${prettyName(this.provider)} — ${baseUrlText}`,
     });
 
 
-    contentEl.createEl('p', { text: 'Future AI features will send:' });
+    contentEl.createEl('p', { text: '使用 AI 功能时可能发送以下内容：' });
     const willList = contentEl.createEl('ul');
     for (const line of DISCLOSURE_BASE_COPY.willSend) {
       willList.createEl('li', { text: line });
     }
 
 
-    contentEl.createEl('p', { text: 'The plugin never sends:' });
+    contentEl.createEl('p', { text: '插件不会发送以下内容：' });
     const neverList = contentEl.createEl('ul');
     for (const line of DISCLOSURE_BASE_COPY.neverSends) {
       neverList.createEl('li', { text: line });
@@ -272,7 +272,7 @@ export class AIDisclosureModal extends Modal {
       .addButton((b) =>
         b
 
-          .setButtonText('Cancel')
+          .setButtonText('取消')
           .onClick(() => {
             this.decided = true;
             this.onCancel();
@@ -284,7 +284,7 @@ export class AIDisclosureModal extends Modal {
           // Locked verbatim — 07-UI-SPEC §"Color" + §"Disclosure modal — verbatim copy".
           // The ONLY new setCta() invocation across the src/ tree in v1.1.
 
-          .setButtonText('I understand — continue')
+          .setButtonText('我已了解，继续')
           .setCta()
           .onClick(() => {
             this.acknowledged = true;

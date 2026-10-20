@@ -86,7 +86,7 @@ describe('buildSummaryBody', () => {
 
   it('Results table has correct headers', () => {
     const body = buildSummaryBody(buildArgs());
-    expect(body).toContain('| Problem | Difficulty | Verdict | Time | Points |');
+    expect(body).toContain('| 题目 | 难度 | 状态 | 用时 | 得分 |');
     expect(body).toContain('| ------- | ---------- | ------- | ---- | ------ |');
   });
 
@@ -94,24 +94,24 @@ describe('buildSummaryBody', () => {
     const body = buildSummaryBody(buildArgs());
     // accepted: problem-a (3) + problem-d (7) = 10
     // total: 3 + 5 + 5 + 7 = 20
-    expect(body).toContain('**Score:** 10/20 (2/4 solved)');
+    expect(body).toContain('**得分：** 10/20（完成 2/4 题）');
   });
 
   it('Duration line formats correctly', () => {
     const body = buildSummaryBody(buildArgs({ totalElapsedMs: 330000 })); // 5m 30s
-    expect(body).toContain('**Duration:** 5m 30s');
+    expect(body).toContain('**用时：** 5 分 30 秒');
   });
 
   it('Aborted marker included when aborted=true', () => {
     // totalElapsed = 3600000ms (60 min), duration = 5400s (90 min)
     // remaining = 5400*1000 - 3600000 = 1800000ms = 30:00
     const body = buildSummaryBody(buildArgs({ aborted: true }));
-    expect(body).toContain('**(aborted at 30:00 remaining)**');
+    expect(body).toContain('**（已放弃，剩余 30:00）**');
   });
 
   it('Aborted marker absent when aborted=false', () => {
     const body = buildSummaryBody(buildArgs({ aborted: false }));
-    expect(body).not.toContain('aborted at');
+    expect(body).not.toContain('已放弃');
   });
 
   it('Each problem row has wikilink to slug', () => {
@@ -126,20 +126,20 @@ describe('buildSummaryBody', () => {
     const body = buildSummaryBody(buildArgs());
     const lines = body.split('\n');
     const problemARow = lines.find((l) => l.includes('[[problem-a\\|Problem A]]'))!;
-    expect(problemARow).toContain('Easy');
+    expect(problemARow).toContain('简单');
     const problemDRow = lines.find((l) => l.includes('[[problem-d\\|Problem D]]'))!;
-    expect(problemDRow).toContain('Hard');
+    expect(problemDRow).toContain('困难');
   });
 
   it('Problem rows have correct verdict words', () => {
     const body = buildSummaryBody(buildArgs());
     const lines = body.split('\n');
     const problemARow = lines.find((l) => l.includes('[[problem-a\\|Problem A]]'))!;
-    expect(problemARow).toContain('Accepted');
+    expect(problemARow).toContain('已完成');
     const problemBRow = lines.find((l) => l.includes('[[problem-b\\|Problem B]]'))!;
-    expect(problemBRow).toContain('Attempted');
+    expect(problemBRow).toContain('已尝试');
     const problemCRow = lines.find((l) => l.includes('[[problem-c\\|Problem C]]'))!;
-    expect(problemCRow).toContain('Unsolved');
+    expect(problemCRow).toContain('未完成');
   });
 
   it('Accepted problems show solve time, others show dash', () => {
@@ -147,7 +147,7 @@ describe('buildSummaryBody', () => {
     const lines = body.split('\n');
     const problemARow = lines.find((l) => l.includes('[[problem-a\\|Problem A]]'))!;
     // 5 min after start → "5m 0s"
-    expect(problemARow).toContain('5m 0s');
+    expect(problemARow).toContain('5 分 0 秒');
     const problemBRow = lines.find((l) => l.includes('[[problem-b\\|Problem B]]'))!;
     expect(problemBRow).toMatch(/—/); // em-dash
   });
@@ -163,11 +163,11 @@ describe('buildSummaryBody', () => {
 
   it('Contains ## Notes heading for user reflection', () => {
     const body = buildSummaryBody(buildArgs());
-    expect(body).toContain('## Notes');
+    expect(body).toContain('## 笔记');
   });
 
   it('Contains ## Results heading', () => {
     const body = buildSummaryBody(buildArgs());
-    expect(body).toContain('## Results');
+    expect(body).toContain('## 竞赛结果');
   });
 });

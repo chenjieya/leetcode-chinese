@@ -202,7 +202,7 @@ describe('SettingsTab — Knowledge Graph section (Phase 5 D-14 / D-15 / D-16)',
     vi.resetModules();
   });
 
-  it('renders a Knowledge graph heading', async () => {
+  it("renders a 知识图谱 heading", async () => {
     // D-14: the new third section is labeled exactly `Knowledge graph`.
     // (Sentence case mandated by obsidianmd/ui/sentence-case.)
     const { LeetCodeSettingTab } = await import('../../src/settings/SettingsTab');
@@ -214,13 +214,13 @@ describe('SettingsTab — Knowledge Graph section (Phase 5 D-14 / D-15 / D-16)',
       tab.containerEl.querySelectorAll('h3, h2, h4'),
     );
     const knowledgeGraphHeading = headings.find(
-      (h) => h.textContent === 'Knowledge graph',
+      (h) => h.textContent === "知识图谱",
     );
     expect(knowledgeGraphHeading).toBeDefined();
   });
 
-  it('technique folder override input has placeholder `{problemsFolder}/Techniques`', async () => {
-    // D-15: placeholder shows the derived default so users see "LeetCode/Techniques"
+  it('technique folder override input has placeholder `{problemsFolder}/techniques`', async () => {
+    // D-15: placeholder shows the derived default so users see "LeetCode/techniques"
     // when they haven't overridden, and their typed value when they have.
     const { LeetCodeSettingTab } = await import('../../src/settings/SettingsTab');
     const settings = makeFakeSettingsStore({
@@ -232,7 +232,7 @@ describe('SettingsTab — Knowledge Graph section (Phase 5 D-14 / D-15 / D-16)',
     const inputs = Array.from(
       tab.containerEl.querySelectorAll('input[type="text"]'),
     ) as HTMLInputElement[];
-    const overrideInput = inputs.find((i) => i.placeholder === 'MyVault/LC/Techniques');
+    const overrideInput = inputs.find((i) => i.placeholder === 'MyVault/LC/techniques');
     expect(overrideInput).toBeDefined();
   });
 

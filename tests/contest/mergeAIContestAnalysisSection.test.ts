@@ -28,7 +28,7 @@ describe('mergeAIContestAnalysisSection', () => {
 
       // Should have Results, then AI Analysis, then Notes
       const resultIdx = result.indexOf('## Results');
-      const aiIdx = result.indexOf('## AI Analysis');
+      const aiIdx = result.indexOf('## AI 分析');
       const notesIdx = result.indexOf('## Notes');
 
       expect(resultIdx).toBeGreaterThan(-1);
@@ -49,10 +49,10 @@ describe('mergeAIContestAnalysisSection', () => {
       const result = mergeAIContestAnalysisSection(body, sampleAnalysis);
 
       expect(result).toContain('## Results');
-      expect(result).toContain('## AI Analysis');
+      expect(result).toContain('## AI 分析');
       expect(result).toContain(sampleAnalysis);
       // AI Analysis should be at the end
-      const aiIdx = result.indexOf('## AI Analysis');
+      const aiIdx = result.indexOf('## AI 分析');
       expect(result.indexOf('## Results')).toBeLessThan(aiIdx);
     });
   });
@@ -121,7 +121,7 @@ describe('mergeAIContestAnalysisSection', () => {
       expect(second).not.toContain('First analysis.');
       // Structure preserved
       expect(second).toContain('## Results');
-      expect(second).toContain('## AI Analysis');
+      expect(second).toContain('## AI 分析');
       expect(second).toContain('## Notes');
     });
 
@@ -179,14 +179,14 @@ describe('mergeAIContestAnalysisSection', () => {
   describe('edge cases', () => {
     it('handles empty body', () => {
       const result = mergeAIContestAnalysisSection('', sampleAnalysis);
-      expect(result).toContain('## AI Analysis');
+      expect(result).toContain('## AI 分析');
       expect(result).toContain(sampleAnalysis);
     });
 
     it('handles empty analysis content', () => {
       const body = '## Results\n\nSome results.\n\n## Notes\n\nNotes.';
       const result = mergeAIContestAnalysisSection(body, '');
-      expect(result).toContain('## AI Analysis');
+      expect(result).toContain('## AI 分析');
       expect(result).toContain('## Notes');
     });
 
@@ -209,7 +209,7 @@ describe('mergeAIContestAnalysisSection', () => {
       expect(result).toContain('## AI Analysis Results');
       expect(result).toContain(sampleAnalysis);
       // The exact heading should appear
-      const exactMatches = result.match(/^## AI Analysis$/gm);
+      const exactMatches = result.match(/^## AI 分析$/gm);
       expect(exactMatches).not.toBeNull();
       expect(exactMatches!.length).toBe(1);
     });

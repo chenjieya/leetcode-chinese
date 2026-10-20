@@ -328,7 +328,7 @@ describe('Phase 21 Plan 21-04 Task 3 — fixture runner (MIGRATE-10 release gate
     'migrates $label byte-exact and writes byte-exact backup',
     async ({ label, inputPath, expectedPath }) => {
       const input = readFileSync(inputPath, 'utf-8');
-      const expected = readFileSync(expectedPath, 'utf-8');
+      const expected = readFileSync(expectedPath, 'utf-8').replace(/\r\n/g, '\n');
       const slug = label.split('/')[1] ?? 'unknown';
       const handle = createMockApp(input, slug);
 

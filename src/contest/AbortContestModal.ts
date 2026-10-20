@@ -22,20 +22,20 @@ export class AbortContestModal extends Modal {
 
   onOpen(): void {
     const { contentEl, titleEl } = this;
-    titleEl.setText('Abort contest?');
+    titleEl.setText('结束并放弃本次竞赛？');
 
     const minutes = Math.floor(this.remainingMs / 60000);
     const seconds = Math.floor((this.remainingMs % 60000) / 1000);
     const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
     contentEl.createEl('p', {
-      text: `You've solved ${String(this.solvedCount)}/${String(this.totalProblems)} problems with ${timeStr} remaining. Aborting will end the contest and write a summary note marked as aborted.`,
+      text: `已完成 ${String(this.solvedCount)}/${String(this.totalProblems)} 道题，剩余 ${timeStr}。放弃后将结束竞赛，并生成标记为已放弃的总结笔记。`,
     });
 
     const actions = contentEl.createDiv({ cls: 'leetcode-contest__modal-actions' });
 
     const confirmBtn = actions.createEl('button', {
-      text: 'Abort contest',
+      text: '放弃竞赛',
       cls: 'leetcode-contest__btn-abort',
     });
     confirmBtn.addEventListener('click', () => {
@@ -44,7 +44,7 @@ export class AbortContestModal extends Modal {
     });
 
     const cancelBtn = actions.createEl('button', {
-      text: 'Cancel',
+      text: '取消',
     });
     cancelBtn.addEventListener('click', () => {
       this.close();

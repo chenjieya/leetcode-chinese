@@ -19,8 +19,8 @@
 //   - this.abortController.signal.aborted (Pitfall 2 — signal-first check)
 //   - addCost(0) on cancel branch (Pitfall 6)
 //   - MarkdownRenderer.render(this.app, ... (Phase 06 precedent + this-as-Component)
-//   - Verbatim copy: 'AI response copied.', 'Clipboard unavailable.',
-//     'Cancelled — partial response below.', 'AI call cancelled.',
+//   - Verbatim copy: '已复制 AI 回答。', '剪贴板不可用。',
+//     '已取消，以下为已生成的部分回答。', '已取消 AI 请求。',
 //     "Couldn't reach <provider>." (apostrophe is U+2019)
 //
 // Logging discipline (Pitfall 10): NEVER log full prompts/responses. Log
@@ -54,7 +54,7 @@ const RENDER_DEBOUNCE_MS = 50;
 
 /**
  * Locked counter cadence (08-UI-SPEC §"Typography" + §"Behavior Contract").
- * 1000ms ticks render `Thinking… mm:ss`. Counter freezes on first stream
+ * 1000ms ticks render `正在思考… mm:ss`. Counter freezes on first stream
  * chunk; clamps at `99:59+` defensively (Phase 09 cap pre-empts in practice).
  */
 const COUNTER_TICK_MS = 1000;
@@ -100,22 +100,22 @@ export interface AIStreamModalArgs {
    * cleanup paths.
    */
   onStreamComplete?: (fullText: string) => Promise<void>;
-  /** Optional modal title override. Defaults to "AI Debug — {provider}". */
+  /** Optional modal title override. Defaults to "AI 调试 — {provider}". */
   title?: string;
 }
 
 /**
- * Live-streaming AI Debug response modal. Opens immediately with `Thinking…`
+ * Live-streaming AI Debug response modal. Opens immediately with `正在思考…`
  * placeholder + counter; switches to debounced MarkdownRenderer.render once
  * the first chunk arrives; supports mid-stream Cancel via AbortController +
  * a Copy-to-clipboard footer post-completion.
  *
  * Lifecycle:
- *   - `onOpen()` paints title + body (Thinking…) + footer (Cancel default-focus);
+ *   - `onOpen()` paints title + body (正在思考…) + footer (Cancel default-focus);
  *     starts the mm:ss counter; calls aiClient.invokeStream().
  *   - On `kind === 'stream'`: for-await consumes textStream; first chunk
- *     replaces Thinking…, stops counter, scheduleRender per chunk; on natural
- *     stream-end, addCost(estimate) and swap footer to [Copy response] [Close].
+ *     replaces 正在思考…, stops counter, scheduleRender per chunk; on natural
+ *     stream-end, addCost(estimate) and swap footer to [复制回答] [Close].
  *   - On `kind === 'buffered'`: counter keeps ticking until the text Promise
  *     resolves; single MarkdownRenderer.render runs on the full text; addCost(0)
  *     because usage isn't exposed on the buffered fallback Promise (modal
@@ -160,18 +160,18 @@ export class AIStreamModal extends Modal {
     const { contentEl, titleEl } = this;
     contentEl.empty();
     contentEl.addClass('leetcode-ai-stream');
-    titleEl.setText(this.args.title ?? `AI Debug — ${prettyName(this.args.provider)}`);
+    titleEl.setText(this.args.title ?? `AI 调试 — ${prettyName(this.args.provider)}`);
 
     this.bodyEl = contentEl.createDiv({
       cls: 'leetcode-ai-stream-body markdown-rendered',
     });
     this.bodyEl.setAttribute('aria-live', 'polite');
 
-    // Initial Thinking… placeholder — visible during the disclosure-gate
+    // Initial 正在思考… placeholder — visible during the disclosure-gate
     // round-trip and pre-first-chunk window. Counter ticks via setWindowTimeout.
     this.bodyEl.createEl('p', {
       cls: 'leetcode-ai-stream-thinking',
-      text: 'Thinking…',
+      text: '正在思考…',
     });
 
     this.footerEl = contentEl.createDiv({ cls: 'leetcode-ai-stream-footer' });
@@ -403,8 +403,8 @@ export class AIStreamModal extends Modal {
       labelEl.textContent =
         this.elapsedSec >= COUNTER_CLAMP_SEC
           ? // NBSP between word and digits — locked per 08-UI-SPEC.
-            'Thinking…\u00A099:59+'
-          : `Thinking…\u00A0${pad(Math.floor(this.elapsedSec / 60))}:${pad(this.elapsedSec % 60)}`;
+            '正在思考…\u00A099:59+'
+          : `正在思考…\u00A0${pad(Math.floor(this.elapsedSec / 60))}:${pad(this.elapsedSec % 60)}`;
     }
     if (this.elapsedSec >= COUNTER_CLAMP_SEC) {
       // Defensive clamp — freeze the counter at 99:59+.
@@ -425,7 +425,7 @@ export class AIStreamModal extends Modal {
 
   private renderCancelFooter(): void {
     this.footerEl.empty();
-    const cancelBtn = this.footerEl.createEl('button', { text: 'Cancel' });
+    const cancelBtn = this.footerEl.createEl('button', { text: '取消' });
     cancelBtn.addEventListener('click', () => this.handleCancel());
     // Default-focus per 08-UI-SPEC §Accessibility.
     if (typeof cancelBtn.focus === 'function') {
@@ -439,9 +439,9 @@ export class AIStreamModal extends Modal {
 
   private swapToCompletionFooter(): void {
     this.footerEl.empty();
-    const copyBtn = this.footerEl.createEl('button', { text: 'Copy response' });
+    const copyBtn = this.footerEl.createEl('button', { text: '复制回答' });
     copyBtn.addEventListener('click', () => this.handleCopy());
-    const closeBtn = this.footerEl.createEl('button', { text: 'Close' });
+    const closeBtn = this.footerEl.createEl('button', { text: '关闭' });
     closeBtn.addEventListener('click', () => this.close());
     if (typeof closeBtn.focus === 'function') {
       try {
@@ -457,14 +457,14 @@ export class AIStreamModal extends Modal {
     // 08-UI-SPEC §"Body states" (Cancelled mid-stream).
     const cancelledEl = this.bodyEl.ownerDocument.createElement('p');
     cancelledEl.className = 'leetcode-ai-stream-cancelled';
-    cancelledEl.textContent = 'Cancelled — partial response below.';
+    cancelledEl.textContent = '已取消，以下为已生成的部分回答。';
     this.bodyEl.insertBefore(cancelledEl, this.bodyEl.firstChild);
     this.swapToCompletionFooter();
   }
 
   private swapToErrorFooter(): void {
     this.footerEl.empty();
-    const closeBtn = this.footerEl.createEl('button', { text: 'Close' });
+    const closeBtn = this.footerEl.createEl('button', { text: '关闭' });
     closeBtn.addEventListener('click', () => this.close());
     if (typeof closeBtn.focus === 'function') {
       try {
@@ -502,10 +502,10 @@ export class AIStreamModal extends Modal {
       if (clip?.writeText) {
         void clip.writeText(this.buffer);
       }
-      new Notice('AI response copied.', 2000);
+      new Notice('已复制 AI 回答。', 2000);
     } catch (err) {
       logger.debug('ai-stream.copy: clipboard unavailable', err);
-      new Notice('Clipboard unavailable.', 4000);
+      new Notice('剪贴板不可用。', 4000);
     }
   }
 
@@ -519,7 +519,7 @@ export class AIStreamModal extends Modal {
       this.cancelled = true;
       this.bodyEl.empty();
       const p = this.bodyEl.ownerDocument.createElement('p');
-      p.textContent = 'AI call cancelled.';
+      p.textContent = '已取消 AI 请求。';
       this.bodyEl.appendChild(p);
       this.swapToErrorFooter();
       return;
@@ -533,7 +533,7 @@ export class AIStreamModal extends Modal {
     this.bodyEl.empty();
     // Apostrophe is U+2019 right-single-quote per UI-SPEC §"Body states".
     const heading = this.bodyEl.ownerDocument.createElement('h3');
-    heading.textContent = `Couldn’t reach ${prettyName(this.args.provider)}.`;
+    heading.textContent = `无法连接 ${prettyName(this.args.provider)}.`;
     this.bodyEl.appendChild(heading);
     const detail = this.bodyEl.ownerDocument.createElement('p');
     detail.className = 'leetcode-ai-stream-error';

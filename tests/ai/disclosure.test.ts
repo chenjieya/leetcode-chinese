@@ -181,54 +181,54 @@ describe('Phase 07 Plan 05 — DISCLOSURE_BASE_COPY constant', () => {
   it('willSend[0] mentions Problem text', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.willSend[0]).toBe(
-      'Problem text (statement, examples, constraints)',
+      '题目内容（题面、示例和约束条件）',
     );
   });
 
   it('willSend[1] mentions ## Code', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
-    expect(DISCLOSURE_BASE_COPY.willSend[1]).toBe('Your `## Code` content');
+    expect(DISCLOSURE_BASE_COPY.willSend[1]).toBe('你的“代码”章节内容');
   });
 
   it('willSend[2] mentions verdict and failing test', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.willSend[2]).toBe(
-      'The last run/submit verdict and failing test (if any)',
+      '最近一次运行或提交结果，以及失败用例（如有）',
     );
   });
 
   it('willSend[3] mentions ## Notes opt-in', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.willSend[3]).toBe(
-      'Optionally your `## Notes` (only if you opt in per feature)',
+      '你的“笔记”章节内容（仅在你为相应功能明确启用时发送）',
     );
   });
 
   it('neverSends[0] mentions vault file paths', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.neverSends[0]).toBe(
-      'Vault file paths outside the active note',
+      '当前笔记之外的知识库文件路径',
     );
   });
 
   it('neverSends[1] mentions lc- frontmatter prefix', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.neverSends[1]).toBe(
-      'Frontmatter that does not begin with `lc-`',
+      '名称不以 lc- 开头的笔记属性',
     );
   });
 
   it('neverSends[2] mentions other vault content', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.neverSends[2]).toBe(
-      'Any other vault content',
+      '知识库中的其他内容',
     );
   });
 
   it('neverSends[3] mentions telemetry', async () => {
     const { DISCLOSURE_BASE_COPY } = await import('../../src/ai/disclosure');
     expect(DISCLOSURE_BASE_COPY.neverSends[3]).toBe(
-      'Telemetry of any kind',
+      '任何遥测数据',
     );
   });
 });
@@ -248,7 +248,7 @@ describe('Phase 07 Plan 05 — AIDisclosureModal DOM rendering', () => {
       vi.fn(),
     );
     modal.onOpen();
-    expect(modal.titleEl.textContent).toBe('Heads up: this will send data to Anthropic');
+    expect(modal.titleEl.textContent).toBe('数据发送确认：即将发送至 Anthropic');
   });
 
   it('modal lead paragraph contains base URL', async () => {
@@ -278,7 +278,7 @@ describe('Phase 07 Plan 05 — AIDisclosureModal DOM rendering', () => {
     modal.onOpen();
     const firstP = modal.contentEl.querySelector('p');
     expect(firstP?.textContent).toBe(
-      'Active provider: Custom (OpenAI-compatible) — (no base URL configured yet)',
+      '当前服务提供商：自定义（OpenAI 兼容） — （尚未配置服务地址）',
     );
   });
 
@@ -325,10 +325,10 @@ describe('Phase 07 Plan 05 — Button shape (setCta vs neutral)', () => {
     modal.onOpen();
     const ctaButtons = modal.contentEl.querySelectorAll('.mod-cta');
     expect(ctaButtons).toHaveLength(1);
-    expect(ctaButtons[0]!.textContent).toBe('I understand — continue');
+    expect(ctaButtons[0]!.textContent).toBe('我已了解，继续');
   });
 
-  it('Cancel button has the locked label "Cancel" and is neutral', async () => {
+  it('Cancel button has the locked label "取消" and is neutral', async () => {
     const { AIDisclosureModal } = await import('../../src/ai/disclosure');
     const modal = new AIDisclosureModal(
       {} as never,
@@ -339,7 +339,7 @@ describe('Phase 07 Plan 05 — Button shape (setCta vs neutral)', () => {
     );
     modal.onOpen();
     const allButtons = Array.from(modal.contentEl.querySelectorAll('button'));
-    const cancelBtn = allButtons.find((b) => b.textContent === 'Cancel');
+    const cancelBtn = allButtons.find((b) => b.textContent === '取消');
     expect(cancelBtn).toBeDefined();
     expect(cancelBtn?.classList.contains('mod-cta')).toBe(false);
   });
@@ -359,7 +359,7 @@ describe('Phase 07 Plan 05 — Callback wiring', () => {
     );
     modal.onOpen();
     const continueBtn = Array.from(modal.contentEl.querySelectorAll('button')).find(
-      (b) => b.textContent === 'I understand — continue',
+      (b) => b.textContent === '我已了解，继续',
     );
     expect(continueBtn).toBeDefined();
     continueBtn!.click();
@@ -380,7 +380,7 @@ describe('Phase 07 Plan 05 — Callback wiring', () => {
     );
     modal.onOpen();
     const cancelBtn = Array.from(modal.contentEl.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Cancel',
+      (b) => b.textContent === '取消',
     );
     expect(cancelBtn).toBeDefined();
     cancelBtn!.click();
@@ -419,7 +419,7 @@ describe('Phase 07 Plan 05 — Callback wiring', () => {
     );
     modal.onOpen();
     const continueBtn = Array.from(modal.contentEl.querySelectorAll('button')).find(
-      (b) => b.textContent === 'I understand — continue',
+      (b) => b.textContent === '我已了解，继续',
     );
     continueBtn!.click(); // sets acknowledged=true, fires onContinue, calls close()
     // The Continue button's click handler closes the modal — onCancel must

@@ -1,3 +1,4 @@
+import { isSectionBoundary, normalizeHeadingLine, persistedHeading } from '../notes/noteHeadings';
 // src/solve/starterCodeInjector.ts
 //
 // Phase 3 starter-code retrofit + on-demand injection
@@ -47,7 +48,6 @@ import { findFirstLeetCodeSolveFenceIndexInCodeSection } from '../widget/fenceMi
 
 const FENCE_OPEN = /^```([a-zA-Z0-9_+#-]*)\s*$/;
 const FENCE_CLOSE = /^```\s*$/;
-const H2 = /^## /;
 
 export interface InjectOptions {
   starterCode: string;
@@ -151,7 +151,7 @@ export function injectCodeSection(current: string, opts: InjectOptions): string 
     ? notesStart
     : (problemStart >= 0 ? findSectionEnd(lines, problemStart) : lines.length);
 
-  const insertion = [CODE_HEADING_LINE, ...starterBlock.split('\n'), ''];
+  const insertion = [persistedHeading(CODE_HEADING_LINE), ...starterBlock.split('\n'), ''];
   const before = lines.slice(0, insertAt);
   const after = lines.slice(insertAt);
 
@@ -283,14 +283,14 @@ export async function retrofit(
 
 function indexOfLine(lines: string[], needle: string): number {
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === needle) return i;
+    if (normalizeHeadingLine(lines[i]) === needle) return i;
   }
   return -1;
 }
 
 function findSectionEnd(lines: string[], start: number): number {
   for (let i = start + 1; i < lines.length; i++) {
-    if (H2.test(lines[i] ?? '')) return i;
+    if (isSectionBoundary(lines[i] ?? '', lines[start]!)) return i;
   }
   return lines.length;
 }

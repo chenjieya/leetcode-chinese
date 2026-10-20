@@ -68,8 +68,8 @@ export function buildCodeBlockButtonRow(
   const retrieveIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2H6a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h2"/><path d="M16 2h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2"/></svg>';
   const resetIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
 
-  row.appendChild(makeIconBtn('leetcode-code-action-icon', 'Retrieve last submission', retrieveIcon, () => plugin.retrieveLastSubmissionFromActive()));
-  row.appendChild(makeIconBtn('leetcode-code-action-icon', 'Reset to starter code', resetIcon, () => plugin.resetFromActive()));
+  row.appendChild(makeIconBtn('leetcode-code-action-icon', '取回最近一次提交', retrieveIcon, () => plugin.retrieveLastSubmissionFromActive()));
+  row.appendChild(makeIconBtn('leetcode-code-action-icon', '重置为初始代码', resetIcon, () => plugin.resetFromActive()));
 
   const makeBtn = (cls: string, label: string, iconSvg: string, handler: () => void | Promise<void>) => {
     const btn = doc.createElement('button');
@@ -91,9 +91,9 @@ export function buildCodeBlockButtonRow(
   const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
   const cloudUploadIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></svg>';
 
-  row.appendChild(makeBtn('leetcode-code-action-ai-solution', 'AI solution', sparklesIcon, () => plugin.aiSolutionFromActive()));
-  row.appendChild(makeBtn('leetcode-code-action-run', 'Run', playIcon, () => plugin.runFromActive()));
-  row.appendChild(makeBtn('leetcode-code-action-submit', 'Submit', cloudUploadIcon, () => plugin.submitFromActive()));
+  row.appendChild(makeBtn('leetcode-code-action-ai-solution', 'AI 题解', sparklesIcon, () => plugin.aiSolutionFromActive()));
+  row.appendChild(makeBtn('leetcode-code-action-run', '运行', playIcon, () => plugin.runFromActive()));
+  row.appendChild(makeBtn('leetcode-code-action-submit', '提交', cloudUploadIcon, () => plugin.submitFromActive()));
 
   return row;
 }

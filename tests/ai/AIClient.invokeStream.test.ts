@@ -76,7 +76,7 @@ describe('Phase 08 AIClient.invokeStream — provider/null check', () => {
     const client = new AIClient(settings as never);
     await expect(
       client.invokeStream({ prompt: 'hi', stream: true } as never),
-    ).rejects.toThrow(/No AI provider configured/);
+    ).rejects.toThrow(/尚未配置 AI 服务/);
   });
 });
 

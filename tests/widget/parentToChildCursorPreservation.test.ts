@@ -34,7 +34,7 @@ import {
   EditorState,
   Transaction,
 } from '@codemirror/state';
-import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, type ViewUpdate } from '@codemirror/view';
 import { editorInfoField } from 'obsidian';
 import { leetCodeFenceViewPlugin } from '../../src/widget/liveModeViewPlugin';
 import { WidgetController } from '../../src/widget/WidgetController';

@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { SettingsStore } from '../../src/settings/SettingsStore';
 
 function makeMockPlugin(initial: unknown = null) {
-  const state: { data: unknown } = { data: initial };
+  const state: { data: unknown } = { data: initial && typeof initial === "object" ? { leetcodeSite: "cn", ...initial } : initial };
   return {
     loadData: vi.fn(async () => state.data),
     saveData: vi.fn(async (d: unknown) => { state.data = d; }),

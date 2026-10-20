@@ -5,7 +5,7 @@
 //   - declares `runs-on: ubuntu-latest`
 //   - declares `node-version: 20`
 //   - runs the 5 steps in this exact order:
-//       npm ci -> npm run lint -> npm test -> npm run build -> npm run check:bundle-size
+//       pnpm install --frozen-lockfile -> pnpm lint -> pnpm test -> pnpm build -> pnpm run check:bundle-size
 //
 // Rationale: the step order is locked in 06-CONTEXT.md §E. We avoid pulling
 // in a YAML parser dep (`js-yaml`) — the file is owned by this plan and not
@@ -27,7 +27,7 @@ describe('.github/workflows/ci.yml — CI workflow contract (FOUND-02)', () => {
     const yaml = readFileSync(WORKFLOW, 'utf-8');
     expect(yaml).toMatch(/runs-on:\s*ubuntu-latest/);
     expect(yaml).toMatch(/node-version:\s*22/);
-    expect(yaml).toMatch(/cache:\s*npm/);
+    expect(yaml).toMatch(/cache:\s*pnpm/);
   });
 
   it('triggers on push to main and on pull_request', () => {
@@ -39,11 +39,11 @@ describe('.github/workflows/ci.yml — CI workflow contract (FOUND-02)', () => {
   it('runs the 5 pipeline steps in the exact locked order', () => {
     const yaml = readFileSync(WORKFLOW, 'utf-8');
     const steps = [
-      'npm ci',
-      'npm run lint',
-      'npm test',
-      'npm run build',
-      'npm run check:bundle-size',
+      'pnpm install --frozen-lockfile',
+      'pnpm lint',
+      'pnpm test',
+      'pnpm build',
+      'pnpm run check:bundle-size',
     ];
     const indices: number[] = steps.map((s) => yaml.indexOf(s));
     // Every step must appear at least once.

@@ -1,3 +1,4 @@
+import { isCodeHeading, isSectionBoundary } from '../notes/noteHeadings';
 // src/solve/resetCodeWithConfirm.ts
 //
 // Phase 5.2 Plan 04 — D-07 Reset code helper.
@@ -41,20 +42,20 @@ import type { SelfWriteSuppression } from '../widget/selfWriteSuppression';
 export function extractFenceBodyFromFullNote(fullNote: string): string {
   const lines = fullNote.split('\n');
   const FENCE_RE = /^\s*```/;
-  const H2_CODE_RE = /^\s*##\s+Code\s*$/;
-  const H2_ANY_RE = /^\s*##\s+.+$/;
 
   let inCodeSection = false;
+  let codeHeading = '## Code';
   let openerIdx = -1;
   let closerIdx = -1;
 
   for (let i = 0; i < lines.length; i++) {
     const text = lines[i] ?? '';
-    if (H2_CODE_RE.test(text)) {
+    if (isCodeHeading(text)) {
+      codeHeading = text;
       inCodeSection = true;
       continue;
     }
-    if (H2_ANY_RE.test(text)) {
+    if (isSectionBoundary(text, codeHeading)) {
       inCodeSection = false;
       continue;
     }
@@ -250,7 +251,7 @@ export async function resetCodeWithConfirm(
     );
   }
 
-  deps.notify('Code reset to starter.');
+  deps.notify('已恢复初始代码。');
 }
 
 /** Mirror of SubmissionDetailModal's readCurrentBody — both production and

@@ -1,3 +1,4 @@
+import { isCodeHeading } from '../notes/noteHeadings';
 import type { MarkdownPostProcessorContext, Plugin } from 'obsidian';
 import { buildCodeBlockButtonRow, type CodeBlockButtonRowHost } from './codeBlockButtonRow';
 
@@ -41,24 +42,24 @@ function findCodeSectionPre(
       if (m) {
         const level = (m[1] ?? '').length;
         const title = (m[2] ?? '').trim();
-        if (level === 2 && title === 'Code') {
+        if (level >= 2 && isCodeHeading(`## ${title}`)) {
           return pre as HTMLElement;
         }
-        if (level <= 2) return null;
+        if (level <= 3) return null;
       }
     }
     return null;
   }
 
-  const headings = element.querySelectorAll('h2');
+  const headings = element.querySelectorAll('h2, h3, h4, h5, h6');
   for (const h of Array.from(headings)) {
-    if (h.textContent?.trim() === 'Code') {
+    if (isCodeHeading(`## ${h.getAttribute('data-heading') ?? h.textContent?.trim() ?? ''}`)) {
       let sib = h.nextElementSibling;
       while (sib) {
         if (sib.tagName === 'PRE' && sib.querySelector(':scope > code')) {
           return sib as HTMLElement;
         }
-        if (sib.tagName === 'H2') return null;
+        if (/^H[1-6]$/.test(sib.tagName) && Number(sib.tagName[1]) <= Number(h.tagName[1])) return null;
         sib = sib.nextElementSibling;
       }
     }

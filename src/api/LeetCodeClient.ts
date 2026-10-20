@@ -1,13 +1,12 @@
 // src/api/LeetCodeClient.ts
-// Thin wrapper over @leetnotion/leetcode-api. All network calls flow through
-// `installRequestUrlFetcher()`'s replaced fetcher -> throttle -> requestUrl.
+// 力扣中国站客户端。通过共享 throttle / requestUrl 发送请求。
 //
 // OWNERSHIP: `isSessionExpired` is defined here and ONLY here (AUTH-04). Plan 03
 // (AuthService) and Plan 06 (ProblemBrowserView) both call it from error paths.
 // Neither redefines it.
-import { LeetCodeAdvanced, Credential } from '@leetnotion/leetcode-api';
 import type { PastContests, ContestQuestions } from '@leetnotion/leetcode-api';
 import type { SettingsStore } from '../settings/SettingsStore';
+import { ChineseProblemClient } from './ChineseProblemClient';
 
 /** LC's `question` object as returned by `lc.problem(slug)`.
  *  Only the fields we consume are declared; LC returns additional fields we ignore.
@@ -24,6 +23,9 @@ export interface LeetCodeProblemDetail {
   titleSlug: string;
   title: string;
   content: string | null;
+  translatedTitle?: string | null;
+  translatedContent?: string | null;
+  translationCheckedAt?: number;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   isPaidOnly: boolean;
   exampleTestcases?: string;
@@ -41,34 +43,18 @@ export interface LeetCodeProblemDetail {
 }
 
 export class LeetCodeClient {
-  public lc!: InstanceType<typeof LeetCodeAdvanced>;
+  public lc: ChineseProblemClient;
   private settings: SettingsStore;
 
   constructor(settings: SettingsStore) {
     this.settings = settings;
-    // WR-01: construct with an UNAUTHENTICATED baseline synchronously so the
-    // .lc field is never undefined. If cookies exist, the caller (main.ts
-    // onload / AuthService after login) MUST await reauthenticate() to bind
-    // the credential. Previously we fire-and-forgot `void cred.init(...)` —
-    // if init rejected, the rejection became an unhandled promise rejection
-    // and the client was left attached to a partially-initialised Credential,
-    // causing API calls to return null data indistinguishable from session
-    // expiry and triggering a spurious logout notice.
-    this.lc = new LeetCodeAdvanced();
+    // 每次请求从设置读取当前中国站 cookie，避免复用旧会话。
+    this.lc = new ChineseProblemClient(() => this.settings.getAuthCookies());
   }
 
-  /** Rebuild the LeetCode client with current cookies and await Credential bootstrap.
-   *  Call this from onload() and from AuthService after login/logout to guarantee
-   *  the LC client's credential is fully initialized before the first API call. */
+  /** 登录或退出后重新绑定中国站客户端，保留调用方的异步契约。 */
   async reauthenticate(): Promise<void> {
-    const cookies = this.settings.getAuthCookies();
-    if (!cookies) {
-      this.lc = new LeetCodeAdvanced();
-      return;
-    }
-    const cred = new Credential();
-    await cred.init(cookies.LEETCODE_SESSION);
-    this.lc = new LeetCodeAdvanced(cred);
+    this.lc = new ChineseProblemClient(() => this.settings.getAuthCookies());
   }
 
   /** Fetch the signed-in user's username via LC's `whoami` GraphQL query.
@@ -128,6 +114,7 @@ export class LeetCodeClient {
     if (!q || !q.questionFrontendId) return null;
     return q;
   }
+
 
   /** Phase 10 CONTEST-01 — fetch past contests with pagination support.
    *  Delegates to LeetCodeAdvanced.getPastContests which returns { totalNum, contests[] }. */

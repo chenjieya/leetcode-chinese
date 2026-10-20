@@ -112,6 +112,7 @@ export type FixtureName =
   | 'list-empty'
   | 'list-session-expired'
   | 'list-many.graphql'
+  | 'detail-cn.graphql'
   | 'detail-ac.graphql'
   | 'detail-wa.graphql';
 

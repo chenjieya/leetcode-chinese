@@ -1,13 +1,14 @@
-## Summary
+## 改动说明
 
-What this PR does and why.
+说明解决的问题与用户可见变化。
 
-## Test Plan
+## 验证结果
 
-- [ ] Existing tests pass (`npm test`)
-- [ ] Build succeeds (`npm run build`)
-- [ ] Manual verification described below
+- [ ] pnpm lint
+- [ ] pnpm test
+- [ ] pnpm build
+- [ ] pnpm run check:bundle-size
 
-## Notes
+## 兼容性与文档
 
-Anything reviewers should know.
+说明是否影响已有笔记、配置、插件目录及迁移流程。涉及上游代码时保留来源与许可证。

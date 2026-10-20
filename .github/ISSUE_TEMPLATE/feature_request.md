@@ -1,23 +1,11 @@
 ---
-name: Feature Request
-about: Suggest an enhancement or new capability
-title: ""
+name: 功能建议
+about: 描述需要解决的问题和期望功能
 labels: enhancement
-assignees: ""
 ---
 
-## Use Case
+## 使用场景
 
-What problem does this solve? Who benefits?
+## 期望行为
 
-## Proposal
-
-Describe the feature or change you'd like.
-
-## Alternatives Considered
-
-Any workarounds or other approaches you've thought about.
-
-## Additional Context
-
-Mockups, references, or related issues.
+## 已尝试的替代方案

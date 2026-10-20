@@ -5,7 +5,7 @@
 //     modal. The trigger gate is `widget.debouncedWriter.hasPending() === true`
 //     at vault.on('modify') arrival; this file does not own that decision —
 //     src/main.ts modify-handler does. This file owns the modal's UX.
-//   - D-conflict-02: "View diff" expands the modal in place to show three
+//   - D-conflict-02: "查看差异" expands the modal in place to show three
 //     columns (Mine | External | Merged preview) using a pure-TS LCS line
 //     diff (`src/widget/conflictDiff.ts`). Buttons remain at top — diff
 //     APPENDS, does NOT replace.
@@ -13,10 +13,10 @@
 //     the External pane in place via `updateExternalContent(newExt)`. No
 //     stacking modals; the modal is a live view of disk state.
 //   - L8: Phase 19's historyJSON capture is consumed best-effort for
-//     post-resolution undo continuity. The "Keep external" path replaces
+//     post-resolution undo continuity. The "使用磁盘版本" path replaces
 //     doc + adds Transaction.addToHistory.of(false) annotation — the user's
 //     undo stack now references a doc state that no longer exists; pressing
-//     Cmd-Z after Keep external is documented as a no-op (limitation).
+//     Cmd-Z after 使用磁盘版本 is documented as a no-op (limitation).
 //
 // CRITICAL contracts (THREAT MODEL T-20-03-01 / T-20-03-09 + CLAUDE.md):
 //   - Render external file content via `textContent` only. NEVER use the
@@ -46,8 +46,8 @@ import type { WidgetController } from './WidgetController';
 
 /**
  * Three-button conflict modal that appears when an external file edit lands
- * during local in-flight typing. The user picks Keep mine / Keep external /
- * View diff (inline expansion, no separate page).
+ * during local in-flight typing. The user picks 保留我的编辑 / 使用磁盘版本 /
+ * 查看差异 (inline expansion, no separate page).
  */
 export class ConflictModal extends Modal {
   /** Public lifecycle flag — set true in `onOpen()` and false in `onClose()`.
@@ -56,7 +56,7 @@ export class ConflictModal extends Modal {
    *  modal (closed or never opened). */
   public isOpen = false;
 
-  /** Whether the user clicked "View diff" and the 3-column section is mounted. */
+  /** Whether the user clicked "查看差异" and the 3-column section is mounted. */
   private diffOpen = false;
 
   /** DOM handles for the diff section. Set when `expandDiff()` fires. */
@@ -100,15 +100,15 @@ export class ConflictModal extends Modal {
     this.isOpen = true;
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: 'External edit detected' });
+    contentEl.createEl('h2', { text: '检测到外部修改' });
     contentEl.createEl('p', {
-      text: 'This file changed on disk while you were editing. Choose a resolution:',
+      text: '代码尚有未保存的修改，同时磁盘中的文件也发生了变化。请选择处理方式：',
     });
 
     new Setting(contentEl)
       .addButton((btn) =>
         btn
-          .setButtonText('Keep mine')
+          .setButtonText('保留我的编辑')
           .setCta()
           .onClick(async () => {
             // CONTEXT discretion: immediate flush — the user just made a
@@ -120,30 +120,30 @@ export class ConflictModal extends Modal {
             } catch {
               // Defensive — flush errors shouldn't block closing the modal.
             }
-            new Notice('Local edits saved.', 3000);
+            new Notice('已保存你的编辑。', 3000);
             this.close();
           }),
       )
       .addButton((btn) =>
-        btn.setButtonText('Keep external').onClick(async () => {
+        btn.setButtonText('使用磁盘版本').onClick(async () => {
           try {
             await this.widget.reloadFromDisk('keep-external');
           } catch {
             // Defensive — reload errors shouldn't block closing the modal.
           }
-          new Notice('Reloaded from disk.', 3000);
+          new Notice('已从磁盘重新加载。', 3000);
           this.close();
         }),
       )
       .addButton((btn) =>
-        btn.setButtonText('View diff').onClick(() => this.expandDiff()),
+        btn.setButtonText('查看差异').onClick(() => this.expandDiff()),
       );
   }
 
   /**
    * D-conflict-02 — append the 3-column diff section BELOW the buttons.
    * Buttons remain interactive at the top of the modal; the user can still
-   * pick Keep mine / Keep external from the same surface that shows the
+   * pick 保留我的编辑 / 使用磁盘版本 from the same surface that shows the
    * diff. No-op if already expanded.
    */
   expandDiff(): void {
@@ -151,7 +151,7 @@ export class ConflictModal extends Modal {
     this.diffOpen = true;
     const { contentEl } = this;
     const diffContainer = contentEl.createDiv({ cls: 'lc-conflict-diff' });
-    diffContainer.createEl('h3', { text: 'Diff' });
+    diffContainer.createEl('h3', { text: '版本差异' });
     const cols = diffContainer.createDiv({ cls: 'lc-conflict-cols' });
     this.mineEl = cols.createEl('pre', { cls: 'lc-conflict-mine' });
     this.extEl = cols.createEl('pre', { cls: 'lc-conflict-external' });

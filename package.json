@@ -1,22 +1,22 @@
 {
-  "name": "obsidian-leetcode",
-  "version": "1.3.2",
-  "description": "Browse, solve, and note LeetCode problems inside your vault.",
+  "name": "leetcode-chinese",
+  "version": "1.0.0",
+  "description": "在 Obsidian 中浏览力扣中国站题目、编写与提交解答，生成中文 AI 复盘和关联笔记.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "prelint": "npm run check:lc-isolation",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --maxWorkers=4",
     "ci": "npm run lint && npm test && npm run build && npm run check:bundle-size",
     "check:bundle-size": "node scripts/check-bundle-size.mjs",
-    "check:lc-isolation": "bash scripts/check-no-obsidianfetch-in-lc.sh && bash scripts/check-no-fetch-in-lc.sh",
+    "check:lc-isolation": "node scripts/check-lc-isolation.mjs",
     "grep:vault": "./scripts/grep-no-vault-modify.sh",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
   "keywords": [],
-  "author": "Mo Xu",
+  "author": "jie.chen",
   "license": "MIT",
   "devDependencies": {
     "@codemirror/commands": "^6.10.3",
@@ -55,5 +55,20 @@
     "turndown": "7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
     "zod": "^4.1.8"
+  },
+  "packageManager": "pnpm@10.28.0",
+  "contributors": [
+    {
+      "name": "Mo Xu (moxu)",
+      "url": "https://github.com/LikeSundayLikeRain"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chenjieya/leetcode-chinese.git"
+  },
+  "homepage": "https://github.com/chenjieya/leetcode-chinese",
+  "bugs": {
+    "url": "https://github.com/chenjieya/leetcode-chinese/issues"
   }
 }

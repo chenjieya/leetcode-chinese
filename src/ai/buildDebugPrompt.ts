@@ -57,6 +57,7 @@ export function buildDebugPrompt(args: BuildDebugPromptArgs): string {
 
   return [
     'You are debugging a LeetCode solution. Be concise. Do not rewrite the entire problem.',
+    '请使用简体中文撰写回答、章节标题和解释，代码中的语言关键字和标识符保持原样。',
     '',
     '## Problem',
     args.problemMd.trim(),

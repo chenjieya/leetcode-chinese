@@ -44,7 +44,7 @@ export function registerRunCommand(
 ): void {
   plugin.addCommand({
     id: 'run',
-    name: 'Run',
+    name: '运行',
     editorCheckCallback: (checking, _editor, view) => {
       const file = view.file;
       if (!file) return false;

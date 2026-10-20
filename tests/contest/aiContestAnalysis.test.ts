@@ -92,12 +92,12 @@ describe('mergeAIContestAnalysisSection integration', () => {
     const merged = mergeAIContestAnalysisSection(body, 'Great performance overall!');
 
     // AI Analysis heading should appear
-    expect(merged).toContain('## AI Analysis');
+    expect(merged).toContain('## AI 分析');
     // AI Analysis content should appear
     expect(merged).toContain('Great performance overall!');
     // Order: Results before AI Analysis before Notes
     const resultsIdx = merged.indexOf('## Results');
-    const analysisIdx = merged.indexOf('## AI Analysis');
+    const analysisIdx = merged.indexOf('## AI 分析');
     const notesIdx = merged.indexOf('## Notes');
     expect(resultsIdx).toBeLessThan(analysisIdx);
     expect(analysisIdx).toBeLessThan(notesIdx);
@@ -125,7 +125,7 @@ describe('mergeAIContestAnalysisSection integration', () => {
     expect(merged).toContain('New analysis content.');
     expect(merged).not.toContain('Old analysis content');
     // Still only one ## AI Analysis heading
-    const matches = merged.match(/## AI Analysis/g);
+    const matches = merged.match(/## AI 分析/g);
     expect(matches).toHaveLength(1);
   });
 
@@ -139,11 +139,11 @@ describe('mergeAIContestAnalysisSection integration', () => {
 
     const merged = mergeAIContestAnalysisSection(body, 'Analysis at end.');
 
-    expect(merged).toContain('## AI Analysis');
+    expect(merged).toContain('## AI 分析');
     expect(merged).toContain('Analysis at end.');
     // AI Analysis comes after Results
     const resultsIdx = merged.indexOf('## Results');
-    const analysisIdx = merged.indexOf('## AI Analysis');
+    const analysisIdx = merged.indexOf('## AI 分析');
     expect(resultsIdx).toBeLessThan(analysisIdx);
   });
 });
@@ -159,7 +159,7 @@ describe('withContestAnalysisBullet', () => {
     // Should contain all base bullets plus the contest analysis bullet
     expect(extended.willSend.length).toBe(DISCLOSURE_BASE_COPY.willSend.length + 1);
     expect(extended.willSend[extended.willSend.length - 1]).toBe(
-      'Contest analysis sends contest metadata, per-problem summary (slug, difficulty, verdict, time, your code)',
+      '竞赛分析会发送竞赛信息和各题摘要（题目标识、难度、判题结果、耗时和你的代码）',
     );
 
     // neverSends should pass through by reference equality

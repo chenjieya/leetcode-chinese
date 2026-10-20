@@ -386,7 +386,7 @@ describe('computeLockedRanges — pure function', () => {
     expect(bodyLocked).toBe(false);
   });
 
-  it('locks ## Techniques heading line; body lines are NOT in any returned range — anchor D-03/Techniques', () => {
+  it('locks ## Techniques heading line; body lines are NOT in any returned range — anchor D-03/techniques', () => {
     const body = canonicalNoteBody();
     const state = makeStateForLockTests({ body });
     const ranges = computeLockedRanges(state);

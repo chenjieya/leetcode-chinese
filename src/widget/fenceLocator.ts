@@ -1,3 +1,4 @@
+import { isCodeHeading, isSectionBoundary } from '../notes/noteHeadings';
 // Phase 19 Plan 01 — Pure fence-locator helpers.
 //
 // Lifts findCodeFence from src/main/codeActionsEditorExtension.ts:177-212
@@ -39,10 +40,9 @@ export function findCodeFence(
 
   const FENCE_RE = /^\s*```/;
   const LC_OPENER_RE = /^\s*```leetcode-solve\b/;
-  const H2_CODE_RE = /^\s*##\s+Code\s*$/;
-  const H2_ANY_RE = /^\s*##\s+.+$/;
 
   let inCodeSection = false;
+  let codeHeading = '## Code';
   const total = state.doc.lines;
 
   // Phase 20 Plan 20-09 — when `preferLeetCodeSolve` is true, the loop
@@ -56,12 +56,13 @@ export function findCodeFence(
   while (i <= total) {
     const text = state.doc.line(i).text;
 
-    if (H2_CODE_RE.test(text)) {
+    if (isCodeHeading(text)) {
+      codeHeading = text;
       inCodeSection = true;
       i++;
       continue;
     }
-    if (H2_ANY_RE.test(text)) {
+    if (isSectionBoundary(text, codeHeading)) {
       inCodeSection = false;
       i++;
       continue;

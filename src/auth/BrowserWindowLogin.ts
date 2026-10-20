@@ -72,12 +72,12 @@ export interface ElectronCookiesApi {
  * Captures LeetCode auth cookies from an Electron session cookies API and
  * extracts the LEETCODE_SESSION + csrftoken pair.
  *
- * Uses `{ url: 'https://leetcode.com/' }` as the filter (NOT `{ domain: ... }`)
+ * Uses `{ url: 'https://leetcode.cn/' }` as the filter (NOT `{ domain: ... }`)
  * because Electron interprets the URL filter as "all cookies that would be sent
  * on a request to that URL" — which is exactly what the API client needs by
  * construction, and crucially INCLUDES host-only cookies (no Domain attribute,
- * stored under `leetcode.com` without a leading dot). LC sometimes sets
- * csrftoken as a host-only cookie; the previous `{ domain: '.leetcode.com' }`
+ * stored under `leetcode.cn` without a leading dot). LC sometimes sets
+ * csrftoken as a host-only cookie; the previous `{ domain: '.leetcode.cn' }`
  * filter omitted those, which silently broke embedded login (issue #16).
  *
  * Returns null when either required cookie is missing or when the underlying
@@ -92,7 +92,7 @@ export async function tryCaptureCookies(
   cookies: ElectronCookiesApi,
 ): Promise<AuthCookies | null> {
   try {
-    const list = await cookies.get({ url: 'https://leetcode.com/' });
+    const list = await cookies.get({ url: 'https://leetcode.cn/' });
     return extractAuthCookies(list);
   } catch {
     // AUTH-06: never log cookie data on failure; next event will retry.
@@ -191,7 +191,7 @@ export function openLogin(): Promise<OpenLoginResult> {
   if (!BrowserWindow) {
     return Promise.reject(
       new Error(
-        'BrowserWindow unavailable — renderer-process Electron did not expose it via electron.remote or @electron/remote. Use the cookie-paste fallback in Settings.',
+        '当前环境无法打开登录窗口，请在设置中手动填写力扣中国站的 Cookie。',
       ),
     );
   }
@@ -204,7 +204,7 @@ export function openLogin(): Promise<OpenLoginResult> {
       show: true,
       autoHideMenuBar: true,
       webPreferences: {
-        partition: 'persist:leetcode', // D-03 — isolated cookie jar (Pitfall 3)
+        partition: 'persist:leetcode-cn', // D-03 — isolated cookie jar (Pitfall 3)
         nodeIntegration: false,
         contextIsolation: true,
       },
@@ -273,7 +273,7 @@ export function openLogin(): Promise<OpenLoginResult> {
     // hang forever. Catch, resolve cancelled, and force-close so the auth
     // flow always settles (CR-05). Semantically still a cancel — user did
     // not log in.
-    win.loadURL('https://leetcode.com/accounts/login/').catch(() => {
+    win.loadURL('https://leetcode.cn/accounts/login/').catch(() => {
       settle({ kind: 'cancelled' });
       safeClose();
     });
@@ -281,7 +281,7 @@ export function openLogin(): Promise<OpenLoginResult> {
 }
 
 /**
- * Clear the `persist:leetcode` Electron session partition so the next embedded
+ * Clear the `persist:leetcode-cn` Electron session partition so the next embedded
  * login actually prompts for credentials instead of auto-signing-in from the
  * cached cookie jar. Called from AuthService.logout().
  *
@@ -297,7 +297,7 @@ export async function clearLeetCodePartitionCookies(): Promise<void> {
       // Try @electron/remote as a last resort (Obsidian ships with it loaded).
       const remoteSession = loadElectronRemote()?.session;
       if (remoteSession) {
-        await remoteSession.fromPartition('persist:leetcode').clearStorageData({
+        await remoteSession.fromPartition('persist:leetcode-cn').clearStorageData({
           storages: ['cookies'],
         });
       }
@@ -305,7 +305,7 @@ export async function clearLeetCodePartitionCookies(): Promise<void> {
       // cookies were already cleared so API calls will still fail-then-prompt.
       return;
     }
-    await session.fromPartition('persist:leetcode').clearStorageData({
+    await session.fromPartition('persist:leetcode-cn').clearStorageData({
       storages: ['cookies'],
     });
   } catch {

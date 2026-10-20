@@ -87,7 +87,7 @@ describe('CR-02 empty-baseUrl guards — Plan 07-07 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeCustom(emptyCfg, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toMatch(/Base URL is required/i);
+    expect(r.errorMessage).toMatch(/请填写.*服务地址/);
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -95,7 +95,7 @@ describe('CR-02 empty-baseUrl guards — Plan 07-07 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeOllama({ ...emptyCfg, apiKey: '' }, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toMatch(/Base URL is required/i);
+    expect(r.errorMessage).toMatch(/请填写.*服务地址/);
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -148,7 +148,7 @@ describe('WR-03-whitespace empty-baseUrl guards — Plan 07-08 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeCustom({ ...emptyCfg, baseUrl: ' ' }, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toBe('Base URL is required for Custom provider.');
+    expect(r.errorMessage).toBe('请填写自定义服务地址。');
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -156,7 +156,7 @@ describe('WR-03-whitespace empty-baseUrl guards — Plan 07-08 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeCustom({ ...emptyCfg, baseUrl: '\t' }, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toBe('Base URL is required for Custom provider.');
+    expect(r.errorMessage).toBe('请填写自定义服务地址。');
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -164,7 +164,7 @@ describe('WR-03-whitespace empty-baseUrl guards — Plan 07-08 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeCustom({ ...emptyCfg, baseUrl: '  \t  ' }, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toBe('Base URL is required for Custom provider.');
+    expect(r.errorMessage).toBe('请填写自定义服务地址。');
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -172,7 +172,7 @@ describe('WR-03-whitespace empty-baseUrl guards — Plan 07-08 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeOllama({ ...emptyCfg, apiKey: '', baseUrl: ' ' }, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toBe('Base URL is required for Ollama provider.');
+    expect(r.errorMessage).toBe('请填写 Ollama 服务地址。');
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -180,7 +180,7 @@ describe('WR-03-whitespace empty-baseUrl guards — Plan 07-08 Task 2', () => {
     const fetcherSpy = vi.fn<FetchFn>();
     const r = await probeOllama({ ...emptyCfg, apiKey: '', baseUrl: '\t \t' }, fetcherSpy);
     expect(r.ok).toBe(false);
-    expect(r.errorMessage).toBe('Base URL is required for Ollama provider.');
+    expect(r.errorMessage).toBe('请填写 Ollama 服务地址。');
     expect(fetcherSpy).toHaveBeenCalledTimes(0);
   });
 

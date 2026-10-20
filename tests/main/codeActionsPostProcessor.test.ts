@@ -150,9 +150,9 @@ describe('codeActionsPostProcessor (Reading Mode)', () => {
     expect(buttons.length).toBe(5);
     expect(buttons[0]!.classList.contains('leetcode-code-action-icon')).toBe(true);
     expect(buttons[1]!.classList.contains('leetcode-code-action-icon')).toBe(true);
-    expect(buttons[2]!.textContent).toBe('AI solution');
-    expect(buttons[3]!.textContent).toBe('Run');
-    expect(buttons[4]!.textContent).toBe('Submit');
+    expect(buttons[2]!.textContent).toBe("AI 题解");
+    expect(buttons[3]!.textContent).toBe("运行");
+    expect(buttons[4]!.textContent).toBe("提交");
   });
 
   it('does NOT append when section is under ## Problem (example code blocks)', async () => {

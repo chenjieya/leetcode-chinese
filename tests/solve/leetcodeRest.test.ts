@@ -110,7 +110,7 @@ describe('interpretSolution (SOLVE-03)', () => {
       throw: boolean;
     };
 
-    expect(call.url).toBe('https://leetcode.com/problems/two-sum/interpret_solution/');
+    expect(call.url).toBe('https://leetcode.cn/problems/two-sum/interpret_solution/');
     expect(call.method).toBe('POST');
     expect(call.throw).toBe(false);
 
@@ -149,9 +149,9 @@ describe('interpretSolution (SOLVE-03)', () => {
 
     expect(headers['cookie']).toBe('csrftoken=csrf-xyz-789; LEETCODE_SESSION=sess-abc-123;');
     expect(headers['x-csrftoken']).toBe('csrf-xyz-789');
-    expect(headers['referer']).toBe('https://leetcode.com/problems/two-sum/description/');
+    expect(headers['referer']).toBe('https://leetcode.cn/problems/two-sum/description/');
     expect(headers['content-type']).toBe('application/json');
-    expect(headers['origin']).toBe('https://leetcode.com');
+    expect(headers['origin']).toBe('https://leetcode.cn');
     expect(headers['x-requested-with']).toBe('XMLHttpRequest');
     expect(typeof headers['user-agent']).toBe('string');
   });
@@ -159,7 +159,7 @@ describe('interpretSolution (SOLVE-03)', () => {
   it('throws SessionExpiredError on HTTP 302', async () => {
     mockThrottledRequestUrl.mockResolvedValueOnce({
       status: 302,
-      headers: { location: 'https://leetcode.com/accounts/login/' },
+      headers: { location: 'https://leetcode.cn/accounts/login/' },
       text: '',
       json: null,
     });
@@ -278,7 +278,7 @@ describe('submitSolution (SOLVE-05)', () => {
       throw: boolean;
     };
 
-    expect(call.url).toBe('https://leetcode.com/problems/two-sum/submit/');
+    expect(call.url).toBe('https://leetcode.cn/problems/two-sum/submit/');
     expect(call.method).toBe('POST');
     expect(call.throw).toBe(false);
 
@@ -360,11 +360,11 @@ describe('checkSubmission (SOLVE-06)', () => {
       headers: Record<string, string>;
       throw: boolean;
     };
-    expect(call.url).toBe('https://leetcode.com/submissions/detail/123456789/check/');
+    expect(call.url).toBe('https://leetcode.cn/submissions/detail/123456789/check/');
     expect(call.method).toBe('GET');
     expect(call.throw).toBe(false);
     // Referer is built from the slug, even though the URL is under /submissions/:
-    expect(call.headers['referer']).toBe('https://leetcode.com/problems/two-sum/description/');
+    expect(call.headers['referer']).toBe('https://leetcode.cn/problems/two-sum/description/');
     expect(call.headers['x-csrftoken']).toBe('csrf-xyz-789');
 
     expect(result).toEqual({ state: 'PENDING' });

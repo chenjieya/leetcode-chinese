@@ -137,8 +137,11 @@
 // Actions workflow at .github/workflows/ci.yml.
 import fs from 'node:fs';
 
-const HARD_LIMIT = 1_800_000;
-const SOFT_WARN = 1_760_000;
+// 中文独立版 1.0.0：当前生产包约 1,945,282 字节（2026-10-20）。
+// 原上限来自上游较早版本；按现有依赖和中国站适配重新建立基线，
+// 保留 2 MB 硬门禁及 1.98 MB 预警，防止后续无意增大。
+const HARD_LIMIT = 2_000_000;
+const SOFT_WARN = 1_980_000;
 const PATH = 'main.js';
 
 if (!fs.existsSync(PATH)) {

@@ -45,7 +45,7 @@ function makeApp(state: MockState): { app: any; file: any } {
   const app = {
     vault: {
       // configDir mirrors Obsidian's default — production code builds the
-      // backup root as `${vault.configDir}/plugins/obsidian-leetcode`, which
+      // backup root as `${vault.configDir}/plugins/leetcode-chinese`, which
       // resolves to the literal `.obsidian/...` paths these fixtures expect.
       // eslint-disable-next-line obsidianmd/hardcoded-config-path -- this IS the configDir mock; production code reads it via app.vault.configDir.
       configDir: '.obsidian',
@@ -279,7 +279,7 @@ describe('writeBackup', () => {
     const path = await writeBackup(app, file, 'two-sum', 'note content');
     expect(path).toBe(
       // eslint-disable-next-line obsidianmd/hardcoded-config-path -- expected output of production code given the mock's configDir='.obsidian' (default).
-      '.obsidian/plugins/obsidian-leetcode/migration-backup-two-sum-2026-06-01T14-32-08Z/two-sum.md',
+      '.obsidian/plugins/leetcode-chinese/migration-backup-two-sum-2026-06-01T14-32-08Z/two-sum.md',
     );
   });
 
@@ -288,7 +288,7 @@ describe('writeBackup', () => {
     const { app, file } = makeApp(state);
     const path = await writeBackup(app, file, 'test-slug', 'x');
     expect(path).toMatch(
-      /\.obsidian\/plugins\/obsidian-leetcode\/migration-backup-test-slug-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\/test-slug\.md/,
+      /\.obsidian\/plugins\/leetcode-chinese\/migration-backup-test-slug-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\/test-slug\.md/,
     );
   });
 
@@ -307,7 +307,7 @@ describe('writeBackup', () => {
     await writeBackup(app, file, 'two-sum', 'x');
     expect(state.adapterMkdirSpy).toHaveBeenCalled();
     expect(state.adapterMkdirSpy.mock.calls[0]?.[0]).toMatch(
-      /^\.obsidian\/plugins\/obsidian-leetcode\/migration-backup-two-sum-/,
+      /^\.obsidian\/plugins\/leetcode-chinese\/migration-backup-two-sum-/,
     );
     // mkdir invoked before write (check invocationCallOrder).
     const mkdirOrder = state.adapterMkdirSpy.mock.invocationCallOrder[0]!;
@@ -548,7 +548,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
   // Plan 21-06 CR-02 — pre-existence backup check protects D-backup-02
   // invariant ("one backup per note ever") on the partial-failure retry
   // path. Before writeBackup runs, the orchestrator lists
-  // .obsidian/plugins/obsidian-leetcode/ and skips the backup write if a
+  // .obsidian/plugins/leetcode-chinese/ and skips the backup write if a
   // `migration-backup-{slug}-*` folder already exists for THIS slug.
   // ───────────────────────────────────────────────────────────────────────
 
@@ -562,7 +562,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
       // Capture the prior-backup folder path written on the first call so
       // adapter.list can surface it on the second call.
       if (priorBackupFolder === null) {
-        // path looks like '.obsidian/plugins/obsidian-leetcode/migration-backup-two-sum-{ISO}/two-sum.md'
+        // path looks like '.obsidian/plugins/leetcode-chinese/migration-backup-two-sum-{ISO}/two-sum.md'
         const dir = path.replace(/\/[^/]+$/, '');
         priorBackupFolder = dir;
       }
@@ -672,7 +672,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
         files: [],
         folders: [
           // eslint-disable-next-line obsidianmd/hardcoded-config-path -- mocked adapter.list output; mirrors what production code writes when configDir='.obsidian'.
-          '.obsidian/plugins/obsidian-leetcode/migration-backup-other-slug-2026-01-01T00-00-00Z',
+          '.obsidian/plugins/leetcode-chinese/migration-backup-other-slug-2026-01-01T00-00-00Z',
         ],
       }),
     });
@@ -1019,7 +1019,7 @@ describe('migrateLegacyFenceIfNeeded — Plan 21-09 dummy block (kept for symmet
       files: [],
       folders: [
         // eslint-disable-next-line obsidianmd/hardcoded-config-path -- mocked adapter.list output; mirrors what production code writes when configDir='.obsidian'.
-        '.obsidian/plugins/obsidian-leetcode/migration-backup-two-sum-2026-06-01T14-32-08Z',
+        '.obsidian/plugins/leetcode-chinese/migration-backup-two-sum-2026-06-01T14-32-08Z',
       ],
     });
 

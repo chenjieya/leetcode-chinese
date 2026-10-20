@@ -25,7 +25,7 @@ export const MAX_WALLCLOCK_MS = 60_000;
 /** Non-2xx streak cap locked by D-26. */
 export const MAX_CONSECUTIVE_ERRORS = 3;
 
-const BASE_URL = 'https://leetcode.com';
+const BASE_URL = 'https://leetcode.cn';
 
 /** Minimal abort-signal shape — matches the DOM AbortSignal's `aborted`
  *  property so tests can pass a bare `{ aborted: boolean }` literal. */

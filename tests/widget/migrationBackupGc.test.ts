@@ -52,7 +52,7 @@ function makeApp(opts: {
     rmdir: vi.fn(opts.rmdirImpl ?? (async () => {})),
   };
   // configDir mirrors Obsidian's default — production code builds the
-  // backup root as `${vault.configDir}/plugins/obsidian-leetcode`, which
+  // backup root as `${vault.configDir}/plugins/leetcode-chinese`, which
   // resolves to the literal `.obsidian/...` paths the BASE/BASE_PREFIX
   // fixtures expect.
   // eslint-disable-next-line obsidianmd/hardcoded-config-path -- this IS the configDir mock; production code reads it via app.vault.configDir.
@@ -60,7 +60,7 @@ function makeApp(opts: {
 }
 
 // eslint-disable-next-line obsidianmd/hardcoded-config-path -- this is the literal output path the production code is expected to produce when configDir='.obsidian' (the default mocked above); not a runtime path-construction site.
-const BASE = '.obsidian/plugins/obsidian-leetcode';
+const BASE = '.obsidian/plugins/leetcode-chinese';
 const BASE_PREFIX = `${BASE}/`;
 
 /** Build a sanitized-ISO suffix at `daysAgo` days before the current mocked

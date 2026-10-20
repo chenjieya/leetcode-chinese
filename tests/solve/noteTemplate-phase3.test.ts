@@ -56,9 +56,9 @@ describe('NoteTemplate Phase 3 schema additions (CONTEXT D-06, D-18, D-20)', () 
   describe('buildNoteBody', () => {
     it('emits `## Problem` → `## Code` → `## Notes` in order (D-06)', () => {
       const body = buildNoteBody({ problemMarkdown: 'A problem.' });
-      const problemIdx = body.indexOf('## Problem');
-      const codeIdx = body.indexOf('## Code');
-      const notesIdx = body.indexOf('## Notes');
+      const problemIdx = body.indexOf('## 题目');
+      const codeIdx = body.indexOf('## 代码');
+      const notesIdx = body.indexOf('## 笔记');
       expect(problemIdx).toBeGreaterThanOrEqual(0);
       expect(codeIdx).toBeGreaterThan(problemIdx);
       expect(notesIdx).toBeGreaterThan(codeIdx);
@@ -71,7 +71,7 @@ describe('NoteTemplate Phase 3 schema additions (CONTEXT D-06, D-18, D-20)', () 
     // spacing.
     it('emits a blank line between `## Code` heading and the fence opener', () => {
       const body = buildNoteBody({ problemMarkdown: 'X' });
-      expect(body).toContain('## Code\n\n```leetcode-solve');
+      expect(body).toContain('## 代码\n\n```leetcode-solve');
     });
 
     it('emits a ```leetcode-solve fence regardless of langSlug (Phase 22 v1.3)', () => {
