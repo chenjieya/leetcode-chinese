@@ -1,5 +1,13 @@
 # LeetCode Chinese
 
+**English overview:** LeetCode Chinese is a desktop plugin for practicing problems on LeetCode China (leetcode.cn) inside Obsidian. Browse Chinese problem statements, write and run solutions, submit with a LeetCode China account, and keep linked study notes. Optional AI features generate Chinese solution reviews, algorithm classifications, and related practice suggestions. The interface and generated learning content are primarily in Chinese.
+
+**Installation:** Download `leetcode-chinese.zip` from [GitHub Releases](https://github.com/chenjieya/leetcode-chinese/releases), extract it into your vault’s `.obsidian/plugins/leetcode-chinese/` directory, then enable LeetCode Chinese. Requires Obsidian desktop 1.12.7 or later. Disable the original LeetCode plugin before migrating. Configure your China-site login and, optionally, an AI provider in settings.
+
+**Privacy and external programs:** Problem browsing and submissions connect to leetcode.cn. AI requests send problem statements, solution code, and judging information to your chosen provider after confirmation; personal notes are excluded. Provider fees may apply. Cookies and API keys are stored in plain text in local `data.json`; do not share this file. Optional AWS Bedrock authentication can read `~/.aws/credentials` and `~/.aws/config` outside the vault and execute a configured `credential_process` helper. Only that credential flow probes the shell PATH on macOS/Linux; normal plugin startup does not launch a shell. Helpers run without shell command interpolation and have a 30-second timeout. The plugin does not execute submitted solution code locally, insert ads, or add client telemetry.
+
+**Attribution:** Derived from [Mo Xu / moxu’s obsidian-leetcode](https://github.com/LikeSundayLikeRain/obsidian-leetcode), under the MIT license. Original copyright notices are retained. This independently maintained China-site adaptation is not affiliated with the original project, LeetCode, or Obsidian.
+
 面向力扣中国站的 Obsidian 桌面插件。在笔记中浏览题目、编写并提交代码，积累中文 AI 复盘、算法模式索引和题目关联。
 
 本项目基于 [Mo Xu / moxu 的 obsidian-leetcode](https://github.com/LikeSundayLikeRain/obsidian-leetcode) 改造，保留原项目 MIT 许可证与版权声明。由 jie.chen 维护中国站适配和中文体验，与原项目、力扣及 Obsidian 官方无隶属关系。
@@ -15,6 +23,7 @@
 | 编号 | 版本 | 修订人 | 修订内容 | 日期 |
 |:--:|:--|:--:|:--|:--|
 | 001 | 1.0 | jie.chen | 发布中文衍生版使用说明 | 2026-10-20 |
+| 002 | 1.1 | jie.chen | 补充市场要求的英文介绍与外部程序调用说明 | 2026-10-20 |
 
 ---
 
@@ -75,7 +84,7 @@
 | 个人笔记 | 不发送个人“笔记”区域参与 AI 调试、复盘或分类 |
 | 本地配置 | Cookie、API 密钥及配置保存在插件目录的 data.json 中，属于敏感文件，不应公开或上传仓库 |
 | AWS Bedrock | 使用凭据链时可能读取知识库外的 ~/.aws/credentials、~/.aws/config，支持环境变量和 credential_process 辅助命令 |
-| 桌面运行环境 | 可读取登录 shell 的 PATH，为外部凭据辅助程序查找命令路径 |
+| 桌面运行环境 | 仅在 AWS credential_process 认证时读取 shell 的 PATH，为外部凭据辅助程序查找命令路径；普通插件启动不调用 shell |
 
 支持 Anthropic、OpenAI、OpenRouter、Ollama、自定义 OpenAI 兼容服务及 AWS Bedrock；选择自定义或本地服务时，请核对地址和模型。插件自身不插入广告或客户端遥测，不会把力扣 Cookie 发送到 AI 服务。服务提供商的收费和数据政策由各自提供商决定。
 

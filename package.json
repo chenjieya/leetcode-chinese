@@ -1,7 +1,7 @@
 {
   "name": "leetcode-chinese",
-  "version": "1.0.2",
-  "description": "在 Obsidian 中浏览力扣中国站题目、编写与提交解答，生成中文 AI 复盘和关联笔记.",
+  "version": "1.0.3",
+  "description": "浏览力扣中国站题目、编写与提交解答，生成中文 AI 复盘和关联笔记.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -71,5 +71,13 @@
   "homepage": "https://github.com/chenjieya/leetcode-chinese",
   "bugs": {
     "url": "https://github.com/chenjieya/leetcode-chinese/issues"
+  },
+  "overrides": {
+    "@ai-sdk/provider-utils": "4.0.33"
+  },
+  "pnpm": {
+    "overrides": {
+      "@ai-sdk/provider-utils": "4.0.33"
+    }
   }
 }

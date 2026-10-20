@@ -226,7 +226,7 @@ describe('credentialProcess — runCredentialProcess (spawn behavior)', () => {
     );
   });
 
-  it('spawnSync called with shell:true, timeout:30000, windowsHide:true, encoding:utf8', async () => {
+  it('spawnSync called with shell:false, timeout:30000, windowsHide:true, encoding:utf8', async () => {
     stubNodeModules({
       spawnSyncResult: {
         status: 0,
@@ -543,6 +543,47 @@ describe('credentialProcess — getCachedOrRefreshSync cache', () => {
 // ─── getCachedOrRefresh async coalescing (D-12) ───────────────────────────
 
 describe('credentialProcess — getCachedOrRefresh async coalescing (D-12)', () => {
+  it('probes PATH only on credential refresh and passes shell metacharacters as literal arguments', async () => {
+    const realProcess = process;
+    vi.stubGlobal('process', new Proxy(realProcess, {
+      get(target, property) {
+        return property === 'platform' ? 'darwin' : Reflect.get(target, property);
+      },
+    }));
+    const execFile = vi.fn((
+      _command: string,
+      args: string[],
+      _options: unknown,
+      callback: (error: Error | null, stdout: string, stderr: string) => void,
+    ) => {
+      callback(null, args[0] === '-ic' ? '/usr/local/bin:/usr/bin' : JSON.stringify({
+        AccessKeyId: 'test-key',
+        SecretAccessKey: 'test-secret',
+      }), '');
+      return { unref: vi.fn() };
+    });
+    vi.stubGlobal('activeWindow', { require: () => ({ execFile }) });
+    const { getCachedOrRefresh } = await import('../../src/ai/credentialProcess');
+
+    expect(execFile).not.toHaveBeenCalled();
+    const value = 'helper "$(touch ignored)"';
+    await getCachedOrRefresh('lazy-path', value);
+    expect(execFile).toHaveBeenCalledTimes(2);
+    expect(execFile).toHaveBeenNthCalledWith(1, expect.any(String),
+      ['-ic', 'printf "%s" "$PATH"'],
+      expect.objectContaining({ timeout: 5_000 }), expect.any(Function));
+    expect(execFile).toHaveBeenNthCalledWith(2, 'helper', ['$(touch ignored)'],
+      expect.objectContaining({
+        shell: false,
+        timeout: 30_000,
+        windowsHide: true,
+        env: expect.objectContaining({ PATH: '/usr/local/bin:/usr/bin' }),
+      }), expect.any(Function));
+
+    await getCachedOrRefresh('lazy-path', value);
+    expect(execFile).toHaveBeenCalledTimes(2);
+  });
+
   it('5 concurrent getCachedOrRefresh calls -> exactly 1 spawn', async () => {
     let spawnCount = 0;
     stubNodeModules({
@@ -561,10 +602,13 @@ describe('credentialProcess — getCachedOrRefresh async coalescing (D-12)', () 
         };
       },
     });
-    const { getCachedOrRefresh, clearCredentialProcessCache } = await import(
+    const { getCachedOrRefresh, clearCredentialProcessCache, _setLoginPathCache } = await import(
       '../../src/ai/credentialProcess'
     );
     clearCredentialProcessCache();
+
+    // Keep this coalescing test independent of the host operating system.
+    _setLoginPathCache(process.env.PATH ?? '');
 
     // Fire 5 concurrent calls
     const results = await Promise.all([

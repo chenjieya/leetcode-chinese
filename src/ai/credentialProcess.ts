@@ -124,7 +124,7 @@ export function getLoginShellPath(): string {
  * first successful call. 5s timeout prevents hanging on exotic shell configs.
  * Falls back to process.env.PATH on any failure.
  *
- * Call once at plugin load (fire-and-forget). Fully async — never freezes UI.
+ * Called only when refreshing AWS credential_process credentials, never at plugin load.
  */
 export async function warmLoginShellPath(): Promise<void> {
   if (cachedLoginPath !== undefined) return;
@@ -185,8 +185,8 @@ function runCredentialProcess(value: string): { stdout: string; stderr: string }
   const { command, args } = parseCommandLine(value);
 
   // Enrich PATH from the user's login shell so tools in ~/.toolbox/bin,
-  // /opt/homebrew/bin, etc. are findable. The probe runs once (cached at
-  // plugin load via onload warm-up) so this is a Map lookup, not a spawn.
+  // /opt/homebrew/bin, etc. are findable after an async credential refresh.
+  // Synchronous callers use the cached PATH or the current process PATH.
   const loginPath = getLoginShellPath();
   const env = loginPath
     ? { ...process.env, PATH: loginPath }
@@ -238,6 +238,7 @@ function runCredentialProcessAsync(value: string): Promise<{ stdout: string; std
       timeout: 30_000,
       encoding: 'utf8',
       windowsHide: true,
+      shell: false,
       env,
     }, (err: Error | null, stdout: string, stderr: string) => {
       const stderrTrunc = typeof stderr === 'string' ? stderr.slice(0, 200) : '';
@@ -395,6 +396,7 @@ export async function getCachedOrRefresh(
 
   const promise = (async () => {
     try {
+      await warmLoginShellPath();
       const { stdout } = await runCredentialProcessAsync(credentialProcessValue);
       const parsed = parseCredentialProcessOutput(stdout);
       const creds: ResolvedCredentials = {

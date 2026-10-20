@@ -546,11 +546,10 @@
 /* Phase 09 (AIREV-01) — wide layout for the verdict modal when the auto AI
    review stream is enabled. Replaces inline style assignments in
    src/solve/VerdictModal.ts (no-static-styles-assignment compliance). The
-   `!important` flags mirror the original inline styles and override
-   Obsidian's default modal widths. */
-.modal.leetcode-verdict-modal--wide {
-  width: min(90vw, 780px) !important;
-  max-width: min(90vw, 780px) !important;
+   container-scoped selector overrides the default modal widths. */
+.modal-container .modal.leetcode-verdict-modal--wide {
+  width: min(90vw, 780px);
+  max-width: min(90vw, 780px);
 }
 .leetcode-verdict-modal-container--wide {
   --dialog-width: min(90vw, 780px);
@@ -970,15 +969,15 @@
  * because hypermd / lang-markdown styles set `display: block` on direct
  * children of cm-content with higher specificity. Re-assert flex layout
  * on the chevron+button row when it's a direct child of cm-content. */
-.cm-editor .cm-content > .leetcode-code-actions,
-.cm-content > .leetcode-code-actions {
-  display: flex !important;
-  justify-content: space-between !important;
-  width: 100% !important;
+.markdown-source-view.mod-cm6 .cm-editor .cm-content > .leetcode-code-actions,
+.cm-editor .cm-content > .leetcode-code-actions {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
   /* Phase 5.4 UAT-G6 — CM6 zeroes margins on direct children of cm-content;
      re-assert the gap below the `## Code` fence so the action row reads as
      a separate affordance (top margin alone collapses; padding-top survives). */
-  padding-top: 8px !important;
+  padding-top: 8px;
 }
 
 /* Phase 22 D-polish-03 — action row chrome reads as UI, not as code.
@@ -1017,15 +1016,15 @@
   padding: 0;
   border: none;
   border-radius: 4px;
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  box-shadow: none;
   color: var(--text-muted);
   cursor: pointer;
   transition: color 120ms ease, background 120ms ease;
 }
 .leetcode-code-actions button.leetcode-code-action-icon:hover {
   color: var(--text-normal);
-  background: var(--background-modifier-hover) !important;
+  background: var(--background-modifier-hover);
 }
 .leetcode-code-actions .leetcode-code-action-ai-solution,
 .leetcode-code-actions .leetcode-code-action-run,
@@ -1092,7 +1091,7 @@
   z-index: 9999;
   isolation: isolate;
 }
-button.leetcode-language-chevron {
+.leetcode-code-actions button.leetcode-language-chevron {
   display: inline-flex;
   align-items: center;
   flex-direction: row-reverse;
@@ -1102,7 +1101,7 @@ button.leetcode-language-chevron {
   font-size: 14px;
   color: var(--text-muted);
   cursor: pointer;
-  background: transparent !important;
+  background: transparent;
   border: none;
   border-radius: 4px;
   box-shadow: none;
@@ -1114,9 +1113,9 @@ button.leetcode-language-chevron {
 .leetcode-language-chevron .leetcode-language-chevron-label {
   font-weight: 500;
 }
-button.leetcode-language-chevron:hover {
+.leetcode-code-actions button.leetcode-language-chevron:hover {
   color: var(--text-normal);
-  background: var(--background-modifier-hover) !important;
+  background: var(--background-modifier-hover);
 }
 .leetcode-language-chevron-dropdown {
   /* G-DROPDOWN-CLIPPED — portal pattern. Dropdown is appended to doc.body
@@ -1700,10 +1699,10 @@ button.leetcode-language-chevron:hover {
   margin: 0;
   padding: 12px;
 }
-.leetcode-contest-solve__highlight code {
-  font-size: 13px !important;
-  line-height: 1.6 !important;
-  font-family: var(--font-monospace) !important;
+.leetcode-contest-solve__highlight pre code {
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: var(--font-monospace);
 }
 .leetcode-contest-solve__highlight.is-hidden {
   display: none;
@@ -2023,15 +2022,15 @@ button.leetcode-language-chevron:hover {
 
 /* Phase 13 — Nested editor: hide fence lines (opener, body, closer).
  * Content stays in document model; visually replaced by child EditorView widget. */
-.cm-editor .lc-fence-hidden {
-  height: 0 !important;
-  overflow: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  line-height: 0 !important;
+.markdown-source-view.mod-cm6 .cm-editor .cm-content .lc-fence-hidden {
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  line-height: 0;
 }
 
 /* Phase 13 — Nested editor container styling. Darker background matching
@@ -2061,39 +2060,12 @@ button.leetcode-language-chevron:hover {
   border-radius: 4px;
   padding: 8px 0;
 }
-/* Phase 22 D-polish-02 — suppress Obsidian's `.cm-embed-block:hover`
- * box-shadow on the widget surface.
- *
- * Source rule (Obsidian core app.css):
- *   @media (hover: hover) {
- *     .markdown-source-view.mod-cm6
- *       .cm-embed-block:not(.cm-table-widget, .cm-lang-base):hover {
- *       box-shadow: var(--embed-block-shadow-hover);
- *       border-radius: var(--radius-s);
- *       cursor: text;
- *     }
- *   }
- *
- * Our widget is mounted as a `.cm-embed-block` (the standard CM6 block
- * widget mount), so it falls inside the hover-shadow scope. The exclusion
- * list (`cm-table-widget`, `cm-lang-base`) doesn't cover us. We override
- * by matching the source selector with `:has(.lc-nested-editor)` to scope
- * strictly to widget-bearing embed blocks, then suppress the same three
- * properties the source rule sets.
- *
- * Border / outline are also zeroed defensively so theme-level hover
- * treatments that happen to land on the same element are also caught. */
-@media (hover: hover) {
-  .markdown-source-view.mod-cm6 .cm-embed-block:has(.lc-nested-editor):hover {
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    cursor: auto !important;
-  }
-}
+/* Keep the native embed-block hover treatment. Avoid scanning descendants
+ * with a relational selector whenever the editor DOM changes. */
 .cm-editor .lc-nested-editor:hover:not(:focus-within),
 .cm-editor .lc-nested-editor .leetcode-widget-codeblock:hover:not(:focus-within) {
-  border: none !important;
-  outline: none !important;
+  border: none;
+  outline: none;
 }
 /* Defensive — ensure the action row shows the note background even when
  * an outer theme rule paints `.lc-nested-editor`. The Phase 20 widget
@@ -2105,8 +2077,8 @@ button.leetcode-language-chevron:hover {
 }
 .cm-editor .lc-nested-editor .cm-editor {
   background: transparent;
-  height: auto !important;
-  max-height: none !important;
+  height: auto;
+  max-height: none;
 }
 .cm-editor .lc-nested-editor .cm-content {
   font-family: var(--font-monospace);
@@ -2151,7 +2123,7 @@ button.leetcode-language-chevron:hover {
 /* Phase 15 -- Auto-grow: disable child independent scrolling so parent
  * scroll container handles all scrolling. Child height tracks content (D-13). */
 .cm-editor .lc-nested-editor .cm-scroller {
-  overflow: visible !important;
+  overflow: visible;
 }
 
 /* Phase 17 Plan 10 round-2 (17-UAT.md Test 13 follow-up) —
@@ -2179,7 +2151,7 @@ button.leetcode-language-chevron:hover {
  *     for Normal/Visual mode (red default block, blinking via cm-blink
  *     animation on the cursor layer's animationName).
  *   - In Insert mode vim does NOT render `.cm-fat-cursor` — it relies on
- *     the OS-native caret being visible. But the `caret-color: transparent`
+ *     the OS-native caret being visible. But the `caret-color: transparent !important`
  *     stays applied, hiding the caret entirely (this was the bug we just hit).
  *
  * Mode discrimination via TWO classes on the widget container, toggled by
@@ -2200,6 +2172,7 @@ button.leetcode-language-chevron:hover {
 /* Vim Normal/Visual mode: solid fat block (no blink) — vim's own animation-
  * name on .cm-vimCursorLayer is cm-blink/cm-blink2; force it off here. */
 .lc-nested-editor.lc-vim-active:not(.lc-vim-insert) .cm-vimCursorLayer {
+  /* Vim sets animationName inline; specificity cannot override it. */
   animation: none !important;
 }
 .lc-nested-editor.lc-vim-active:not(.lc-vim-insert) .cm-fat-cursor {
@@ -2220,7 +2193,7 @@ button.leetcode-language-chevron:hover {
  * color ensures the caret renders even if `auto` would otherwise resolve
  * to a transparent inherited value. */
 .lc-nested-editor.lc-vim-active.lc-vim-insert .cm-fat-cursor {
-  display: none !important;
+  display: none;
 }
 .lc-nested-editor.lc-vim-active.lc-vim-insert .cm-editor,
 .lc-nested-editor.lc-vim-active.lc-vim-insert .cm-editor .cm-scroller,
@@ -2228,6 +2201,7 @@ button.leetcode-language-chevron:hover {
 .lc-nested-editor.lc-vim-active.lc-vim-insert .cm-editor .cm-content .cm-line,
 .lc-nested-editor.lc-vim-active.lc-vim-insert .cm-editor .cm-line,
 .lc-nested-editor.lc-vim-active.lc-vim-insert .cm-editor .cm-line * {
+  /* codemirror-vim hides the native caret with an important declaration. */
   caret-color: var(--text-normal, currentColor) !important;
 }
 
@@ -2410,19 +2384,17 @@ button.leetcode-language-chevron:hover {
  * BOTH Reading mode and Live Preview (selector is unscoped to the
  * banner CTA class). Uses Obsidian's interactive-accent CSS variables
  * so the button respects the user's theme. */
-button.leetcode-migration-banner__cta,
-.leetcode-migration-banner__cta {
-  background-color: var(--interactive-accent) !important;
-  color: var(--text-on-accent) !important;
-  border: none !important;
+.leetcode-migration-banner button.leetcode-migration-banner__cta {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
   border-radius: var(--radius-s);
   padding: var(--size-4-1) var(--size-4-3);
   cursor: pointer;
 }
 
-button.leetcode-migration-banner__cta:hover,
-.leetcode-migration-banner__cta:hover {
-  background-color: var(--interactive-accent-hover) !important;
+.leetcode-migration-banner button.leetcode-migration-banner__cta:hover {
+  background-color: var(--interactive-accent-hover);
 }
 
 /* LP-specific within-fence layout. CM6's block-decoration-replace
@@ -2488,9 +2460,8 @@ button.leetcode-migration-banner__cta:hover,
  * The `min(90vw, 780px)` expression is viewport-relative but constant
  * (no per-instance value), so it lives in static CSS and is applied
  * via the `.leetcode-ai-solution-modal` class added in main.ts.
- * `!important` mirrors the previous inline-style behavior, overriding
- * Obsidian's default `.modal { width: ... }` rule. */
-.leetcode-ai-solution-modal {
-  width: min(90vw, 780px) !important;
-  max-width: min(90vw, 780px) !important;
+ * The container-scoped selector overrides the default modal width. */
+.modal-container .modal.leetcode-ai-solution-modal {
+  width: min(90vw, 780px);
+  max-width: min(90vw, 780px);
 }
