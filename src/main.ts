@@ -872,7 +872,7 @@ export default class LeetCodePlugin extends Plugin {
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
         if (!isValidSlug(fm?.['lc-slug'])) return false;
         if (!checking) { void this.submitFromActive(); }
         return true;
@@ -898,7 +898,7 @@ export default class LeetCodePlugin extends Plugin {
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
         const slug = fm?.['lc-slug'];
         if (!isValidSlug(slug)) return false;
         if (!checking) { void this.openAIDebug(slug); }
@@ -917,7 +917,7 @@ export default class LeetCodePlugin extends Plugin {
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
         const slug = fm?.['lc-slug'];
         if (!isValidSlug(slug)) return false;
         if (!checking) { void this.runAIReview(slug, file); }
@@ -936,7 +936,7 @@ export default class LeetCodePlugin extends Plugin {
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
         const slug = fm?.['lc-slug'];
         if (!isValidSlug(slug)) return false;
         if (!checking) { void this.resetCode(file, slug); }
@@ -956,7 +956,7 @@ export default class LeetCodePlugin extends Plugin {
       editorCheckCallback: (checking, _editor, view) => {
         const file = view.file;
         if (!file) return false;
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
         if (!isValidSlug(fm?.['lc-slug'])) return false;
         if (!checking) { void this.openSubmissionPickerFromActive(); }
         return true;
@@ -1037,7 +1037,7 @@ export default class LeetCodePlugin extends Plugin {
         const file = view.file;
         if (!file) return false;
         const cache = this.app.metadataCache.getFileCache(file);
-        const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = cache?.frontmatter;
         if (!fm?.['lc-contest-id']) return false;
         if (!checking) { void this.handleManualContestAnalysis(file); }
         return true;
@@ -2232,7 +2232,7 @@ export default class LeetCodePlugin extends Plugin {
   private async handleManualContestAnalysis(file: TFile): Promise<void> {
     // Read frontmatter to reconstruct a minimal session for prompt building.
     const cache = this.app.metadataCache.getFileCache(file);
-    const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+    const fm: Record<string, unknown> | undefined = cache?.frontmatter;
     if (!fm) return;
 
     const contestTitle = (fm['lc-contest-id'] as string) ?? '未知竞赛';
@@ -2316,7 +2316,7 @@ export default class LeetCodePlugin extends Plugin {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view || !view.file) return null;
     const file = view.file;
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const slug = fm?.['lc-slug'];
     const title = fm?.['lc-title'];
     const lcLanguage = typeof fm?.['lc-language'] === 'string' ? fm['lc-language'] : null;
@@ -2869,7 +2869,6 @@ export default class LeetCodePlugin extends Plugin {
 
       if (handle.kind === 'stream') {
         const textStream = (
-          // eslint-disable-next-line no-undef -- AsyncIterable is a TS lib type
           handle.result as unknown as { textStream: AsyncIterable<string> }
         ).textStream;
         for await (const chunk of textStream) {
@@ -3052,9 +3051,7 @@ export default class LeetCodePlugin extends Plugin {
       new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
-    const fm = this.app.metadataCache.getFileCache(view.file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(view.file)?.frontmatter;
     const slug = fm?.['lc-slug'];
     if (!isValidSlug(slug)) {
       new Notice('当前笔记缺少 lc-slug 属性。', 4000);
@@ -3069,9 +3066,7 @@ export default class LeetCodePlugin extends Plugin {
       new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
-    const fm = this.app.metadataCache.getFileCache(view.file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(view.file)?.frontmatter;
     const slug = fm?.['lc-slug'];
     if (!isValidSlug(slug)) {
       new Notice('当前笔记缺少 lc-slug 属性。', 4000);
@@ -3197,9 +3192,7 @@ export default class LeetCodePlugin extends Plugin {
     await widget.flushNow();
     const code = widget.view.state.doc.toString();
     const file = widget.file;
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const lcSlugRaw = fm?.['lc-slug'];
     if (typeof lcSlugRaw !== 'string' || lcSlugRaw.length === 0) {
       new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
@@ -3220,9 +3213,7 @@ export default class LeetCodePlugin extends Plugin {
     const widgetCtxResolver = (): ProblemContext | null => {
       // Re-read frontmatter at run-modal commit time; the user may have
       // toggled language via the chevron between modal open and Run click.
-      const freshFm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-        | Record<string, unknown>
-        | undefined;
+      const freshFm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
       const freshSlug = freshFm?.['lc-slug'];
       if (typeof freshSlug !== 'string' || freshSlug.length === 0) return null;
       const freshLanguage =
@@ -3266,9 +3257,7 @@ export default class LeetCodePlugin extends Plugin {
     await widget.flushNow();
     const code = widget.view.state.doc.toString();
     const file = widget.file;
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const lcSlugRaw = fm?.['lc-slug'];
     if (typeof lcSlugRaw !== 'string' || lcSlugRaw.length === 0) {
       new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
@@ -3309,9 +3298,7 @@ export default class LeetCodePlugin extends Plugin {
    */
   async aiSolutionFromWidget(widget: WidgetController): Promise<void> {
     const file = widget.file;
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const lcSlug = fm?.['lc-slug'];
     if (typeof lcSlug !== 'string' || lcSlug.length === 0) {
       new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
@@ -3326,9 +3313,7 @@ export default class LeetCodePlugin extends Plugin {
    */
   async resetFromWidget(widget: WidgetController): Promise<void> {
     const file = widget.file;
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const lcSlug = fm?.['lc-slug'];
     if (typeof lcSlug !== 'string' || lcSlug.length === 0) {
       new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
@@ -3344,9 +3329,7 @@ export default class LeetCodePlugin extends Plugin {
    */
   async retrieveLastSubmissionFromWidget(widget: WidgetController): Promise<void> {
     const file = widget.file;
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const lcSlug = fm?.['lc-slug'];
     if (typeof lcSlug !== 'string' || lcSlug.length === 0) {
       new Notice('当前编辑器不属于 LeetCode 题目笔记。', 4000);
@@ -3425,9 +3408,7 @@ export default class LeetCodePlugin extends Plugin {
       new Notice('请先打开一篇 LeetCode 题目笔记。', 4000);
       return;
     }
-    const fm = this.app.metadataCache.getFileCache(view.file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(view.file)?.frontmatter;
 
     let problemHtml = '';
     const cached = this.lcSettings.getProblemDetail(slug);
@@ -4133,8 +4114,8 @@ export default class LeetCodePlugin extends Plugin {
         // metadata, so the v1.2 fence-opener-fallback branch retired
         // with the v1.2 path.
         try {
-          const fm = this.app.metadataCache.getFileCache(targetFile)
-            ?.frontmatter as Record<string, unknown> | undefined;
+          const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(targetFile)
+            ?.frontmatter;
           const fmLang = fm?.['lc-language'];
           if (typeof fmLang === 'string' && fmLang.length > 0) return fmLang;
         } catch {

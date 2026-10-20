@@ -1,3 +1,4 @@
+import type { App, TFile } from 'obsidian';
 // Phase 21 Plan 21-01 — fenceMigrator unit + integration tests.
 //
 // Covers MIGRATE-01..MIGRATE-04, MIGRATE-07, and the 5-clause
@@ -39,16 +40,12 @@ interface MockState {
   vaultReadSpy: ReturnType<typeof vi.fn>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional `any` so call-site fixtures (38+ direct calls into production functions typed `app: App`, `file: TFile`) don't each need an `as never` cast. Loosely-typed test mocks are the established pattern in this file.
-function makeApp(state: MockState): { app: any; file: any } {
+function makeApp(state: MockState): { app: App; file: TFile } {
   const file = { path: 'LeetCode/two-sum.md', name: 'two-sum.md', extension: 'md' };
   const app = {
     vault: {
-      // configDir mirrors Obsidian's default — production code builds the
-      // backup root as `${vault.configDir}/plugins/leetcode-chinese`, which
-      // resolves to the literal `.obsidian/...` paths these fixtures expect.
-      // eslint-disable-next-line obsidianmd/hardcoded-config-path -- this IS the configDir mock; production code reads it via app.vault.configDir.
-      configDir: '.obsidian',
+      // A custom configDir verifies that backup reads and writes agree.
+      configDir: '.test-config',
       read: state.vaultReadSpy,
       process: state.vaultProcessSpy,
       adapter: {
@@ -64,7 +61,7 @@ function makeApp(state: MockState): { app: any; file: any } {
       processFrontMatter: state.processFrontMatterSpy,
     },
   };
-  return { app, file };
+  return { app: app as unknown as App, file: file as TFile };
 }
 
 function makeState(opts: {
@@ -278,8 +275,7 @@ describe('writeBackup', () => {
     const { app, file } = makeApp(state);
     const path = await writeBackup(app, file, 'two-sum', 'note content');
     expect(path).toBe(
-      // eslint-disable-next-line obsidianmd/hardcoded-config-path -- expected output of production code given the mock's configDir='.obsidian' (default).
-      '.obsidian/plugins/leetcode-chinese/migration-backup-two-sum-2026-06-01T14-32-08Z/two-sum.md',
+      '.test-config/plugins/leetcode-chinese/migration-backup-two-sum-2026-06-01T14-32-08Z/two-sum.md',
     );
   });
 
@@ -288,7 +284,7 @@ describe('writeBackup', () => {
     const { app, file } = makeApp(state);
     const path = await writeBackup(app, file, 'test-slug', 'x');
     expect(path).toMatch(
-      /\.obsidian\/plugins\/leetcode-chinese\/migration-backup-test-slug-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\/test-slug\.md/,
+      /\.test-config\/plugins\/leetcode-chinese\/migration-backup-test-slug-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\/test-slug\.md/,
     );
   });
 
@@ -307,7 +303,7 @@ describe('writeBackup', () => {
     await writeBackup(app, file, 'two-sum', 'x');
     expect(state.adapterMkdirSpy).toHaveBeenCalled();
     expect(state.adapterMkdirSpy.mock.calls[0]?.[0]).toMatch(
-      /^\.obsidian\/plugins\/leetcode-chinese\/migration-backup-two-sum-/,
+      /^\.test-config\/plugins\/leetcode-chinese\/migration-backup-two-sum-/,
     );
     // mkdir invoked before write (check invocationCallOrder).
     const mkdirOrder = state.adapterMkdirSpy.mock.invocationCallOrder[0]!;
@@ -548,7 +544,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
   // Plan 21-06 CR-02 — pre-existence backup check protects D-backup-02
   // invariant ("one backup per note ever") on the partial-failure retry
   // path. Before writeBackup runs, the orchestrator lists
-  // .obsidian/plugins/leetcode-chinese/ and skips the backup write if a
+  // .test-config/plugins/leetcode-chinese/ and skips the backup write if a
   // `migration-backup-{slug}-*` folder already exists for THIS slug.
   // ───────────────────────────────────────────────────────────────────────
 
@@ -562,7 +558,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
       // Capture the prior-backup folder path written on the first call so
       // adapter.list can surface it on the second call.
       if (priorBackupFolder === null) {
-        // path looks like '.obsidian/plugins/leetcode-chinese/migration-backup-two-sum-{ISO}/two-sum.md'
+        // path looks like '.test-config/plugins/leetcode-chinese/migration-backup-two-sum-{ISO}/two-sum.md'
         const dir = path.replace(/\/[^/]+$/, '');
         priorBackupFolder = dir;
       }
@@ -594,8 +590,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
     const frontmatter = { 'lc-slug': slug, 'lc-language': 'python3' };
     const app = {
       vault: {
-        // eslint-disable-next-line obsidianmd/hardcoded-config-path -- this IS the configDir mock; production code reads it via app.vault.configDir.
-        configDir: '.obsidian',
+        configDir: '.test-config',
         read: vi.fn(async () => currentText),
         process: vaultProcessSpy,
         adapter: {
@@ -671,8 +666,7 @@ describe('migrateLegacyFenceIfNeeded', () => {
       adapterListImpl: async () => ({
         files: [],
         folders: [
-          // eslint-disable-next-line obsidianmd/hardcoded-config-path -- mocked adapter.list output; mirrors what production code writes when configDir='.obsidian'.
-          '.obsidian/plugins/leetcode-chinese/migration-backup-other-slug-2026-01-01T00-00-00Z',
+          '.test-config/plugins/leetcode-chinese/migration-backup-other-slug-2026-01-01T00-00-00Z',
         ],
       }),
     });
@@ -1018,8 +1012,7 @@ describe('migrateLegacyFenceIfNeeded — Plan 21-09 dummy block (kept for symmet
     state.adapterListSpy.mockResolvedValue({
       files: [],
       folders: [
-        // eslint-disable-next-line obsidianmd/hardcoded-config-path -- mocked adapter.list output; mirrors what production code writes when configDir='.obsidian'.
-        '.obsidian/plugins/leetcode-chinese/migration-backup-two-sum-2026-06-01T14-32-08Z',
+        '.test-config/plugins/leetcode-chinese/migration-backup-two-sum-2026-06-01T14-32-08Z',
       ],
     });
 

@@ -209,8 +209,8 @@ export class SubmissionPickerModal extends Modal {
   }
 
   private renderRow(row: SubmissionRow): HTMLElement {
-    const ownerDoc = this.contentEl.ownerDocument as unknown as Document;
-    const el = ownerDoc.createElement('div');
+    const ownerDoc = this.contentEl.ownerDocument;
+    const el = ownerDoc.win.createDiv();
     el.className = 'leetcode-submissions-row';
     el.setAttribute('role', 'listitem');
     el.setAttribute('tabindex', '0');
@@ -310,8 +310,8 @@ function clear(el: HTMLElement | null | undefined): void {
 }
 
 function appendEl(parent: HTMLElement, tag: string, cls?: string): HTMLElement {
-  const doc = parent.ownerDocument as unknown as Document;
-  const el = doc.createElement(tag);
+  const doc = parent.ownerDocument;
+  const el = doc.win.createEl(tag);
   if (cls) el.className = cls;
   parent.appendChild(el);
   return el;

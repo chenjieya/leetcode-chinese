@@ -20,7 +20,7 @@ import { Compartment, type Extension } from '@codemirror/state';
 
 import { indentUnit, StreamLanguage } from '@codemirror/language';
 // eslint-disable-next-line import/no-extraneous-dependencies -- transitive peer of obsidian; external in esbuild
-import { keymap, type Command } from '@codemirror/view';
+import { keymap } from '@codemirror/view';
 
 import { toggleLineComment } from '@codemirror/commands';
 
@@ -137,12 +137,7 @@ export function buildLanguageExtensions(
     getLanguageSupport(slug),
     indentUnit.of(effectiveIndent(slug, override)),
     closeBrackets(),
-    // toggleLineComment is typed as `StateCommand` from @codemirror/commands but
-    // structurally identical to view's `Command`. The mismatch comes from the
-    // pre-existing @codemirror/state version duplication in node_modules
-    // (commands brings in 6.6.0, the rest resolve 6.5.0). Runtime behavior is
-    // unaffected — both interfaces are nominally the same EditorView.dispatch
-    // contract. Cast through Command to unblock TypeScript strict mode.
-    keymap.of([{ key: 'Mod-/', run: toggleLineComment as unknown as Command }]),
+    // The published StateCommand signature accepts the keymap's EditorView.
+    keymap.of([{ key: 'Mod-/', run: toggleLineComment }]),
   ];
 }

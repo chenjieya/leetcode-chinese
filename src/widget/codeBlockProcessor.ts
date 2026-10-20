@@ -136,8 +136,8 @@ function renderStaticFallback(el: HTMLElement, source: string): void {
     (pre as unknown as { createEl: CreateElFn }).createEl('code', { text: source });
   } else {
     // happy-dom path — manual DOM. Still no innerHTML.
-    const pre = activeDocument.createElement('pre');
-    const code = activeDocument.createElement('code');
+    const pre = activeWindow.createEl('pre');
+    const code = activeWindow.createEl('code');
     code.textContent = source;
     pre.appendChild(code);
     el.appendChild(pre);
@@ -169,9 +169,7 @@ export function leetCodeBlockProcessor(plugin: ProcessorHost) {
     // codeActionsEditorExtension.ts:248-251). Do NOT use ctx.frontmatter —
     // typed `any | null | undefined` per RESEARCH Anti-Patterns + Specific
     // Findings §A5.
-    const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
     const lcSlug = fm?.['lc-slug'];
     const hasLcSlug = typeof lcSlug === 'string' && lcSlug.length > 0;
 
@@ -217,7 +215,7 @@ export function leetCodeBlockProcessor(plugin: ProcessorHost) {
         const defaultLanguage =
           settings?.getDefaultLanguage?.() ?? 'python3';
         const migrated = await migrateLegacyFenceIfNeeded(
-          plugin.app as Parameters<typeof migrateLegacyFenceIfNeeded>[0],
+          plugin.app,
           file,
           {
             autoMigrateOnOpen: true,
@@ -241,7 +239,7 @@ export function leetCodeBlockProcessor(plugin: ProcessorHost) {
         // falling back to Python+Notice). Same try/catch shape as the
         // migration block — silent on failure.
         const repaired = await repairFrontmatterIfNeeded(
-          plugin.app as Parameters<typeof repairFrontmatterIfNeeded>[0],
+          plugin.app,
           file,
           {
             autoMigrateOnOpen: true,
@@ -305,7 +303,7 @@ export function leetCodeBlockProcessor(plugin: ProcessorHost) {
           el,
           source,
           file,
-          plugin as Parameters<typeof mountLegacyFenceBanner>[3],
+          plugin,
           'manual-prompt',
         );
         return;

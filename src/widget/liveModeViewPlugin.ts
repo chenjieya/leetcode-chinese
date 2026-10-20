@@ -52,7 +52,6 @@ import type { WidgetMountHost } from './WidgetController';
 import { syncAnnotation } from './childParentSync';
 import {
   leetCodeFenceStateFields,
-  type StateFieldPluginHost,
 } from './liveModeBannerStateField';
 
 type PluginHost = Plugin & WidgetMountHost & {
@@ -272,7 +271,7 @@ function pushParentToChild(view: EditorView, plugin: PluginHost): void {
  */
 export function leetCodeFenceViewPlugin(plugin: PluginHost): Extension {
   return [
-    ...leetCodeFenceStateFields(plugin as StateFieldPluginHost),
+    ...leetCodeFenceStateFields(plugin),
     ViewPlugin.define((view) => new LeetCodeLiveViewPlugin(view, plugin)),
   ];
 }

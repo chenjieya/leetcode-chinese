@@ -306,7 +306,7 @@ export function isMigrationCandidate(
  * Result regex (verified shape):
  *   /^migration-backup-(.+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$/
  */
-function buildBackupPaths(slug: string): { dir: string; file: string } {
+function buildBackupPaths(app: App, slug: string): { dir: string; file: string } {
   // toISOString() => '2026-06-01T14:32:08.123Z'
   // Replace `:` with `-` (Windows-illegal in filenames) and strip the
   // millisecond fragment so the regex is `\d{2}-\d{2}-\d{2}Z` not
@@ -315,7 +315,7 @@ function buildBackupPaths(slug: string): { dir: string; file: string } {
     .toISOString()
     .replace(/:/g, '-')
     .replace(/\.\d{3}Z$/, 'Z');
-  const dir = `.obsidian/plugins/leetcode-chinese/migration-backup-${slug}-${ts}`;
+  const dir = `${pluginDir(app)}/migration-backup-${slug}-${ts}`;
   const file = `${dir}/${slug}.md`;
   return { dir, file };
 }
@@ -391,7 +391,7 @@ export async function writeBackup(
   slug: string,
   fileText: string,
 ): Promise<string> {
-  const { dir, file: backupPath } = buildBackupPaths(slug);
+  const { dir, file: backupPath } = buildBackupPaths(app, slug);
   // Defensive mkdir — RESEARCH Open Question §2 + Pitfall 4.
   try {
     await app.vault.adapter.mkdir(dir);
@@ -448,9 +448,7 @@ export async function migrateLegacyFenceIfNeeded(
   try {
     // Step 1 — read text + frontmatter.
     const text = await app.vault.read(file);
-    const fm = app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm = app.metadataCache.getFileCache(file)?.frontmatter;
 
     // Step 2 — strict-match gate.
     if (!isMigrationCandidate(text, fm)) {
@@ -667,9 +665,7 @@ export async function repairFrontmatterIfNeeded(
   try {
     // Step 1 — read text + frontmatter.
     const text = await app.vault.read(file);
-    const fm = app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm = app.metadataCache.getFileCache(file)?.frontmatter;
 
     // Step 2 — predicate gate.
     if (!isFrontmatterRepairCandidate(text, fm)) {

@@ -146,7 +146,7 @@ export async function throttledRequestUrl(
   // params (Wave 0 RED test convenience). The opts arg wins when both are set.
   const { timeoutMs: inlineTimeoutMs, ...cleanParams } = params;
   const timeoutMs = opts.timeoutMs ?? inlineTimeoutMs ?? DEFAULT_TIMEOUT_MS;
-  return raceWithTimeout(runWith429Retry(throttle, cleanParams as RequestUrlParam), timeoutMs);
+  return raceWithTimeout(runWith429Retry(throttle, cleanParams), timeoutMs);
 }
 
 // --- Internal helpers (Phase 5 Wave 2) --------------------------------------

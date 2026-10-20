@@ -120,9 +120,7 @@ export function makeReadingModeMigrationHandler(
     //    file-open with null when the user closes the last leaf).
     if (!file) return;
     // 2. Per-note gate (lc-slug presence).
-    const fm = deps.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = deps.app.metadataCache.getFileCache(file)?.frontmatter;
     const slug = fm?.['lc-slug'];
     if (typeof slug !== 'string' || slug.length === 0) return;
     // 3. Cross-mode dedupe (WR-01).

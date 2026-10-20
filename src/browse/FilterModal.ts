@@ -110,7 +110,7 @@ export function stripAutoDefaults(rules: FilterRule[]): FilterRule[] {
   return rules.map((r) => {
     const copy = { ...r } as FilterRule & { __autoDefault?: boolean };
     delete copy.__autoDefault;
-    return copy as FilterRule;
+    return copy;
   });
 }
 

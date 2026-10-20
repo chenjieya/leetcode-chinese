@@ -108,7 +108,7 @@ export class ProblemListService {
       const page = (await this.client.lc.problems({
         limit: PAGE_SIZE,
         offset,
-      } as unknown as Parameters<typeof this.client.lc.problems>[0])) as unknown as {
+      })) as unknown as {
         questions: LcQuestion[];
         total?: number;
       };

@@ -7,7 +7,7 @@
 // (UI-SPEC.md § Color). Logout, Save cookies, and every other button in this
 // file MUST remain neutral. Grep gate: exactly one invocation of the accent
 // modifier in this file.
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting, type SettingDefinitionItem } from 'obsidian';
 import type LeetCodePlugin from '../main';
 import type { AuthCookies } from '../auth/types';
 import type { AIProvider, BedrockProviderConfig } from '../ai/types';
@@ -70,8 +70,45 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     super(app, plugin);
   }
 
+  // Compatibility fallback for Obsidian 1.12.7; newer hosts use definitions.
   display(): void {
+    this.sectionContainers.clear();
+    this.containerEl.empty();
     this.renderTab();
+  }
+
+  /** 使用分区定义支持 1.13+ 设置搜索，复用原控件与持久化逻辑。 */
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return this.settingSections().map(section => ({
+      name: section.name,
+      aliases: section.aliases,
+      render: (setting: Setting) => {
+        const container = setting.settingEl;
+        this.containerEl.addClass('leetcode-settings');
+        container.empty();
+        container.addClass('lc-settings-section');
+        this.sectionContainers.set(section.name, container);
+        section.render(container);
+        return () => {
+          if (this.sectionContainers.get(section.name) === container) {
+            this.sectionContainers.delete(section.name);
+          }
+        };
+      },
+    }));
+  }
+
+  private readonly sectionContainers = new Map<string, HTMLElement>();
+
+  private settingSections() {
+    return [
+      { name: '账号与登录', aliases: ["力扣中国站账号","状态","手动填写 Cookie（备用方式）","LEETCODE_SESSION","csrftoken"], render: (el: HTMLElement) => this.renderAuthSection(el) },
+      { name: '笔记', aliases: ["题目目录","默认编程语言","点击行为"], render: (el: HTMLElement) => this.renderNotesSection(el) },
+      { name: '代码编辑器', aliases: ["缩进大小","在代码编辑器中显示相对行号"], render: (el: HTMLElement) => this.renderEditorSection(el) },
+      { name: '旧笔记迁移', aliases: ["打开时自动迁移 v1.2 笔记","保存延迟"], render: (el: HTMLElement) => this.renderMigrationSection(el) },
+      { name: 'AI 解题助手', aliases: ["服务提供商","通过后自动复盘","通过后自动分类解题模式","推荐后续练习","竞赛分析","API 密钥","模型","服务地址","预算","OpenAI","DeepSeek","Ollama","AWS Bedrock"], render: (el: HTMLElement) => this.renderAISection(el) },
+      { name: '知识图谱', aliases: ["自定义技巧笔记目录","通过后自动创建技巧反向链接"], render: (el: HTMLElement) => this.renderGraphSection(el) },
+    ];
   }
 
   // Internal re-render hook used by click handlers that need to refresh the
@@ -80,10 +117,19 @@ export class LeetCodeSettingTab extends PluginSettingTab {
   // `PluginSettingTab.display` symbol while preserving the framework's
   // public `display()` contract for the initial paint.
   private renderTab(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.addClass('leetcode-settings');
+    this.containerEl.addClass('leetcode-settings');
+    for (const section of this.settingSections()) {
+      let container = this.sectionContainers.get(section.name);
+      if (!container || !this.containerEl.contains(container)) {
+        container = this.containerEl.createDiv('lc-settings-section');
+        this.sectionContainers.set(section.name, container);
+      }
+      container.empty();
+      section.render(container);
+    }
+  }
 
+  private renderAuthSection(containerEl: HTMLElement): void {
     // =============================
     //   Authentication section
     // =============================
@@ -172,7 +218,9 @@ export class LeetCodeSettingTab extends PluginSettingTab {
         t.inputEl.addClass('lc-cookie-input');
         t.onChange((v) => { csrfVal = v; });
       });
+  }
 
+  private renderNotesSection(containerEl: HTMLElement): void {
     // =============================
     //   Notes section
     // =============================
@@ -183,9 +231,7 @@ export class LeetCodeSettingTab extends PluginSettingTab {
       .setName('题目目录')
       .setDesc('用于保存题目笔记的知识库目录。')
       .addText((t) => t
-
-        // eslint-disable-next-line obsidianmd/ui/sentence-case -- 文件夹示例必须保持小写。
-        .setPlaceholder('leetcode/')
+        .setPlaceholder('输入题目目录')
         .setValue(this.plugin.lcSettings.getProblemsFolder())
         .onChange(async (v) => {
           // D-10: strip trailing slash on persist (stored without trailing slash).
@@ -215,7 +261,9 @@ export class LeetCodeSettingTab extends PluginSettingTab {
           await this.plugin.lcSettings.setPreviewClickBehavior(v as 'preview' | 'open');
         }),
       );
+  }
 
+  private renderEditorSection(containerEl: HTMLElement): void {
     // =============================
     //   Code editor section (Phase 16 INDENT-04 D-06)
     // =============================
@@ -268,7 +316,9 @@ export class LeetCodeSettingTab extends PluginSettingTab {
     // Phase 22 (D-settings-01) — `useInlineWidget` / `useNestedEditor`
     // toggles retired with the v1.2 path. The v1.3 inline widget is the only
     // mount path and migration runs unconditionally on file open.
+  }
 
+  private renderMigrationSection(containerEl: HTMLElement): void {
     // =============================
     //   Migration section
     // =============================
@@ -317,8 +367,9 @@ export class LeetCodeSettingTab extends PluginSettingTab {
           this.plugin.widgetRegistry?.applyDelay(val);
         }),
       );
+  }
 
-
+  private renderAISection(containerEl: HTMLElement): void {
     // =============================
     //   AI section (Phase 07 Plan 03 — AIPROV-01 / AIPROV-02)
     // =============================
@@ -431,7 +482,9 @@ export class LeetCodeSettingTab extends PluginSettingTab {
           }),
         );
     }
+  }
 
+  private renderGraphSection(containerEl: HTMLElement): void {
     // =============================
     //   Knowledge Graph section (Phase 5 POLISH-01 D-14)
     // =============================

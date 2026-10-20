@@ -241,7 +241,7 @@ export class AIStreamModal extends Modal {
       // (Vercel AI SDK 6.x). Each chunk is a delta — append to buffer.
       const textStream = (
         result as unknown as {
-          // eslint-disable-next-line no-undef -- AsyncIterable is a TS lib type
+
           textStream: AsyncIterable<string>;
         }
       ).textStream;
@@ -455,7 +455,7 @@ export class AIStreamModal extends Modal {
   private swapToCancelledFooter(): void {
     // Prepend the cancelled indicator above the existing rendered body — per
     // 08-UI-SPEC §"Body states" (Cancelled mid-stream).
-    const cancelledEl = this.bodyEl.ownerDocument.createElement('p');
+    const cancelledEl = this.bodyEl.ownerDocument.win.createEl('p');
     cancelledEl.className = 'leetcode-ai-stream-cancelled';
     cancelledEl.textContent = '已取消，以下为已生成的部分回答。';
     this.bodyEl.insertBefore(cancelledEl, this.bodyEl.firstChild);
@@ -518,7 +518,7 @@ export class AIStreamModal extends Modal {
     if (message === 'AI call cancelled') {
       this.cancelled = true;
       this.bodyEl.empty();
-      const p = this.bodyEl.ownerDocument.createElement('p');
+      const p = this.bodyEl.ownerDocument.win.createEl('p');
       p.textContent = '已取消 AI 请求。';
       this.bodyEl.appendChild(p);
       this.swapToErrorFooter();
@@ -532,10 +532,10 @@ export class AIStreamModal extends Modal {
     const message = err instanceof Error ? err.message : String(err);
     this.bodyEl.empty();
     // Apostrophe is U+2019 right-single-quote per UI-SPEC §"Body states".
-    const heading = this.bodyEl.ownerDocument.createElement('h3');
+    const heading = this.bodyEl.ownerDocument.win.createEl('h3');
     heading.textContent = `无法连接 ${prettyName(this.args.provider)}.`;
     this.bodyEl.appendChild(heading);
-    const detail = this.bodyEl.ownerDocument.createElement('p');
+    const detail = this.bodyEl.ownerDocument.win.createEl('p');
     detail.className = 'leetcode-ai-stream-error';
     detail.textContent = message.slice(0, ERROR_MSG_MAX_LEN);
     this.bodyEl.appendChild(detail);

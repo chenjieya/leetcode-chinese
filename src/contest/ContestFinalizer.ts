@@ -326,7 +326,7 @@ export async function finalizeContest(args: FinalizeContestArgs): Promise<string
       }
       // Apply full frontmatter (same as normal notes) + contest ID
       const fmInput = buildFrontmatterInput(
-        { ...detail, fetchedAt: detail.fetchedAt ?? Date.now(), difficulty: detail.difficulty as 'Easy' | 'Medium' | 'Hard', topicSlugs: detail.topicSlugs ?? [] } as Parameters<typeof buildFrontmatterInput>[0],
+        { ...detail, fetchedAt: detail.fetchedAt ?? Date.now(), difficulty: detail.difficulty as 'Easy' | 'Medium' | 'Hard', topicSlugs: detail.topicSlugs ?? [] },
         settings.getDefaultLanguage(),
         problem.verdict === 'accepted' ? 'accepted' : 'attempted',
       );

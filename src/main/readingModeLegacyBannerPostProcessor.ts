@@ -120,9 +120,7 @@ async function processBlock(
   const file: TFile = fileLike;
 
   // Step 2 — read frontmatter; bail if lc-slug missing/empty.
-  const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-    | Record<string, unknown>
-    | undefined;
+  const fm: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
   const lcSlug = fm?.['lc-slug'];
   if (typeof lcSlug !== 'string' || lcSlug.length === 0) return;
 
@@ -193,10 +191,10 @@ async function processBlock(
   // it's pulled from the rendered DOM node Obsidian gave us, which itself
   // lives in the popout-window's document tree.
   const ownerDoc = target.pre.ownerDocument;
-  const host = ownerDoc.createElement('div');
+  const host = ownerDoc.win.createDiv();
   host.classList.add('leetcode-migration-banner-host');
   target.pre.replaceWith(host);
-  mountLegacyFenceBanner(host, source, file, plugin as never, 'manual-prompt');
+  mountLegacyFenceBanner(host, source, file, plugin, 'manual-prompt');
 }
 
 /** Read `code.className` and return the first `language-{slug}` slug, or

@@ -201,7 +201,7 @@ class AutoMigratingBannerWidget extends WidgetType {
   }
 
   toDOM(_view: EditorView): HTMLElement {
-    const host = activeDocument.createElement('div');
+    const host = activeWindow.createDiv();
     // Plan 21-15 (UAT R4 closure) — `lc-legacy-banner--livepreview` is the
     // top-level CSS scope class that styles.css uses to reset CM6's block-
     // decoration wrapper styling (background tint, monospace font, fence
@@ -217,7 +217,7 @@ class AutoMigratingBannerWidget extends WidgetType {
       host,
       this.source,
       this.file,
-      this.plugin as Parameters<typeof mountLegacyFenceBanner>[3],
+      this.plugin,
       'auto-migrating',
     );
     return host;
@@ -245,7 +245,7 @@ class ManualPromptBannerWidget extends WidgetType {
   }
 
   toDOM(_view: EditorView): HTMLElement {
-    const host = activeDocument.createElement('div');
+    const host = activeWindow.createDiv();
     // Plan 21-15 (UAT R4 closure) — see AutoMigratingBannerWidget.toDOM
     // above for the rationale. Both LP widget hosts carry the LP scope
     // class so styles.css rules apply identically.
@@ -257,7 +257,7 @@ class ManualPromptBannerWidget extends WidgetType {
       host,
       this.source,
       this.file,
-      this.plugin as Parameters<typeof mountLegacyFenceBanner>[3],
+      this.plugin,
       'manual-prompt',
     );
     return host;
@@ -293,9 +293,7 @@ function buildLegacyBannerDecorations(state: EditorState): DecorationSet {
   const file = state.field(editorInfoField, false)?.file;
   if (!file) return Decoration.none;
 
-  const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-    | Record<string, unknown>
-    | undefined;
+  const fm: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
   const slug = fm?.['lc-slug'];
   if (typeof slug !== 'string' || slug.length === 0) {
     return Decoration.none;
@@ -339,7 +337,7 @@ function buildLegacyBannerDecorations(state: EditorState): DecorationSet {
       attempted?.add(file.path);
       plugin.migrateInFlight.add(file.path);
       void migrateLegacyFenceIfNeeded(
-        plugin.app as Parameters<typeof migrateLegacyFenceIfNeeded>[0],
+        plugin.app,
         file,
         {
           autoMigrateOnOpen: true,
@@ -371,9 +369,7 @@ function buildLeetCodeWidgetDecorations(state: EditorState): DecorationSet {
   const file = state.field(editorInfoField, false)?.file;
   if (!file) return Decoration.none;
 
-  const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-    | Record<string, unknown>
-    | undefined;
+  const fm: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
   const slug = fm?.['lc-slug'];
   if (typeof slug !== 'string' || slug.length === 0) {
     return Decoration.none;
@@ -418,7 +414,7 @@ function buildLeetCodeWidgetDecorations(state: EditorState): DecorationSet {
       repairAttempted?.add(file.path);
       repairInFlight.add(file.path);
       void repairFrontmatterIfNeeded(
-        plugin.app as Parameters<typeof repairFrontmatterIfNeeded>[0],
+        plugin.app,
         file,
         {
           autoMigrateOnOpen: true,
@@ -435,8 +431,8 @@ function buildLeetCodeWidgetDecorations(state: EditorState): DecorationSet {
             // metadataCache to actually reflect the write, then dispatch.
             // Bounded poll: 16-tick budget @ ~50ms each = ~800ms ceiling.
             const waitForCacheAndDispatch = (ticks: number): void => {
-              const fmNow = plugin.app.metadataCache.getFileCache(file)
-                ?.frontmatter as Record<string, unknown> | undefined;
+              const fmNow: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)
+                ?.frontmatter;
               const lcLangNow = fmNow?.['lc-language'];
               if (typeof lcLangNow === 'string' && lcLangNow.length > 0) {
                 dispatchLeetCodeRefresh(plugin, file.path);

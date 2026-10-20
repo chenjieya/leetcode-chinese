@@ -436,7 +436,7 @@ export class SubmissionOrchestrator {
             }
             resolve();
           } catch (err) {
-            reject(err as Error);
+            reject(err instanceof Error ? err : new Error(String(err)));
           }
         })();
       });

@@ -11,7 +11,7 @@ export function registerCodeBlockActionProcessor(
         typeof plugin.app.metadataCache.getFileCache
       >[0],
     );
-    const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+    const fm: Record<string, unknown> | undefined = cache?.frontmatter;
     const slug = fm?.['lc-slug'];
     if (typeof slug !== 'string' || slug.length === 0) return;
 
@@ -19,7 +19,7 @@ export function registerCodeBlockActionProcessor(
     if (!pre) return;
     if (pre.nextElementSibling?.classList.contains('leetcode-code-actions')) return;
 
-    const doc: Document = pre.ownerDocument as unknown as Document;
+    const doc: Document = pre.ownerDocument;
     const row = buildCodeBlockButtonRow(doc, plugin);
     pre.insertAdjacentElement('afterend', row);
   });

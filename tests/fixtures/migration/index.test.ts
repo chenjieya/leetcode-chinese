@@ -1,3 +1,4 @@
+import type { App, TFile } from 'obsidian';
 // Phase 21 Plan 21-04 Task 3 — Fixture runner / CI release gate.
 //
 // MIGRATE-10 + D-fixtures-03: scans tests/fixtures/migration/{v1.0,v1.1,v1.2}/,
@@ -236,10 +237,8 @@ interface RunnerSpies {
 }
 
 interface RunnerHandle {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional `any` so callers don't each need an `as never` cast when passing through to production functions typed `app: App`, `file: TFile`.
-  app: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see app field above.
-  file: any;
+  app: App;
+  file: TFile;
   spies: RunnerSpies;
   /** The current note text after all writes. */
   getCurrentText: () => string;
@@ -300,8 +299,8 @@ function createMockApp(input: string, slug: string): RunnerHandle {
   };
 
   return {
-    app,
-    file,
+    app: app as unknown as App,
+    file: file as TFile,
     spies,
     getCurrentText: () => currentText,
   };

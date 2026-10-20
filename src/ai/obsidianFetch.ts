@@ -120,7 +120,7 @@ export function obsidianFetch(mode: 'stream' | 'request'): FetchFn {
     // credentials: 'omit' (documented; requestUrl does not carry cookies)
     const res = await requestUrl({
       url,
-      method: (init?.method as string) ?? 'GET',
+      method: (init?.method) ?? 'GET',
       headers: (init?.headers as Record<string, string>) ?? {},
       body: init?.body as string | undefined,
       throw: false,

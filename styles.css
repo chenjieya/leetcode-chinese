@@ -191,6 +191,11 @@
   color: var(--text-muted);
   border-top: 1px solid var(--background-modifier-border);
 }
+.leetcode-settings .lc-settings-section {
+  display: block;
+  border-top: none;
+  padding: 0;
+}
 .leetcode-settings .lc-settings-group {
   background: var(--background-secondary);
   border-radius: var(--radius-m);

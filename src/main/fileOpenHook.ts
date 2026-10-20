@@ -43,9 +43,7 @@ export function makeFileOpenHandler(
 ): (file: TFile | null) => void {
   return (file: TFile | null): void => {
     if (!file) return;
-    const fm = deps.app.metadataCache.getFileCache(file)?.frontmatter as
-      | Record<string, unknown>
-      | undefined;
+    const fm: Record<string, unknown> | undefined = deps.app.metadataCache.getFileCache(file)?.frontmatter;
     const slug = fm?.['lc-slug'];
     if (!isValidSlug(slug)) return;
     const cached = deps.settings.getProblemDetail(slug);

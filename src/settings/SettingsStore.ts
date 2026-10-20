@@ -1150,7 +1150,7 @@ export class SettingsStore {
     } else {
       this.data.providerConfigs[p] = sanitizeProviderConfig(
         cfg,
-        DEFAULT_PROVIDER_CONFIGS[p] as ProviderConfig,
+        DEFAULT_PROVIDER_CONFIGS[p],
       );
     }
     await this.persist();

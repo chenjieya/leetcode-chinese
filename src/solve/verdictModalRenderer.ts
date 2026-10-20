@@ -793,7 +793,7 @@ function clear(el: HTMLElement): void {
 }
 
 function appendEl(parent: HTMLElement, tag: string, cls?: string): HTMLElement {
-  const el = (parent.ownerDocument ?? activeDocument).createElement(tag);
+  const el = (parent.ownerDocument ?? activeDocument).win.createEl(tag);
   if (cls) el.className = cls;
   parent.appendChild(el);
   return el;

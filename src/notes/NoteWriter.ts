@@ -345,9 +345,7 @@ export class NoteWriter {
     delayMs: number,
   ): Promise<void> {
     for (let i = 0; i < ticks; i++) {
-      const fm = this.app.metadataCache.getFileCache(file)?.frontmatter as
-        | Record<string, unknown>
-        | undefined;
+      const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
       const slug = fm?.['lc-slug'];
       if (typeof slug === 'string' && slug.length > 0) return;
       await new Promise<void>((resolve) => window.setTimeout(resolve, delayMs));
@@ -569,7 +567,7 @@ export class NoteWriter {
    * behavior (Pitfall 4).
    */
   private async backgroundRefresh(file: TFile, slug: string): Promise<void> {
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const previousTitle = typeof fm?.['lc-title'] === 'string' ? fm['lc-title'] : this.settings.getProblemDetail(slug)?.title ?? '';
     const language = typeof fm?.['lc-language'] === 'string' ? fm['lc-language'] : this.settings.getDefaultLanguage();
     const detail = await this.client.getProblemDetail(slug);
@@ -636,7 +634,7 @@ export class NoteWriter {
       new Notice(`未找到题目 ${slug} 的笔记。`, 4000);
       return;
     }
-    const frontmatter = this.app.metadataCache.getFileCache(existingFile)?.frontmatter;
+    const frontmatter: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(existingFile)?.frontmatter;
     const previousTitle = typeof frontmatter?.['lc-title'] === 'string' ? frontmatter['lc-title'] : cached?.title ?? '';
     const currentLanguage = typeof frontmatter?.['lc-language'] === 'string' ? frontmatter['lc-language'] : this.settings.getDefaultLanguage();
 
@@ -707,7 +705,7 @@ export class NoteWriter {
 
   /** 直接从知识库打开旧笔记时，按需更新中国站题面；离线失败不影响阅读。 */
   async refreshChineseNote(file: TFile): Promise<void> {
-    const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const slug: unknown = fm?.['lc-slug'];
     if (typeof slug !== 'string' || !/^[a-z0-9-]+$/.test(slug)) return;
     await this.localizeStoredNote(file);

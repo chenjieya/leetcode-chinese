@@ -1,7 +1,7 @@
 // tests/contest/ContestListService.test.ts
 // Phase 10 Plan 01 Task 2 — unit tests for ContestListService.
 
-/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-misused-promises -- Deferred test callbacks resolve promises. */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ContestListService, CONTEST_INDEX_TTL_MS, inferContestType } from '../../src/contest/ContestListService';
 import type { CachedContest, ContestIndex } from '../../src/contest/types';
@@ -294,3 +294,5 @@ describe('ContestListService', () => {
     });
   });
 });
+
+/* eslint-enable @typescript-eslint/no-misused-promises -- End of deferred callback tests. */

@@ -35,7 +35,7 @@ export function buildCodeBlockButtonRow(
   plugin: Plugin & CodeBlockButtonRowHost,
   opts: CodeBlockButtonRowOptions = {},
 ): HTMLDivElement {
-  const row = doc.createElement('div');
+  const row = doc.win.createDiv();
   row.className = 'leetcode-code-actions';
 
   // Phase 5.3 D-06 / D-09 — chevron prefix slot. DOM order is load-bearing:
@@ -52,7 +52,7 @@ export function buildCodeBlockButtonRow(
   };
 
   const makeIconBtn = (cls: string, tooltip: string, iconSvg: string, handler: () => void | Promise<void>) => {
-    const btn = doc.createElement('button');
+    const btn = doc.win.createEl('button');
     btn.className = cls;
     btn.appendChild(doc.importNode(parseSvg(iconSvg), true));
     btn.title = tooltip;
@@ -72,10 +72,10 @@ export function buildCodeBlockButtonRow(
   row.appendChild(makeIconBtn('leetcode-code-action-icon', '重置为初始代码', resetIcon, () => plugin.resetFromActive()));
 
   const makeBtn = (cls: string, label: string, iconSvg: string, handler: () => void | Promise<void>) => {
-    const btn = doc.createElement('button');
+    const btn = doc.win.createEl('button');
     btn.className = cls;
     btn.appendChild(doc.importNode(parseSvg(iconSvg), true));
-    const span = doc.createElement('span');
+    const span = doc.win.createSpan();
     span.textContent = label;
     btn.appendChild(span);
     btn.addEventListener('mousedown', (e) => { e.preventDefault(); });

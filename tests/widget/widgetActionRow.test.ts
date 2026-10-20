@@ -64,6 +64,17 @@ describe('mountActionRow — DOM shape (D-action-03 lock + UI-SPEC §1)', () => 
     vi.clearAllMocks();
   });
 
+  it('creates controls in the supplied document rather than the active window', () => {
+    const ownerDocument = document.implementation.createHTMLDocument('popout');
+    const ctl = makeFakeCtl();
+    ctl.container = ownerDocument.createElement('div');
+    const { row } = mountActionRow(ctl as never, { path: 'p' } as never, 'python3', ownerDocument);
+    expect(row.ownerDocument).toBe(ownerDocument);
+    for (const element of Array.from(row.querySelectorAll('*'))) {
+      expect(element.ownerDocument).toBe(ownerDocument);
+    }
+  });
+
   it('returns a row with class leetcode-code-actions containing exactly 6 children in locked order', () => {
     const ctl = makeFakeCtl();
     const file = { path: 'LeetCode/two-sum.md' } as never;

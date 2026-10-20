@@ -94,7 +94,7 @@ export function buildLanguageChevron(
   file: TFile,
   currentSlug: string,
 ): LanguageChevronHandle {
-  const wrapper = doc.createElement('span');
+  const wrapper = doc.win.createSpan();
   wrapper.className = 'leetcode-language-chevron-wrapper';
 
   // Chevron button — Lucide `chevron-down` icon span + label span sibling.
@@ -102,18 +102,18 @@ export function buildLanguageChevron(
   // so the chevron button reads as a select-input pill (matches FilterModal's
   // `.lc-fm__picker` shape). The icon and label live in separate child spans so
   // CSS can size/color them independently and tests can assert each surface.
-  const button = doc.createElement('button');
+  const button = doc.win.createEl('button');
   button.className = 'leetcode-language-chevron';
   button.setAttribute('aria-haspopup', 'listbox');
   button.setAttribute('aria-expanded', 'false');
   // Icon-host span — setIcon mounts a Lucide SVG into this element.
   // CSP-safe: setIcon is Obsidian's sanctioned API (no innerHTML on our side).
-  const iconSpan = doc.createElement('span');
+  const iconSpan = doc.win.createSpan();
   iconSpan.className = 'leetcode-language-chevron-icon';
   setIcon(iconSpan, 'chevron-down');
   button.appendChild(iconSpan);
   // Label span — textContent (NOT raw-HTML assignment) per CLAUDE.md store-policy.
-  const labelSpan = doc.createElement('span');
+  const labelSpan = doc.win.createSpan();
   labelSpan.className = 'leetcode-language-chevron-label';
   labelSpan.textContent = LC_LANG_DISPLAY_LABELS[currentSlug] ?? currentSlug;
   button.appendChild(labelSpan);
@@ -121,7 +121,7 @@ export function buildLanguageChevron(
   wrapper.appendChild(button);
 
   // Dropdown popover — initially hidden via .is-hidden CSS class.
-  const dropdown = doc.createElement('div');
+  const dropdown = doc.win.createDiv();
   dropdown.className = 'leetcode-language-chevron-dropdown is-hidden';
   dropdown.setAttribute('role', 'listbox');
 
@@ -266,7 +266,7 @@ export function buildLanguageChevron(
   let mountedSlug = currentSlug;
   const items = new Map<string, HTMLButtonElement>();
   for (const slug of LC_CHEVRON_LANG_ORDER) {
-    const item = doc.createElement('button');
+    const item = doc.win.createEl('button');
     item.className = 'leetcode-language-chevron-item';
     item.setAttribute('role', 'option');
     const itemLabel = LC_LANG_DISPLAY_LABELS[slug] ?? slug;

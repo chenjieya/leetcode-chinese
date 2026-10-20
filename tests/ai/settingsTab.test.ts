@@ -175,7 +175,8 @@ vi.mock('obsidian', () => {
           selectEl.value = v;
           return api;
         },
-        onChange(_fn: (v: string) => void) {
+        onChange(fn: (v: string) => void) {
+          selectEl.addEventListener('change', () => { fn(selectEl.value); });
           return api;
         },
       };
@@ -240,6 +241,7 @@ vi.mock('obsidian', () => {
 
   return {
     Setting,
+    requireApiVersion: () => true,
     PluginSettingTab,
     Notice,
     App: class {},
@@ -377,6 +379,50 @@ describe('SettingsTab — AI section (Phase 07 Plan 03)', () => {
   });
   afterEach(() => {
     vi.resetModules();
+  });
+
+  it('provides searchable section metadata without rendering controls or reading credentials', async () => {
+    const { LeetCodeSettingTab } = await import('../../src/settings/SettingsTab');
+    const plugin = makeFakePlugin();
+    const authRead = vi.spyOn(plugin.auth, 'isLoggedIn');
+    const configRead = vi.spyOn(plugin.lcSettings, 'getProviderConfig');
+    const tab = new LeetCodeSettingTab({} as never, plugin as never);
+    const definitions = tab.getSettingDefinitions();
+    expect(definitions).toHaveLength(6);
+    expect(JSON.stringify(definitions)).toContain('题目目录');
+    expect(JSON.stringify(definitions)).toContain('API 密钥');
+    expect(tab.containerEl.childElementCount).toBe(0);
+    expect(authRead).not.toHaveBeenCalled();
+    expect(configRead).not.toHaveBeenCalled();
+  });
+
+  it('preserves host section rows when a declarative provider control refreshes the tab', async () => {
+    const { LeetCodeSettingTab } = await import('../../src/settings/SettingsTab');
+    const { Setting, requireApiVersion } = await import('obsidian');
+    const plugin = makeFakePlugin({ activeProvider: 'anthropic' });
+    const tab = new LeetCodeSettingTab({} as never, plugin as never);
+    const cleanups: Array<() => void> = [];
+    for (const definition of tab.getSettingDefinitions()) {
+      if (requireApiVersion('1.13.0') && 'render' in definition && typeof definition.render === 'function') {
+        const cleanup = definition.render(new Setting(tab.containerEl), {} as never);
+        if (cleanup) cleanups.push(cleanup);
+      }
+    }
+    const rows = Array.from(tab.containerEl.children);
+    const providerSelect = Array.from(tab.containerEl.querySelectorAll('select'))
+      .find(select => select.querySelector('option[value="anthropic"]'));
+    expect(providerSelect).toBeDefined();
+    providerSelect!.value = 'openai';
+    providerSelect!.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => {
+      expect(plugin.lcSettings.getActiveAIProvider()).toBe('openai');
+      expect(Array.from(tab.containerEl.children)).toEqual(rows);
+      expect(tab.containerEl.querySelectorAll('.lc-settings-section')).toHaveLength(6);
+    });
+    cleanups.forEach(cleanup => cleanup());
+    tab.containerEl.empty();
+    tab.display();
+    expect(tab.containerEl.querySelectorAll('.lc-settings-section')).toHaveLength(6);
   });
 
   it('when activeAIProvider is null, only heading row renders in the AI section (toggle off)', async () => {

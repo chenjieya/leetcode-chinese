@@ -48,9 +48,7 @@ export function registerRunCommand(
     editorCheckCallback: (checking, _editor, view) => {
       const file = view.file;
       if (!file) return false;
-      const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-        | Record<string, unknown>
-        | undefined;
+      const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
       if (!isValidSlug(fm?.['lc-slug'])) return false;
       if (!checking) {
         if (deps.openRun) {

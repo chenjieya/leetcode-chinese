@@ -157,7 +157,6 @@ export function setupModalMocks(): void {
  * `@typescript-eslint/unbound-method`.
  */
 export interface StreamHandle {
-  // eslint-disable-next-line no-undef -- AsyncIterable is a TS lib type
   iterator: AsyncIterable<string>;
   push: (chunk: string) => void;
   end: () => void;
@@ -224,7 +223,6 @@ export function makeStreamHandle(): StreamHandle {
 
   return {
     iterator: {
-      // eslint-disable-next-line no-undef -- AsyncIterator is a TS lib type
       [Symbol.asyncIterator](): AsyncIterator<string> {
         return { next };
       },

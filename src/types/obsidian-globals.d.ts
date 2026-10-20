@@ -32,6 +32,11 @@ interface DomCreateHelpers {
 }
 
 declare global {
+  // Each popout owns its own global helpers; use ownerDocument.win to
+  // create detached elements in that window rather than the active one.
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- host API augmentation.
+  interface Window extends DomCreateHelpers {}
+
   // Polyfilled by Obsidian on Document; happy-dom is shimmed in tests/helpers/setup.ts.
   interface Document {
     createEl<K extends keyof HTMLElementTagNameMap>(

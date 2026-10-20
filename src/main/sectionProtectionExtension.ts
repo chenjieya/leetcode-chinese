@@ -432,9 +432,7 @@ export function buildSectionProtectionExtension(plugin: Plugin): Extension {
 
       // Gate 3 — D-06 frontmatter gate. Verbatim Phase 5.1 cast pattern;
       // the lock applies only to notes with a non-empty `lc-slug` string.
-      const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-        | Record<string, unknown>
-        | undefined;
+      const fm: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
       const slug = fm?.['lc-slug'];
       if (typeof slug !== 'string' || slug.length === 0) {
         return true;
@@ -496,9 +494,7 @@ export function buildSectionProtectionExtension(plugin: Plugin): Extension {
 
       const file = tr.startState.field(editorInfoField)?.file;
       if (!file) return tr;
-      const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-        | Record<string, unknown>
-        | undefined;
+      const fm: Record<string, unknown> | undefined = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
       const slug = fm?.['lc-slug'];
       if (typeof slug !== 'string' || slug.length === 0) return tr;
 

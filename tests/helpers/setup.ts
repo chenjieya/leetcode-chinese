@@ -155,8 +155,7 @@ if (g.document) {
   // source modules that call the bare global form (e.g. `createDiv(...)`)
   // — which is how Obsidian injects them on window in production — work in
   // happy-dom tests without runtime errors.
-  // eslint-disable-next-line obsidianmd/no-global-this
-  const gThis = globalThis as Record<string, unknown>;
+  const gThis = window as unknown as Record<string, unknown>;
   if (typeof gThis['createDiv'] !== 'function') {
     gThis['createDiv'] = function (options?: CreateElOptions): HTMLElement {
       const el = doc.createElement('div');
@@ -178,6 +177,30 @@ if (g.document) {
       return el;
     };
   }
+  // Obsidian exposes the owning Window through Document.win, including
+  // detached documents. Keep element creation bound to that document.
+  const documentHelpers = new WeakMap<Document, Pick<Window, 'createEl' | 'createDiv' | 'createSpan'>>();
+  Object.defineProperty(Object.getPrototypeOf(doc) as Document, 'win', {
+    configurable: true,
+    get(this: Document) {
+      if (this === doc) return gThis;
+      let helpers = documentHelpers.get(this);
+      if (!helpers) {
+        const make = (tag: string, options?: CreateElOptions): HTMLElement => {
+          const el = this.createElement(tag);
+          applyOptions(el, options);
+          return el;
+        };
+        helpers = {
+          createEl: make,
+          createDiv: (options?: CreateElOptions) => make('div', options),
+          createSpan: (options?: CreateElOptions) => make('span', options),
+        } as Pick<Window, 'createEl' | 'createDiv' | 'createSpan'>;
+        documentHelpers.set(this, helpers);
+      }
+      return helpers;
+    },
+  });
   // Document also exposes `createFragment`. The native `createDocumentFragment`
   // is what happy-dom ships; alias it onto `createFragment` so source modules
   // calling `activeDocument.createFragment()` resolve.

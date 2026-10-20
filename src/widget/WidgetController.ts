@@ -848,7 +848,7 @@ export class WidgetController {
     if (typeof readFn !== 'function') return;
     let newDisk: string;
     try {
-      newDisk = await readFn.call(this.plugin.app.vault, this.file as never);
+      newDisk = await readFn.call(this.plugin.app.vault, this.file);
     } catch {
       // I/O failure (file deleted, etc.) — abort silently.
       return;
@@ -999,7 +999,7 @@ export class WidgetController {
     this.view.dispatch({
       effects: [
         this.vimCompartment.reconfigure(
-          enabled ? vim({ status: true } as Parameters<typeof vim>[0]) : [],
+          enabled ? vim({ status: true }) : [],
         ),
         lineNumbersCompartment.reconfigure(buildLineNumbersExtension(enabled)),
       ],
@@ -1151,12 +1151,12 @@ export class WidgetController {
       // Mount overlay if not already present.
       if (!this.takeoverOverlay) {
         const doc = this.container.ownerDocument ?? activeDocument;
-        const overlay = doc.createElement('div');
+        const overlay = doc.win.createDiv();
         overlay.className = 'lc-takeover-overlay';
         overlay.setAttribute('role', 'button');
         overlay.setAttribute('tabindex', '0');
 
-        const cta = doc.createElement('button');
+        const cta = doc.win.createEl('button');
         cta.className = 'lc-takeover-cta';
         cta.textContent = '点击接管编辑';
         cta.setAttribute(
@@ -1583,7 +1583,7 @@ function buildExtensions(
     // rebuilding the EditorView. Initial payload mirrors the v1.2 / Phase 19
     // mount-time gate (BLOCKER 1 fix: gated on !readOnly above).
     vimCompartment.of(
-      vimEnabled ? vim({ status: true } as Parameters<typeof vim>[0]) : [],
+      vimEnabled ? vim({ status: true }) : [],
     ),
     // Debug session vim-cmd-v-paste-offset — capture-phase Cmd+V / Ctrl+V
     // intercept. `@replit/codemirror-vim` 6.3.0 attaches a bubble-phase
@@ -1653,7 +1653,7 @@ function buildExtensions(
         run: (view) => {
           const cm5 = getCM(view);
           if (cm5 && !cm5.state.vim?.insertMode) return false;
-          return indentLess(view as unknown as Parameters<typeof indentLess>[0]);
+          return indentLess(view);
         },
       },
     ]),
@@ -1724,7 +1724,7 @@ export function mountLeetCodeWidget(
   // CONTEXT C-13 + PATTERNS line 1101 — three classes, two carry-over
   // (lc-nested-editor + HyperMD-codeblock) plus the v1.3-specific
   // lc-leetcode-solve so Phase 22 polish can target widgets specifically.
-  const container = activeDocument.createElement('div');
+  const container = activeWindow.createDiv();
   container.className = 'lc-nested-editor HyperMD-codeblock lc-leetcode-solve';
   // Phase 20 Plan 20-04 — initial pane state is `active`. The CSS rule
   // `.lc-nested-editor[data-pane-state="peer"] > .lc-takeover-overlay`
@@ -1751,7 +1751,7 @@ export function mountLeetCodeWidget(
   //     </div>
   //     <div class="leetcode-code-actions">…</div>  ← sibling on note bg
   //   </div>
-  const codeblockWrap = activeDocument.createElement('div');
+  const codeblockWrap = activeWindow.createDiv();
   codeblockWrap.className = 'leetcode-widget-codeblock';
   container.appendChild(codeblockWrap);
 
@@ -2180,7 +2180,7 @@ export class LeetCodeWidgetRenderChild extends MarkdownRenderChild {
 
   private static getParkingLot(): HTMLDivElement {
     if (!LeetCodeWidgetRenderChild.parkingLot) {
-      const lot = activeDocument.createElement('div');
+      const lot = activeWindow.createDiv();
       // Visual + hit-test setup is in styles.css under `.lc-widget-parking-lot`
       // (D-static-style — eslint `obsidianmd/no-static-styles-assignment`).
       lot.className = 'lc-widget-parking-lot';

@@ -76,9 +76,7 @@ export async function runLanguageSwitch(
   }
 
   // Step 2 — same-slug short-circuit at entry.
-  const fmAtEntry = deps.app.metadataCache.getFileCache(file)?.frontmatter as
-    | Record<string, unknown>
-    | undefined;
+  const fmAtEntry: Record<string, unknown> | undefined = deps.app.metadataCache.getFileCache(file)?.frontmatter;
   const currentSlug =
     typeof fmAtEntry?.['lc-language'] === 'string'
       ? fmAtEntry['lc-language']

@@ -119,9 +119,7 @@ export async function copyToCode(
   // Same-slug short-circuit — the note's `lc-language` already equals the
   // submission's slug, so writing again would only fire a spurious
   // metadataCache 'changed' event with no semantic delta.
-  const fm = app.metadataCache.getFileCache(file)?.frontmatter as
-    | Record<string, unknown>
-    | undefined;
+  const fm: Record<string, unknown> | undefined = app.metadataCache.getFileCache(file)?.frontmatter;
   const currentLangSlug = fm?.['lc-language'];
   if (currentLangSlug === langSlug) return;
 

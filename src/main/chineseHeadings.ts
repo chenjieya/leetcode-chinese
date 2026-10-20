@@ -19,7 +19,7 @@ class ChineseHeadingWidget extends WidgetType {
   constructor(private label: string) { super(); }
   eq(other: ChineseHeadingWidget): boolean { return this.label === other.label; }
   toDOM(view: EditorView): HTMLElement {
-    const span = view.dom.ownerDocument.createElement('span');
+    const span = view.dom.ownerDocument.win.createSpan();
     span.className = 'cm-header cm-header-2';
     span.textContent = this.label;
     return span;

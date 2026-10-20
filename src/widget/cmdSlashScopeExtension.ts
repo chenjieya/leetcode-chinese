@@ -100,12 +100,8 @@ export function createCmdSlashScopeExtension(
 ): Extension {
   if (!app) return [];
 
-  // Cast `toggleLineComment` (StateCommand) to a EditorView-runner shape.
-  // The pre-existing @codemirror/state version skew (commands brings 6.6.0,
-  // the rest resolve 6.5.0) makes the structural-but-not-nominal mismatch
-  // a tsc-only quirk; runtime types are identical. Same workaround
-  // childEditorLanguage.ts:146 uses for the in-Compartment keymap entry.
-  const runComment = toggleLineComment as unknown as (v: EditorView) => boolean;
+  // StateCommand accepts the EditorView supplied by the active scope.
+  const runComment = toggleLineComment;
 
   return ViewPlugin.define((view: EditorView): PluginValue => {
     let activeScope: ScopeType | null = null;

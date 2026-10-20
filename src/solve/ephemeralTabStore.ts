@@ -118,7 +118,7 @@ export class EphemeralTabStore {
       const metadataCache = this.plugin.app.metadataCache;
       if (file instanceof TFile && metadataCache?.getFileCache) {
         const cache = metadataCache.getFileCache(file);
-        const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+        const fm: Record<string, unknown> | undefined = cache?.frontmatter;
         const fmSlug = fm?.['lc-slug'];
         if (typeof fmSlug === 'string') slug = fmSlug;
       }
